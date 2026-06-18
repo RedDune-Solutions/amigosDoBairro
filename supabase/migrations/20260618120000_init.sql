@@ -75,7 +75,11 @@ security definer
 set search_path = public, pg_temp
 as $$
 begin
-  if new.role is distinct from old.role and not public.is_admin() then
+  -- auth.uid() null = contexto de backend/service_role (confiável: bootstrap,
+  -- migrações). Bloqueia apenas utilizadores autenticados não-admin.
+  if new.role is distinct from old.role
+     and auth.uid() is not null
+     and not public.is_admin() then
     raise exception 'Apenas um admin pode alterar o role.';
   end if;
   return new;
@@ -356,6 +360,27 @@ create policy reservations_update_own on public.reservations
 -- earn_nonces: cliente vê/cria os seus (criação real é via função). Sem leitura cruzada.
 create policy nonces_select_own on public.earn_nonces
   for select to authenticated using (user_id = auth.uid());
+
+-- =============================================================================
+-- GRANTS de tabela — necessários além da RLS (instância secure-by-default:
+-- tabelas novas não são auto-expostas aos roles da Data API).
+-- points_ledger NÃO tem insert/update/delete para authenticated: a escrita é
+-- exclusiva das funções SECURITY DEFINER (que correm como dono da tabela).
+-- =============================================================================
+grant usage on schema public to anon, authenticated;
+
+grant select on public.profiles to authenticated;
+grant update (nome, telefone) on public.profiles to authenticated;
+
+grant select on public.points_ledger to authenticated;
+
+grant select, insert, update, delete on public.rewards to authenticated;
+
+grant select on public.redemptions to authenticated;
+
+grant select, insert, update on public.reservations to authenticated;
+
+grant select on public.earn_nonces to authenticated;
 
 -- =============================================================================
 -- GRANTS — funções de negócio executáveis por authenticated; bloqueio directo
