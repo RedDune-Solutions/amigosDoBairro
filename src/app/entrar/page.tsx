@@ -1,5 +1,5 @@
-import { AuthShell } from "@/components/brand-mark";
-import { AuthForm } from "@/components/auth-form";
+import { Stage } from "@/design/ui";
+import { AuthScreen } from "@/design/screens/AuthScreen";
 
 export default async function EntrarPage({
   searchParams,
@@ -8,8 +8,8 @@ export default async function EntrarPage({
 }) {
   const { next } = await searchParams;
   return (
-    <AuthShell title="Bem-vindo de volta" subtitle="Entra para ver os teus pontos.">
-      <AuthForm mode="entrar" next={next} />
-    </AuthShell>
+    <Stage>
+      <AuthScreen initialMode="login" next={next} />
+    </Stage>
   );
 }

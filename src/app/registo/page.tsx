@@ -1,5 +1,5 @@
-import { AuthShell } from "@/components/brand-mark";
-import { AuthForm } from "@/components/auth-form";
+import { Stage } from "@/design/ui";
+import { AuthScreen } from "@/design/screens/AuthScreen";
 
 export default async function RegistoPage({
   searchParams,
@@ -8,11 +8,8 @@ export default async function RegistoPage({
 }) {
   const { next } = await searchParams;
   return (
-    <AuthShell
-      title="Junta-te ao clube"
-      subtitle="Cria a tua conta grátis e começa a acumular pontos."
-    >
-      <AuthForm mode="registo" next={next} />
-    </AuthShell>
+    <Stage>
+      <AuthScreen initialMode="register" next={next} />
+    </Stage>
   );
 }

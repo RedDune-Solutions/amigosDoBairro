@@ -1,22 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import { Baloo_2, Nunito } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const baloo = Baloo_2({
+  variable: "--font-baloo",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal"],
+  weight: ["500", "600", "700", "800"],
 });
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
-  title: "Os Amigos do Bairro — o teu cantinho no bairro",
+  title: "Os Amigos do Bairro · App de Fidelização",
   description:
     "Clube de fidelização do Café & Snack-Bar do Bairro. Acumula pontos, troca recompensas e reserva a tua mesa.",
   applicationName: "Os Amigos do Bairro",
@@ -25,10 +25,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f7efe1",
+  themeColor: "#fbf3e7",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -37,9 +36,11 @@ export default function RootLayout({
   return (
     <html
       lang="pt-PT"
-      className={`${fraunces.variable} ${jakarta.variable} h-full antialiased`}
+      className={`${baloo.variable} ${nunito.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

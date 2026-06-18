@@ -43,3 +43,6 @@ next-env.d.ts
 # Client docs / quotes (kept local, never committed)
 *.pdf
 _docs-clientes/
+
+# Design source (referência local, não parte da app)
+_design-ref/
