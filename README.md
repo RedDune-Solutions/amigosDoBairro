@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Os Amigos do Bairro — App de Fidelização
 
-## Getting Started
+App de fidelização do **Café & Snack-Bar do Bairro**. Os clientes acumulam pontos,
+trocam por recompensas e reservam mesa. PWA construída com Next.js + Supabase.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, TypeScript, Turbopack)
+- **Tailwind CSS 4** — tema quente "café do bairro" (Fraunces + Plus Jakarta Sans)
+- **Supabase** (Postgres + Auth + RLS) — local via Docker, migrável para cloud sem reescrita
+- **PWA** — manifest + ícones, mobile-first e responsivo em desktop
+
+## Funcionalidades
+
+| Área | O quê |
+|------|-------|
+| Cliente | Conta/login, saldo de pontos, QR rotativo para acumular, catálogo de recompensas com resgate, reserva de mesa, histórico |
+| Staff | Ler QR do cliente (câmara ou manual) e creditar pontos, validar códigos de resgate, ver reservas |
+| Admin | Gerir recompensas (CRUD), ajustar pontos, gerir reservas |
+
+## Segurança (pontos = dinheiro)
+
+- O ledger de pontos é **append-only**; o cliente **nunca** escreve nele directamente.
+- Todo o crédito/débito passa por funções `SECURITY DEFINER` com verificação de role
+  (`creditar_via_nonce`, `resgatar_recompensa`, `ajustar_pontos`).
+- Acumulação por **nonce de uso único e curta duração** (anti-replay, anti-auto-crédito).
+- RLS em todas as tabelas; cliente só vê os seus dados.
+- Server actions validam input com `zod` e re-verificam o role no servidor.
+
+## Desenvolvimento local
+
+Pré-requisitos: **Node 20+**, **Docker** a correr.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npx supabase start          # sobe Postgres/Auth/Studio locais (1.ª vez puxa imagens)
+npx supabase db reset       # aplica migrações + seed de recompensas demo
+npm run dev                 # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`supabase start` imprime as chaves locais. Confirma que `.env.local` tem
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Criar um staff/admin (local)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Regista-te na app e depois, no Studio local (`http://localhost:54323`) ou via SQL:
 
-## Learn More
+```sql
+update public.profiles set role = 'admin' where id = '<o-teu-uuid>';
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Migrar para Supabase cloud (quando houver projecto)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Sem reescrita — tudo está em ficheiros:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npx supabase link --project-ref <ref-do-projecto>
+npx supabase db push        # aplica as migrações no cloud
+```
 
-## Deploy on Vercel
+Depois actualiza as variáveis de ambiente (Vercel) com o URL e as chaves do projecto cloud.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## A confirmar com a cliente (Daniela)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Regra de pontos (ex.: 1 café = 1 ponto).
+- Lista e custos das recompensas (o seed actual é placeholder).
+- Horário e capacidade para reservas.
+- Logótipo e cores exactas da marca (o emblema actual é placeholder).
