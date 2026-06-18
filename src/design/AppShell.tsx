@@ -6,6 +6,8 @@ import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { TabBar, TopBar, Scroll, Card, IconTile, Button } from "@/design/ui";
 import { Home, LoyaltyCard, Rewards } from "@/design/screens/AppScreens";
+import { MenuScreen } from "@/design/screens/MenuScreen";
+import { Reservations } from "@/design/screens/Reservations";
 import { QrModal } from "@/design/screens/QrModal";
 import { TIERS, tierIndexFor, type AppData, type RewardRow } from "@/design/data";
 import { redeemReward } from "@/lib/app-actions";
@@ -47,9 +49,17 @@ export function AppShell({ data }: { data: AppData }) {
   } else if (tab === "rewards") {
     screen = <Rewards points={points} rewards={data.rewards} onRedeem={onRedeem} />;
   } else if (tab === "reservations") {
-    screen = <ComingSoon title={T("res.title") as string} icon="calendar" />;
+    screen = (
+      <Reservations
+        next={data.nextReservation}
+        onBooked={() => {
+          flash(T("toast.bookingOk") as string);
+          router.refresh();
+        }}
+      />
+    );
   } else if (tab === "menu") {
-    screen = <ComingSoon title={T("menu.title") as string} icon="menu" />;
+    screen = <MenuScreen />;
   } else if (tab === "profile") {
     screen = (
       <ProfileBasic
@@ -91,23 +101,6 @@ export function AppShell({ data }: { data: AppData }) {
         </div>
       )}
     </div>
-  );
-}
-
-function ComingSoon({ title, icon }: { title: string; icon: string }) {
-  return (
-    <>
-      <TopBar title={title} />
-      <Scroll>
-        <Card style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: 28, marginTop: 20, textAlign: "center" }}>
-          <IconTile icon={icon} size={64} iconSize={30} />
-          <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 17, color: "var(--c-ink)" }}>Em breve</div>
-          <div style={{ fontFamily: "var(--f-body)", fontSize: 13.5, color: "var(--c-muted)" }}>
-            Esta secção está a ser preparada.
-          </div>
-        </Card>
-      </Scroll>
-    </>
   );
 }
 
