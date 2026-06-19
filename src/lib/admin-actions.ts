@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
@@ -10,97 +9,82 @@ async function assertAdmin() {
   if (!profile || profile.role !== "admin") throw new Error("forbidden");
 }
 
-export type AdminState = { ok?: boolean; error?: string };
-
-const rewardSchema = z.object({
-  titulo: z.string().trim().min(2).max(80),
-  descricao: z.string().trim().max(200).optional().or(z.literal("")),
-  custo_pontos: z.coerce.number().int().min(1).max(100000),
-  stock: z.coerce.number().int().min(0).max(100000).optional().or(z.literal("")),
+const patchSchema = z.object({
+  id: z.string(),
+  nome_pt: z.string().trim().max(80).optional(),
+  nome_en: z.string().trim().max(80).optional(),
+  desc_pt: z.string().trim().max(160).optional(),
+  desc_en: z.string().trim().max(160).optional(),
+  icon: z.string().max(20).optional(),
+  accent: z.enum(["primary", "green", "blue", "red"]).optional(),
+  weight: z.coerce.number().int().min(1).max(1000).optional(),
+  stock: z.coerce.number().int().min(0).max(100000).optional(),
 });
 
-export async function criarRecompensa(
-  _prev: AdminState,
-  formData: FormData,
-): Promise<AdminState> {
+export async function patchPrize(
+  input: z.input<typeof patchSchema>,
+): Promise<{ ok?: boolean; error?: string }> {
   await assertAdmin();
-  const parsed = rewardSchema.safeParse({
-    titulo: formData.get("titulo"),
-    descricao: formData.get("descricao"),
-    custo_pontos: formData.get("custo_pontos"),
-    stock: formData.get("stock"),
-  });
-  if (!parsed.success) return { error: "Dados da recompensa inválidos." };
-
+  const parsed = patchSchema.safeParse(input);
+  if (!parsed.success) return { error: "Dados inválidos." };
+  const { id, ...fields } = parsed.data;
+  if (Object.keys(fields).length === 0) return { ok: true };
   const supabase = await createClient();
-  const { error } = await supabase.from("rewards").insert({
-    titulo: parsed.data.titulo,
-    descricao: parsed.data.descricao || null,
-    custo_pontos: parsed.data.custo_pontos,
-    stock: parsed.data.stock === "" || parsed.data.stock === undefined ? null : parsed.data.stock,
-  });
-  if (error) return { error: "Não foi possível criar a recompensa." };
-  revalidatePath("/admin");
-  revalidatePath("/recompensas");
+  const { error } = await supabase.from("prizes").update(fields).eq("id", id);
+  if (error) return { error: "Não foi possível guardar." };
   return { ok: true };
 }
 
-export async function alternarRecompensa(formData: FormData): Promise<void> {
+export async function addPrize(kind: "comum" | "especial"): Promise<{ id?: string; error?: string }> {
   await assertAdmin();
-  const id = String(formData.get("id"));
-  const ativo = formData.get("ativo") === "true";
   const supabase = await createClient();
-  await supabase.from("rewards").update({ ativo: !ativo }).eq("id", id);
-  revalidatePath("/admin");
-  revalidatePath("/recompensas");
+  const id = "n_" + Date.now().toString(36);
+  const { error } = await supabase.from("prizes").insert({
+    id,
+    kind,
+    nome_pt: "Novo prémio",
+    nome_en: "New prize",
+    icon: "gift",
+    accent: kind === "especial" ? "primary" : "green",
+    weight: 10,
+    stock: 20,
+  });
+  if (error) return { error: "Não foi possível adicionar." };
+  return { id };
 }
 
-export async function apagarRecompensa(formData: FormData): Promise<void> {
+export async function removePrize(id: string): Promise<{ ok?: boolean; error?: string }> {
   await assertAdmin();
-  const id = String(formData.get("id"));
   const supabase = await createClient();
-  await supabase.from("rewards").delete().eq("id", id);
-  revalidatePath("/admin");
-  revalidatePath("/recompensas");
-}
-
-const ajusteSchema = z.object({
-  userId: z.string().uuid("Utilizador inválido."),
-  delta: z.coerce.number().int().refine((n) => n !== 0, "Não pode ser zero."),
-  reason: z.string().trim().max(120).optional().or(z.literal("")),
-});
-
-export async function ajustarPontos(
-  _prev: AdminState,
-  formData: FormData,
-): Promise<AdminState> {
-  await assertAdmin();
-  const parsed = ajusteSchema.safeParse({
-    userId: formData.get("userId"),
-    delta: formData.get("delta"),
-    reason: formData.get("reason"),
-  });
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
-  }
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("ajustar_pontos", {
-    p_user: parsed.data.userId,
-    p_delta: parsed.data.delta,
-    p_reason: parsed.data.reason || "Ajuste manual",
-  });
-  if (error) return { error: "Não foi possível ajustar os pontos." };
-  revalidatePath("/admin");
+  const { error } = await supabase.from("prizes").delete().eq("id", id);
+  if (error) return { error: "Não foi possível remover." };
   return { ok: true };
 }
 
-export async function atualizarReserva(formData: FormData): Promise<void> {
+export async function updateLoyalty(
+  euroPerStamp: number,
+  stampGoal: number,
+): Promise<{ ok?: boolean; error?: string }> {
   await assertAdmin();
-  const id = String(formData.get("id"));
-  const estado = String(formData.get("estado"));
-  if (!["pendente", "confirmada", "cancelada"].includes(estado)) return;
+  if (euroPerStamp < 1 || stampGoal < 2) return { error: "Valores inválidos." };
   const supabase = await createClient();
-  await supabase.from("reservations").update({ estado }).eq("id", id);
-  revalidatePath("/admin");
-  revalidatePath("/staff");
+  const { error } = await supabase
+    .from("loyalty_config")
+    .update({ euro_per_stamp: euroPerStamp, stamp_goal: stampGoal })
+    .eq("id", true);
+  if (error) return { error: "Não foi possível guardar." };
+  return { ok: true };
+}
+
+/** Valida um voucher por código: tenta carteira (raspadinha) e depois resgate de pontos. */
+export async function validateVoucher(codigo: string): Promise<{ ok?: boolean; error?: string }> {
+  await assertAdmin();
+  const code = codigo.trim().toUpperCase();
+  if (code.length < 4) return { error: "Código inválido." };
+  const supabase = await createClient();
+  const wallet = await supabase.rpc("usar_carteira", { p_codigo: code });
+  if (!wallet.error) return { ok: true };
+  const red = await supabase.rpc("marcar_levantado", { p_codigo: code });
+  if (!red.error) return { ok: true };
+  return { error: "Código inválido ou já usado." };
 }
