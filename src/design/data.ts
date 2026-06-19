@@ -129,7 +129,36 @@ export type AppData = {
   rewards: RewardRow[];
   history: HistoryRow[];
   pendingScratch: number;
+  scratchCards: ScratchCardRow[];
+  wallet: WalletItemRow[];
   nextReservation: NextReservation;
+};
+
+export type ScratchCardRow = { id: string; kind: "comum" | "especial" };
+
+export type WalletItemRow = {
+  id: string;
+  kind: "comum" | "especial";
+  nome_pt: string;
+  nome_en: string | null;
+  desc_pt: string | null;
+  desc_en: string | null;
+  icon: string | null;
+  accent: string | null;
+  codigo: string;
+  status: "por-usar" | "usado";
+  created_at: string;
+};
+
+export type ScratchPrize = {
+  prize_id: string;
+  nome_pt: string;
+  nome_en: string | null;
+  desc_pt: string | null;
+  desc_en: string | null;
+  icon: string;
+  accent: string;
+  codigo: string;
 };
 
 export type RewardRow = {

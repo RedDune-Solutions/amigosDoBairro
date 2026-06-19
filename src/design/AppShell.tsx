@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { TabBar, TopBar, Scroll, Card, IconTile, Button } from "@/design/ui";
-import { Home, LoyaltyCard, Rewards } from "@/design/screens/AppScreens";
+import { Home, LoyaltyCard } from "@/design/screens/AppScreens";
+import { PrizesScreen } from "@/design/screens/PrizesScreen";
 import { MenuScreen } from "@/design/screens/MenuScreen";
 import { Reservations } from "@/design/screens/Reservations";
 import { QrModal } from "@/design/screens/QrModal";
@@ -47,7 +48,15 @@ export function AppShell({ data }: { data: AppData }) {
   } else if (tab === "card") {
     screen = <LoyaltyCard data={data} points={points} history={data.history} onQR={() => setQr(true)} go={setTab} />;
   } else if (tab === "rewards") {
-    screen = <Rewards points={points} rewards={data.rewards} onRedeem={onRedeem} />;
+    screen = (
+      <PrizesScreen
+        data={data}
+        points={points}
+        go={setTab}
+        onRedeem={onRedeem}
+        onPrizeWon={() => router.refresh()}
+      />
+    );
   } else if (tab === "reservations") {
     screen = (
       <Reservations

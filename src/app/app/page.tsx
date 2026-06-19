@@ -25,6 +25,8 @@ export default async function AppPage() {
     { data: rewardsData },
     { data: ledgerData },
     { count: scratchCount },
+    { data: scratchData },
+    { data: walletData },
     { data: nextRes },
   ] = await Promise.all([
     supabase.from("profiles").select("nome, role, stamps, spend_toward, created_at").eq("id", user.id).single(),
@@ -33,6 +35,8 @@ export default async function AppPage() {
     supabase.from("rewards").select("id, titulo, nome_en, descricao, desc_en, custo_pontos, icon, accent").eq("ativo", true).order("ordem", { ascending: true }),
     supabase.from("points_ledger").select("id, delta, reason, source, created_at").order("created_at", { ascending: false }).limit(20),
     supabase.from("scratch_cards").select("id", { count: "exact", head: true }).eq("status", "por-abrir"),
+    supabase.from("scratch_cards").select("id, kind").eq("status", "por-abrir").order("created_at", { ascending: true }),
+    supabase.from("wallet_items").select("id, kind, nome_pt, nome_en, desc_pt, desc_en, icon, accent, codigo, status, created_at").order("created_at", { ascending: false }).limit(30),
     supabase.from("reservations").select("data, hora, n_pessoas, estado").gte("data", new Date().toISOString().slice(0, 10)).neq("estado", "cancelada").order("data", { ascending: true }).order("hora", { ascending: true }).limit(1).maybeSingle(),
   ]);
 
@@ -67,6 +71,8 @@ export default async function AppPage() {
     rewards: (rewardsData ?? []) as RewardRow[],
     history,
     pendingScratch: scratchCount ?? 0,
+    scratchCards: (scratchData ?? []) as AppData["scratchCards"],
+    wallet: (walletData ?? []) as AppData["wallet"],
     nextReservation: nextRes
       ? {
           data: nextRes.data as string,
