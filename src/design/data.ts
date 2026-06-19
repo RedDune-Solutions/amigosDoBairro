@@ -119,6 +119,8 @@ export type NextReservation = {
 export type AppData = {
   nome: string;
   firstName: string;
+  email: string;
+  telefone: string;
   role: "customer" | "staff" | "admin";
   memberSince: string;
   points: number;

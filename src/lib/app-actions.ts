@@ -35,6 +35,26 @@ export async function openScratch(
   return { prize: data as Record<string, unknown> };
 }
 
+export async function updateProfile(input: {
+  nome: string;
+  telefone: string;
+}): Promise<{ ok?: boolean; error?: string }> {
+  const nome = input.nome.trim();
+  const telefone = input.telefone.trim();
+  if (nome.length < 2) return { error: "Nome demasiado curto." };
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada." };
+  const { error } = await supabase
+    .from("profiles")
+    .update({ nome, telefone: telefone || null })
+    .eq("id", user.id);
+  if (error) return { error: "Não foi possível guardar." };
+  return { ok: true };
+}
+
 export async function createReservation(input: {
   data: string;
   hora: string;
