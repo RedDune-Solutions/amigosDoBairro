@@ -7,6 +7,8 @@ import {
   useMemo,
   useState,
 } from "react";
+import PT from "country-flag-icons/react/3x2/PT";
+import GB from "country-flag-icons/react/3x2/GB";
 import { STRINGS, type Lang } from "@/design/strings";
 
 /** Localiza um campo bilingue { pt, en }. */
@@ -87,42 +89,20 @@ export function useI18n(): Ctx {
   return ctx;
 }
 
-// Bandeiras desenhadas em SVG inline (circulares) — sem dependência externa e sem
-// distorção (os emojis 🇵🇹/🇬🇧 aparecem como letras no Windows).
+// Bandeiras reais (country-flag-icons) — SVGs precisos, sem distorção.
 export function FlagIcon({ code, size = 26 }: { code: string; size?: number }) {
-  const common = { width: size, height: size, viewBox: "0 0 60 60", style: { display: "block" } };
-  if (code === "pt") {
-    return (
-      <svg {...common} role="img" aria-label="Português">
-        <defs>
-          <clipPath id="flag-pt">
-            <circle cx="30" cy="30" r="30" />
-          </clipPath>
-        </defs>
-        <g clipPath="url(#flag-pt)">
-          <rect width="24" height="60" fill="#1E7A3D" />
-          <rect x="24" width="36" height="60" fill="#D52B1E" />
-          <circle cx="24" cy="30" r="9.5" fill="#FFD24D" stroke="#9C5A12" strokeWidth="1.6" />
-          <circle cx="24" cy="30" r="4.5" fill="#D52B1E" stroke="#fff" strokeWidth="1" />
-        </g>
-      </svg>
-    );
-  }
+  const Flag = code === "pt" ? PT : GB;
   return (
-    <svg {...common} role="img" aria-label="English">
-      <defs>
-        <clipPath id="flag-gb">
-          <circle cx="30" cy="30" r="30" />
-        </clipPath>
-      </defs>
-      <g clipPath="url(#flag-gb)">
-        <rect width="60" height="60" fill="#012169" />
-        <path d="M0 0 L60 60 M60 0 L0 60" stroke="#fff" strokeWidth="12" />
-        <path d="M0 0 L60 60 M60 0 L0 60" stroke="#C8102E" strokeWidth="5" />
-        <path d="M30 0 V60 M0 30 H60" stroke="#fff" strokeWidth="18" />
-        <path d="M30 0 V60 M0 30 H60" stroke="#C8102E" strokeWidth="10" />
-      </g>
-    </svg>
+    <Flag
+      title={code === "pt" ? "Português" : "English"}
+      style={{
+        width: size,
+        height: "auto",
+        display: "block",
+        borderRadius: 4,
+        boxShadow: "0 0 0 1px rgba(0,0,0,0.08)",
+      }}
+    />
   );
 }
 
@@ -143,20 +123,18 @@ export function LangToggle({
         onClick={() => onChange(next)}
         title={next === "en" ? "Switch to English" : "Mudar para Português"}
         style={{
-          padding: 3,
-          borderRadius: "50%",
-          border: "2px solid var(--c-surface)",
+          padding: 4,
+          borderRadius: 9,
+          border: "1px solid var(--c-line)",
           background: "var(--c-surface)",
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.16), 0 0 0 1px var(--c-line)",
-          width: 30,
-          height: 30,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.14)",
         }}
       >
-        <FlagIcon code={flagCode} size={32} />
+        <FlagIcon code={flagCode} size={26} />
       </button>
     );
   }

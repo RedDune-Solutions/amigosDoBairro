@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/ui";
@@ -8,6 +8,7 @@ import { TiersSheet } from "@/design/screens/AppScreens";
 import { TIERS, tierIndexFor, type AppData } from "@/design/data";
 import { updateProfile } from "@/lib/app-actions";
 import { signOut } from "@/lib/auth-actions";
+import { createClient } from "@/lib/supabase/client";
 import type { Lang } from "@/design/strings";
 
 function initialsFrom(name: string): string {
@@ -16,6 +17,22 @@ function initialsFrom(name: string): string {
   const first = parts[0][0] || "";
   const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
   return (first + last).toUpperCase();
+}
+
+function Avatar({ url, initials, size }: { url: string | null; initials: string; size: number }) {
+  if (url) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", background: "var(--c-surface2)", flexShrink: 0 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      </div>
+    );
+  }
+  return (
+    <div style={{ width: size, height: size, borderRadius: "50%", background: "linear-gradient(135deg, var(--c-primary), var(--c-red))", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: Math.round(size * 0.37), flexShrink: 0 }}>
+      {initials}
+    </div>
+  );
 }
 
 export function Profile({
@@ -49,11 +66,8 @@ export function Profile({
       <TopBar title={T("prof.title") as string} />
       <Scroll>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "4px 0 6px" }}>
-          <button onClick={onEdit} style={{ position: "relative", border: "none", background: "none", padding: 0, cursor: "pointer" }}>
-            <div style={{ width: 86, height: 86, borderRadius: "50%", background: "linear-gradient(135deg, var(--c-primary), var(--c-red))", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 32 }}>{initialsFrom(data.nome)}</div>
-            <div style={{ position: "absolute", bottom: 0, right: -2, width: 30, height: 30, borderRadius: "50%", background: "var(--c-surface)", border: "1px solid var(--c-line)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-primary)" }}>
-              <Icon name="edit" size={15} />
-            </div>
+          <button onClick={onEdit} style={{ border: "none", background: "none", padding: 0, cursor: "pointer" }}>
+            <Avatar url={data.avatarUrl} initials={initialsFrom(data.nome)} size={86} />
           </button>
           <h2 style={{ margin: "12px 0 2px", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 22, color: "var(--c-ink)" }}>{data.nome}</h2>
           <button onClick={() => setTiers(true)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 11px 5px 12px", borderRadius: 100, border: "none", cursor: "pointer", background: "color-mix(in srgb, var(--c-primary) 14%, var(--c-surface))", color: "var(--c-primary)", fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 12.5 }}>
@@ -168,10 +182,40 @@ export function EditProfile({
   const { T } = useI18n();
   const [name, setName] = useState(data.nome);
   const [phone, setPhone] = useState(data.telefone);
+  const [avatar, setAvatar] = useState<string | null>(data.avatarUrl);
+  const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const initials = initialsFrom(name);
   const dirty = name !== data.nome || phone !== data.telefone;
   const valid = name.trim().length > 1;
+
+  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setUploading(false);
+      return;
+    }
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${user.id}/avatar.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (!upErr) {
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = `${pub.publicUrl}?t=${Date.now()}`;
+      await updateProfile({ nome: name, telefone: phone, avatar_url: url });
+      setAvatar(url);
+      onSaved();
+    }
+    setUploading(false);
+  }
 
   async function save() {
     if (!valid || !dirty || busy) return;
@@ -188,8 +232,15 @@ export function EditProfile({
       <TopBar title={T("edit.title") as string} onBack={onBack} />
       <Scroll>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "2px 0 6px" }}>
-          <div style={{ position: "relative" }}>
-            <div style={{ width: 92, height: 92, borderRadius: "50%", background: "linear-gradient(135deg, var(--c-primary), var(--c-red))", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 34 }}>{initials}</div>
+          <button onClick={() => fileRef.current?.click()} style={{ position: "relative", border: "none", background: "none", padding: 0, cursor: "pointer" }}>
+            <Avatar url={avatar} initials={initials} size={92} />
+            <div style={{ position: "absolute", bottom: -2, right: -2, width: 34, height: 34, borderRadius: "50%", background: "var(--c-primary)", border: "3px solid var(--c-surface)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+              <Icon name="camera" size={16} stroke={2} />
+            </div>
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} style={{ display: "none" }} />
+          <div style={{ marginTop: 10, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-primary)" }}>
+            {uploading ? "A enviar…" : (T("edit.photo") as string)}
           </div>
         </div>
 

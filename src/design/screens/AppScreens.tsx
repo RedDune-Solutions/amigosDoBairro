@@ -163,11 +163,13 @@ export function Home({
   points,
   go,
   onQR,
+  onBell,
 }: {
   data: AppData;
   points: number;
   go: (tab: string) => void;
   onQR: () => void;
+  onBell: () => void;
 }) {
   const { T } = useI18n();
   const toNext = 50 - (points % 50);
@@ -181,10 +183,9 @@ export function Home({
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 18px 14px" }}>
         <LogoBadge size={46} />
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>{T("home.greet") as string}</div>
-          <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 21, color: "var(--c-ink)", lineHeight: 1 }}>{T("home.hello", data.firstName) as string}</div>
+          <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 21, color: "var(--c-ink)", lineHeight: 1.1 }}>{T("home.hello", data.firstName) as string}</div>
         </div>
-        <button onClick={() => go("profile")} style={{ width: 42, height: 42, borderRadius: 14, border: "1px solid var(--c-line)", background: "var(--c-surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--c-ink)", position: "relative" }}>
+        <button onClick={onBell} style={{ width: 42, height: 42, borderRadius: 14, border: "1px solid var(--c-line)", background: "var(--c-surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--c-ink)", position: "relative" }}>
           <Icon name="bell" size={20} />
           <span style={{ position: "absolute", top: 9, right: 10, width: 8, height: 8, borderRadius: "50%", background: "var(--c-red)", border: "1.5px solid var(--c-surface)" }} />
         </button>

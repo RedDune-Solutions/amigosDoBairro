@@ -141,7 +141,7 @@ function PrizeRow({ prize, pct, onPatch, onRemove }: { prize: PrizeAdmin; pct: n
   );
 }
 
-function AdminPrizes({ prizes, setPrizes }: { prizes: PrizeAdmin[]; setPrizes: (p: PrizeAdmin[]) => void }) {
+export function AdminPrizes({ prizes, setPrizes }: { prizes: PrizeAdmin[]; setPrizes: (p: PrizeAdmin[]) => void }) {
   const router = useRouter();
   const [pool, setPool] = useState<"comum" | "especial">("especial");
   const list = prizes.filter((p) => p.kind === pool);
@@ -191,7 +191,7 @@ function AdminPrizes({ prizes, setPrizes }: { prizes: PrizeAdmin[]; setPrizes: (
   );
 }
 
-function AdminRedemptions({ vouchers }: { vouchers: VoucherRow[] }) {
+export function AdminRedemptions({ vouchers }: { vouchers: VoucherRow[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
@@ -249,7 +249,7 @@ function AdminRedemptions({ vouchers }: { vouchers: VoucherRow[] }) {
   );
 }
 
-function AdminStats({ stats, prizes }: { stats: AdminStatsData; prizes: PrizeAdmin[] }) {
+export function AdminStats({ stats, prizes }: { stats: AdminStatsData; prizes: PrizeAdmin[] }) {
   const especial = prizes.filter((p) => p.kind === "especial");
   const tiles = [
     { v: stats.scratchGiven, l: "Raspadinhas dadas", icon: "sparkle", a: "var(--c-primary)" },
@@ -306,7 +306,7 @@ function AdminStats({ stats, prizes }: { stats: AdminStatsData; prizes: PrizeAdm
   );
 }
 
-function AdminSettings({ euroPerStamp, stampGoal }: { euroPerStamp: number; stampGoal: number }) {
+export function AdminSettings({ euroPerStamp, stampGoal }: { euroPerStamp: number; stampGoal: number }) {
   const router = useRouter();
   const [eps, setEps] = useState(euroPerStamp);
   const [sg, setSg] = useState(stampGoal);

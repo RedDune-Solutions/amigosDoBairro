@@ -121,6 +121,7 @@ export type AppData = {
   firstName: string;
   email: string;
   telefone: string;
+  avatarUrl: string | null;
   role: "customer" | "staff" | "admin";
   memberSince: string;
   points: number;

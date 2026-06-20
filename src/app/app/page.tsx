@@ -29,7 +29,7 @@ export default async function AppPage() {
     { data: walletData },
     { data: nextRes },
   ] = await Promise.all([
-    supabase.from("profiles").select("nome, telefone, role, stamps, spend_toward, created_at").eq("id", user.id).single(),
+    supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at").eq("id", user.id).single(),
     supabase.rpc("meu_saldo"),
     supabase.from("loyalty_config").select("euro_per_stamp, stamp_goal").eq("id", true).single(),
     supabase.from("rewards").select("id, titulo, nome_en, descricao, desc_en, custo_pontos, icon, accent").eq("ativo", true).order("ordem", { ascending: true }),
@@ -63,6 +63,7 @@ export default async function AppPage() {
     firstName: nome.split(" ")[0],
     email: user.email ?? "",
     telefone: profile?.telefone ?? "",
+    avatarUrl: (profile?.avatar_url as string | null) ?? null,
     role: (profile?.role as AppData["role"]) ?? "customer",
     memberSince,
     points: typeof saldo === "number" ? saldo : 0,

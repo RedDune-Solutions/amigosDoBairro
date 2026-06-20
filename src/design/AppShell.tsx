@@ -10,6 +10,7 @@ import { MenuScreen } from "@/design/screens/MenuScreen";
 import { Reservations } from "@/design/screens/Reservations";
 import { Profile, EditProfile } from "@/design/screens/Profile";
 import { QrModal } from "@/design/screens/QrModal";
+import { NotificationsSheet } from "@/design/screens/NotificationsSheet";
 import { type AppData, type RewardRow } from "@/design/data";
 import { redeemReward } from "@/lib/app-actions";
 
@@ -19,6 +20,7 @@ export function AppShell({ data }: { data: AppData }) {
   const [tab, setTab] = useState("home");
   const [points, setPoints] = useState(data.points);
   const [qr, setQr] = useState(false);
+  const [notif, setNotif] = useState(false);
   const [editing, setEditing] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,7 +51,7 @@ export function AppShell({ data }: { data: AppData }) {
 
   let screen: React.ReactNode = null;
   if (tab === "home") {
-    screen = <Home data={data} points={points} go={goTab} onQR={() => setQr(true)} />;
+    screen = <Home data={data} points={points} go={goTab} onQR={() => setQr(true)} onBell={() => setNotif(true)} />;
   } else if (tab === "card") {
     screen = <LoyaltyCard data={data} points={points} history={data.history} onQR={() => setQr(true)} go={goTab} />;
   } else if (tab === "rewards") {
@@ -93,6 +95,7 @@ export function AppShell({ data }: { data: AppData }) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>{screen}</div>
       {showTabBar && <TabBar active={tab} onChange={goTab} />}
       {qr && <QrModal onClose={() => setQr(false)} />}
+      {notif && <NotificationsSheet data={data} onClose={() => setNotif(false)} />}
       {toast && (
         <div
           style={{

@@ -27,6 +27,22 @@ function safeNext(next: FormDataEntryValue | null): string {
   return value.startsWith("/") && !value.startsWith("//") ? value : "/app";
 }
 
+/** Redireciona conforme o role: staff/admin → painel; cliente → app/next. */
+async function postAuthRedirect(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  formData: FormData,
+): Promise<never> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  let role: string = "customer";
+  if (user) {
+    const { data } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    role = (data?.role as string) ?? "customer";
+  }
+  redirect(role === "admin" || role === "staff" ? "/admin" : safeNext(formData.get("next")));
+}
+
 export async function signIn(
   _prev: AuthState,
   formData: FormData,
@@ -44,7 +60,8 @@ export async function signIn(
   if (error) {
     return { error: "Email ou palavra-passe incorretos." };
   }
-  redirect(safeNext(formData.get("next")));
+  await postAuthRedirect(supabase, formData);
+  return {};
 }
 
 export async function signUp(
@@ -72,7 +89,37 @@ export async function signUp(
   if (error) {
     return { error: "Não foi possível criar a conta. Tenta outro email." };
   }
-  redirect(safeNext(formData.get("next")));
+  await postAuthRedirect(supabase, formData);
+  return {};
+}
+
+/** Pede email de recuperação de palavra-passe. */
+export async function requestPasswordReset(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState & { sent?: boolean }> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!/^\S+@\S+\.\S+$/.test(email)) return { error: "Email inválido." };
+  const origin = String(formData.get("origin") ?? "");
+  const supabase = await createClient();
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/recuperar`,
+  });
+  // resposta neutra (não revelar se o email existe)
+  return { sent: true };
+}
+
+/** Define nova palavra-passe (sessão de recovery activa). */
+export async function updatePassword(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState & { ok?: boolean }> {
+  const password = String(formData.get("password") ?? "");
+  if (password.length < 8) return { error: "A palavra-passe precisa de pelo menos 8 caracteres." };
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: "Não foi possível atualizar. Pede um novo link." };
+  return { ok: true };
 }
 
 /**

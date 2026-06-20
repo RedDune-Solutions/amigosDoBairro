@@ -107,9 +107,13 @@ export function AuthScreen({
 
           {!isReg && (
             <div style={{ textAlign: "right", marginTop: 10 }}>
-              <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-primary)", cursor: "pointer" }}>
+              <button
+                type="button"
+                onClick={() => router.push("/recuperar")}
+                style={{ border: "none", background: "transparent", cursor: "pointer", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-primary)" }}
+              >
                 {T("auth.forgot") as string}
-              </span>
+              </button>
             </div>
           )}
 

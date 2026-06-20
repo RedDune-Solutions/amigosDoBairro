@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
@@ -7,6 +8,11 @@ import { getProfile } from "@/lib/data";
 async function assertAdmin() {
   const { profile } = await getProfile();
   if (!profile || profile.role !== "admin") throw new Error("forbidden");
+}
+
+async function assertStaff() {
+  const { profile } = await getProfile();
+  if (!profile || (profile.role !== "staff" && profile.role !== "admin")) throw new Error("forbidden");
 }
 
 const patchSchema = z.object({
@@ -74,6 +80,17 @@ export async function updateLoyalty(
     .eq("id", true);
   if (error) return { error: "Não foi possível guardar." };
   return { ok: true };
+}
+
+/** Confirmar / cancelar reserva (staff ou admin). */
+export async function atualizarReserva(formData: FormData): Promise<void> {
+  await assertStaff();
+  const id = String(formData.get("id"));
+  const estado = String(formData.get("estado"));
+  if (!["pendente", "confirmada", "cancelada"].includes(estado)) return;
+  const supabase = await createClient();
+  await supabase.from("reservations").update({ estado }).eq("id", id);
+  revalidatePath("/admin");
 }
 
 /** Valida um voucher por código: tenta carteira (raspadinha) e depois resgate de pontos. */

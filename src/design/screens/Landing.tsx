@@ -243,7 +243,7 @@ export function Landing() {
             >
               <iframe
                 title="Google Maps"
-                src="https://www.google.com/maps?q=37.034983,-7.8477932&z=17&output=embed"
+                src="https://www.google.com/maps?q=R.%20D%C3%A2maso%20da%20Encarna%C3%A7%C3%A3o%2053C%2C%208700-247%20Quelfes&z=16&output=embed"
                 style={{ width: "100%", height: 168, border: "none", display: "block", filter: "saturate(1.05)", pointerEvents: "none" }}
                 loading="lazy"
               />
