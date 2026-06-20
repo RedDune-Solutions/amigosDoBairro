@@ -87,17 +87,42 @@ export function useI18n(): Ctx {
   return ctx;
 }
 
-// Bandeiras (flagcdn) — emojis 🇵🇹/🇬🇧 aparecem como letras no Windows
+// Bandeiras desenhadas em SVG inline (circulares) — sem dependência externa e sem
+// distorção (os emojis 🇵🇹/🇬🇧 aparecem como letras no Windows).
 export function FlagIcon({ code, size = 26 }: { code: string; size?: number }) {
+  const common = { width: size, height: size, viewBox: "0 0 60 60", style: { display: "block" } };
+  if (code === "pt") {
+    return (
+      <svg {...common} role="img" aria-label="Português">
+        <defs>
+          <clipPath id="flag-pt">
+            <circle cx="30" cy="30" r="30" />
+          </clipPath>
+        </defs>
+        <g clipPath="url(#flag-pt)">
+          <rect width="24" height="60" fill="#1E7A3D" />
+          <rect x="24" width="36" height="60" fill="#D52B1E" />
+          <circle cx="24" cy="30" r="9.5" fill="#FFD24D" stroke="#9C5A12" strokeWidth="1.6" />
+          <circle cx="24" cy="30" r="4.5" fill="#D52B1E" stroke="#fff" strokeWidth="1" />
+        </g>
+      </svg>
+    );
+  }
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={`https://flagcdn.com/${code}.svg`}
-      alt={code === "pt" ? "Português" : "English"}
-      width={size}
-      height={size}
-      style={{ display: "block", width: size, height: size, objectFit: "cover", borderRadius: "50%" }}
-    />
+    <svg {...common} role="img" aria-label="English">
+      <defs>
+        <clipPath id="flag-gb">
+          <circle cx="30" cy="30" r="30" />
+        </clipPath>
+      </defs>
+      <g clipPath="url(#flag-gb)">
+        <rect width="60" height="60" fill="#012169" />
+        <path d="M0 0 L60 60 M60 0 L0 60" stroke="#fff" strokeWidth="12" />
+        <path d="M0 0 L60 60 M60 0 L0 60" stroke="#C8102E" strokeWidth="5" />
+        <path d="M30 0 V60 M0 30 H60" stroke="#fff" strokeWidth="18" />
+        <path d="M30 0 V60 M0 30 H60" stroke="#C8102E" strokeWidth="10" />
+      </g>
+    </svg>
   );
 }
 

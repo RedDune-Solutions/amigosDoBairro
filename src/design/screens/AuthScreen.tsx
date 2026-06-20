@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { Scroll, Button, Field, LogoBadge } from "@/design/ui";
-import { signIn, signUp, type AuthState } from "@/lib/auth-actions";
+import { authenticate, type AuthState } from "@/lib/auth-actions";
 
 const initial: AuthState = {};
 
@@ -20,10 +20,7 @@ export function AuthScreen({
   const { T, lang, setLang } = useI18n();
   const [mode, setMode] = useState<"login" | "register">(initialMode);
   const isReg = mode === "register";
-  const [state, formAction, pending] = useActionState(
-    isReg ? signUp : signIn,
-    initial,
-  );
+  const [state, formAction, pending] = useActionState(authenticate, initial);
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -95,6 +92,7 @@ export function AuthScreen({
         </div>
 
         <form action={formAction}>
+          <input type="hidden" name="mode" value={mode} />
           {next ? <input type="hidden" name="next" value={next} /> : null}
           <div style={{ display: "flex", flexDirection: "column", gap: 13, marginTop: 18 }}>
             {isReg && (
@@ -129,20 +127,10 @@ export function AuthScreen({
         </form>
 
         {isReg && (
-          <p style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)", textAlign: "center", marginTop: 12, lineHeight: 1.5 }}>
+          <p style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)", textAlign: "center", marginTop: 16, marginBottom: 4, lineHeight: 1.5 }}>
             {T("auth.terms") as string}
           </p>
         )}
-
-        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
-          <div style={{ flex: 1, height: 1, background: "var(--c-line)" }} />
-          <span style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)" }}>{T("auth.or") as string}</span>
-          <div style={{ flex: 1, height: 1, background: "var(--c-line)" }} />
-        </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <Button full variant="outline" style={{ fontFamily: "var(--f-body)", fontWeight: 700 }}>Google</Button>
-          <Button full variant="outline" style={{ fontFamily: "var(--f-body)", fontWeight: 700 }}>Apple</Button>
-        </div>
       </Scroll>
     </div>
   );

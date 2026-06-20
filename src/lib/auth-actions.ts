@@ -75,6 +75,19 @@ export async function signUp(
   redirect(safeNext(formData.get("next")));
 }
 
+/**
+ * Acção única de autenticação — encaminha para registo ou entrada conforme o
+ * campo `mode` do formulário. Evita o binding preso do useActionState quando se
+ * alterna entre login/registo no mesmo ecrã.
+ */
+export async function authenticate(
+  prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const mode = formData.get("mode");
+  return mode === "register" ? signUp(prev, formData) : signIn(prev, formData);
+}
+
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();

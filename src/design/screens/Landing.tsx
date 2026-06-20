@@ -79,6 +79,7 @@ export function Landing() {
   const { T, L, lang, setLang } = useI18n();
   const title = T("land.title") as string[];
   const hoursVal = T("land.hoursVal") as string[];
+  const whereVal = T("land.whereVal") as string[];
 
   const features = [
     { icon: "star", accent: "var(--c-primary)", title: T("land.f1.t") as string, desc: T("land.f1.d") as string },
@@ -235,14 +236,14 @@ export function Landing() {
           <SectionLabel>{T("land.visit") as string}</SectionLabel>
           <Card style={{ padding: 0, overflow: "hidden", marginTop: 12 }}>
             <a
-              href="https://www.google.com/maps/search/?api=1&query=Rua+das+Flores+24+Lisboa"
+              href="https://www.google.com/maps/place/Os+Amigos+Do+Bairro/@37.034983,-7.8477932,17z"
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: "block", position: "relative", lineHeight: 0 }}
             >
               <iframe
                 title="Google Maps"
-                src="https://www.google.com/maps?q=Rua+das+Flores+24+Lisboa&z=15&output=embed"
+                src="https://www.google.com/maps?q=37.034983,-7.8477932&z=17&output=embed"
                 style={{ width: "100%", height: 168, border: "none", display: "block", filter: "saturate(1.05)", pointerEvents: "none" }}
                 loading="lazy"
               />
@@ -268,15 +269,33 @@ export function Landing() {
                 <Icon name="mapPin" size={15} color="var(--c-red)" stroke={2.4} /> {T("land.openMaps") as string}
               </div>
             </a>
-            <div style={{ padding: "15px 16px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, color: "var(--c-ink)" }}>
-                <Icon name="clock" size={16} color="var(--c-primary)" /> {T("land.hours") as string}
+            <div style={{ padding: "15px 16px", display: "flex", flexDirection: "column", gap: 13 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, color: "var(--c-ink)" }}>
+                  <Icon name="mapPin" size={16} color="var(--c-red)" /> {T("land.address") as string}
+                </div>
+                <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", marginTop: 4, lineHeight: 1.5 }}>
+                  {whereVal[0]}
+                  <br />
+                  {whereVal[1]}
+                </div>
               </div>
-              <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", marginTop: 4, lineHeight: 1.5 }}>
-                {hoursVal[0]}
-                <br />
-                {hoursVal[1]}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, color: "var(--c-ink)" }}>
+                  <Icon name="clock" size={16} color="var(--c-primary)" /> {T("land.hours") as string}
+                </div>
+                <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", marginTop: 4, lineHeight: 1.5 }}>
+                  {hoursVal[0]}
+                  <br />
+                  {hoursVal[1]}
+                </div>
               </div>
+              <a
+                href="tel:+351912021759"
+                style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, color: "var(--c-ink)", textDecoration: "none" }}
+              >
+                <Icon name="phone" size={16} color="var(--c-green)" /> {T("land.phoneVal") as string}
+              </a>
             </div>
           </Card>
         </div>

@@ -41,13 +41,13 @@ body {
 /* Stage da app: mobile full-screen, desktop coluna centrada (sem moldura de telemóvel) */
 .app-stage-outer {
   min-height: 100dvh;
-  display: flex;
-  justify-content: center;
 }
 .app-stage {
   position: relative;
   width: 100%;
-  min-height: 100dvh;
+  max-width: 480px;
+  height: 100dvh;
+  margin: 0 auto;
   background: var(--c-bg);
   display: flex;
   flex-direction: column;
@@ -55,7 +55,6 @@ body {
 }
 @media (min-width: 480px) {
   .app-stage {
-    max-width: 480px;
     box-shadow: 0 0 60px -20px rgba(40, 30, 10, 0.25);
   }
 }
