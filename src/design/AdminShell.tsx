@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
-import { Scroll, Card, IconTile, Button } from "@/design/ui";
+import { Scroll } from "@/design/ui";
 import { AdminPrizes, AdminStats, AdminSettings, type PrizeAdmin, type AdminStatsData } from "@/design/AdminPanel";
 import { BalcaoScreen } from "@/design/screens/admin/BalcaoScreen";
 import { ReservasAdmin, type ReservaAdminRow } from "@/design/screens/admin/ReservasAdmin";
 import { EquipaScreen, type MemberRow, type InviteRow } from "@/design/screens/admin/EquipaScreen";
-import { signOut } from "@/lib/auth-actions";
+import { PerfilAdmin } from "@/design/screens/admin/PerfilAdmin";
+import type { AppData } from "@/design/data";
 
-type Tab = "inicio" | "balcao" | "premios" | "reservas" | "equipa";
+type Tab = "inicio" | "balcao" | "premios" | "reservas" | "equipa" | "perfil";
 
 const TABS: { id: Tab; icon: string; label: string; adminOnly: boolean }[] = [
   { id: "inicio", icon: "chart", label: "Início", adminOnly: true },
@@ -18,12 +19,14 @@ const TABS: { id: Tab; icon: string; label: string; adminOnly: boolean }[] = [
   { id: "premios", icon: "gift", label: "Prémios", adminOnly: true },
   { id: "reservas", icon: "calendar", label: "Reservas", adminOnly: false },
   { id: "equipa", icon: "users", label: "Equipa", adminOnly: true },
+  { id: "perfil", icon: "user", label: "Perfil", adminOnly: false },
 ];
 
 export function AdminShell({
   role,
   nome,
   isOwner,
+  me,
   prizes: initialPrizes,
   stats,
   euroPerStamp,
@@ -35,6 +38,7 @@ export function AdminShell({
   role: "staff" | "admin";
   nome: string;
   isOwner: boolean;
+  me: AppData;
   prizes: PrizeAdmin[];
   stats: AdminStatsData;
   euroPerStamp: number;
@@ -66,17 +70,6 @@ export function AdminShell({
           <div style={{ marginTop: 11 }}>
             <AdminSettings euroPerStamp={euroPerStamp} stampGoal={stampGoal} />
           </div>
-          <Card onClick={() => router.push("/app")} style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 13 }}>
-            <IconTile icon="coffee" accent="var(--c-primary)" size={42} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Ver app de cliente</div>
-              <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>O teu cartão de membro</div>
-            </div>
-            <Icon name="chevronRight" size={20} color="var(--c-muted)" />
-          </Card>
-          <form action={signOut} style={{ marginTop: 14 }}>
-            <Button full variant="outline" type="submit" icon="logout">Terminar sessão</Button>
-          </form>
         </Scroll>
       </>
     );
@@ -97,6 +90,8 @@ export function AdminShell({
     screen = <ReservasAdmin reservas={reservas} />;
   } else if (tab === "equipa") {
     screen = <EquipaScreen members={members} invites={invites} isOwner={isOwner} />;
+  } else if (tab === "perfil") {
+    screen = <PerfilAdmin me={me} onSaved={() => router.refresh()} />;
   }
 
   return (

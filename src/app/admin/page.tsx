@@ -5,13 +5,40 @@ import { getProfile } from "@/lib/data";
 import type { PrizeAdmin, AdminStatsData } from "@/design/AdminPanel";
 import type { ReservaAdminRow } from "@/design/screens/admin/ReservasAdmin";
 import type { MemberRow, InviteRow } from "@/design/screens/admin/EquipaScreen";
+import type { AppData } from "@/design/data";
 
 export const dynamic = "force-dynamic";
+
+const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
 export default async function AdminPage() {
   const { profile, supabase } = await getProfile();
   if (!profile || (profile.role !== "staff" && profile.role !== "admin")) redirect("/app");
   const isAdmin = profile.role === "admin";
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const created = profile.created_at ? new Date(profile.created_at) : new Date();
+  const me: AppData = {
+    nome: profile.nome ?? "Equipa",
+    firstName: (profile.nome ?? "Equipa").split(" ")[0],
+    email: user?.email ?? "",
+    telefone: profile.telefone ?? "",
+    avatarUrl: (profile as { avatar_url?: string | null }).avatar_url ?? null,
+    role: profile.role as AppData["role"],
+    memberSince: `${MESES[created.getMonth()]} ${created.getFullYear()}`,
+    points: 0,
+    stamps: 0,
+    spendToward: 0,
+    euroPerStamp: 15,
+    stampGoal: 10,
+    rewards: [],
+    history: [],
+    pendingScratch: 0,
+    scratchCards: [],
+    wallet: [],
+    nextReservation: null,
+  };
 
   const [
     { data: prizesData },
@@ -66,6 +93,7 @@ export default async function AdminPage() {
         role={profile.role as "staff" | "admin"}
         nome={profile.nome ?? "Equipa"}
         isOwner={Boolean((profile as { is_owner?: boolean }).is_owner)}
+        me={me}
         prizes={(prizesData ?? []) as PrizeAdmin[]}
         stats={stats}
         euroPerStamp={cfg?.euro_per_stamp ?? 15}
