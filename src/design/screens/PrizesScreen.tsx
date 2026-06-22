@@ -139,6 +139,38 @@ function PrizeFace({ prize }: { prize: ScratchPrize }) {
   );
 }
 
+function NoPrizeFace() {
+  const { T } = useI18n();
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        borderRadius: 20,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        textAlign: "center",
+        padding: 16,
+        background: "radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--c-muted) 12%, #fff), #fff 72%)",
+      }}
+    >
+      <div style={{ width: 64, height: 64, borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-muted)", background: "color-mix(in srgb, var(--c-muted) 14%, #fff)" }}>
+        <Icon name="coffee" size={32} stroke={2.1} />
+      </div>
+      <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 21, color: "var(--c-ink)", lineHeight: 1.1 }}>
+        {T("sc.noPrize") as string}
+      </div>
+      <div style={{ fontFamily: "var(--f-body)", fontWeight: 600, fontSize: 13, color: "var(--c-muted)" }}>
+        {T("sc.noPrizeSub") as string}
+      </div>
+    </div>
+  );
+}
+
 function ScratchReveal({
   card,
   prize,
@@ -146,7 +178,7 @@ function ScratchReveal({
   onClaim,
 }: {
   card: ScratchCardRow;
-  prize: ScratchPrize;
+  prize: ScratchPrize | null;
   onClose: () => void;
   onClaim: () => void;
 }) {
@@ -166,17 +198,25 @@ function ScratchReveal({
         </div>
 
         <div style={{ position: "relative", width: 320, maxWidth: "100%", height: 190, margin: "0 auto" }}>
-          <PrizeFace prize={prize} />
+          {prize ? <PrizeFace prize={prize} /> : <NoPrizeFace />}
           {!revealed && <ScratchCanvas kind={card.kind} onReveal={() => setRevealed(true)} />}
         </div>
 
         <div style={{ marginTop: 16, minHeight: 4 }}>
           {revealed ? (
-            <div style={{ animation: "popIn .3s ease" }}>
-              <div style={{ textAlign: "center", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 18, color: "var(--c-ink)", marginBottom: 3 }}>{T("sc.won") as string}</div>
-              <div style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)", marginBottom: 14 }}>{T("sc.wonSub") as string}</div>
-              <Button full size="lg" onClick={onClaim} icon="wallet">{T("sc.saveWallet") as string}</Button>
-            </div>
+            prize ? (
+              <div style={{ animation: "popIn .3s ease" }}>
+                <div style={{ textAlign: "center", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 18, color: "var(--c-ink)", marginBottom: 3 }}>{T("sc.won") as string}</div>
+                <div style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)", marginBottom: 14 }}>{T("sc.wonSub") as string}</div>
+                <Button full size="lg" onClick={onClaim} icon="wallet">{T("sc.saveWallet") as string}</Button>
+              </div>
+            ) : (
+              <div style={{ animation: "popIn .3s ease" }}>
+                <div style={{ textAlign: "center", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 18, color: "var(--c-ink)", marginBottom: 3 }}>{T("sc.noPrize") as string}</div>
+                <div style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)", marginBottom: 14 }}>{T("sc.noPrizeSub") as string}</div>
+                <Button full size="lg" onClick={onClose} icon="check">{T("common.close") as string}</Button>
+              </div>
+            )
           ) : (
             <div style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>{T("sc.hintRaspar") as string}</div>
           )}
@@ -220,7 +260,7 @@ export function PrizesScreen({
   onPrizeWon: () => void;
 }) {
   const { T, L } = useI18n();
-  const [active, setActive] = useState<{ card: ScratchCardRow; prize: ScratchPrize } | null>(null);
+  const [active, setActive] = useState<{ card: ScratchCardRow; prize: ScratchPrize | null } | null>(null);
   const [busy, setBusy] = useState(false);
   const pending = data.scratchCards;
   const stampsLeft = data.stampGoal - data.stamps;
@@ -231,7 +271,8 @@ export function PrizesScreen({
     const res = await openScratch(card.id);
     setBusy(false);
     if (res.error || !res.prize) return;
-    setActive({ card, prize: res.prize as unknown as ScratchPrize });
+    const p = res.prize as { none?: boolean };
+    setActive({ card, prize: p.none ? null : (res.prize as unknown as ScratchPrize) });
   }
 
   return (

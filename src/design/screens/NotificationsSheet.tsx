@@ -8,12 +8,18 @@ import type { AppData } from "@/design/data";
 type Evt = { icon: string; accent: string; title: string; sub: string };
 
 export function NotificationsSheet({ data, onClose }: { data: AppData; onClose: () => void }) {
-  const { T } = useI18n();
+  const { lang } = useI18n();
 
   const events: Evt[] = [];
-  // novidades do café
-  events.push({ icon: "cake", accent: "var(--c-red)", title: T("home.n1.t") as string, sub: T("home.n1.d") as string });
-  events.push({ icon: "plate", accent: "var(--c-green)", title: T("home.n2.t") as string, sub: T("home.n2.d") as string });
+  // novidades do café (geridas pela Daniela)
+  data.news.forEach((n) => {
+    events.push({
+      icon: n.icon || "sparkle",
+      accent: `var(--c-${n.accent || "primary"})`,
+      title: lang === "en" && n.titulo_en ? n.titulo_en : n.titulo_pt,
+      sub: lang === "en" && n.desc_en ? n.desc_en : n.desc_pt ?? "",
+    });
+  });
   // reserva confirmada
   if (data.nextReservation && data.nextReservation.estado === "confirmada") {
     const r = data.nextReservation;

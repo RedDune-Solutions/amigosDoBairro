@@ -7,7 +7,7 @@ import { registarCompra, validarVoucher } from "@/lib/balcao-actions";
 const READER_ID = "balcao-qr";
 
 export function BalcaoScreen() {
-  const [nonce, setNonce] = useState("");
+  const [code, setCode] = useState("");
   const [euros, setEuros] = useState("");
   const [scanning, setScanning] = useState(false);
   const [camError, setCamError] = useState<string | null>(null);
@@ -29,7 +29,7 @@ export function BalcaoScreen() {
         { facingMode: "environment" },
         { fps: 10, qrbox: 220 },
         (decoded: string) => {
-          setNonce(decoded.trim());
+          setCode(decoded.trim().toUpperCase());
           void stopCamera();
         },
         () => {},
@@ -62,7 +62,7 @@ export function BalcaoScreen() {
     if (busy) return;
     setBusy(true);
     setMsg(null);
-    const res = await registarCompra(nonce, Number(euros));
+    const res = await registarCompra(code, Number(euros));
     setBusy(false);
     if (res.error) {
       setMsg({ ok: false, text: res.error });
@@ -72,7 +72,7 @@ export function BalcaoScreen() {
       ok: true,
       text: `+${res.pontos} pontos${res.cartolas ? ` · ${res.cartolas * 2} raspadinhas!` : ""}`,
     });
-    setNonce("");
+    setCode("");
     setEuros("");
   }
 
@@ -97,8 +97,8 @@ export function BalcaoScreen() {
           {camError && <p style={{ color: "var(--c-red)", fontSize: 13, fontFamily: "var(--f-body)" }}>{camError}</p>}
 
           <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-            <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Código (QR)</span>
-            <input value={nonce} onChange={(e) => setNonce(e.target.value)} placeholder="Lido do QR ou à mão" style={inputStyle} />
+            <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Código do cliente</span>
+            <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Lido do QR ou à mão (ex.: ABCD2345)" style={{ ...inputStyle, textTransform: "uppercase", letterSpacing: 1 }} />
           </label>
           <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
             <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Valor gasto (€)</span>
@@ -107,7 +107,7 @@ export function BalcaoScreen() {
           {msg && (
             <p style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: msg.ok ? "var(--c-green)" : "var(--c-red)" }}>{msg.text}</p>
           )}
-          <Button full icon="check" onClick={submit} disabled={busy || !nonce || !euros}>
+          <Button full icon="check" onClick={submit} disabled={busy || !code || !euros}>
             {busy ? "A registar…" : "Registar compra"}
           </Button>
         </Card>

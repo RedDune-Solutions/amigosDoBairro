@@ -11,6 +11,7 @@ const TTL = 90;
 export function QrModal({ onClose }: { onClose: () => void }) {
   const { T } = useI18n();
   const [dataUrl, setDataUrl] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(null);
   const [seconds, setSeconds] = useState(TTL);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,13 +23,15 @@ export function QrModal({ onClose }: { onClose: () => void }) {
       setError("Não foi possível gerar o código.");
       return;
     }
+    const value = String(data);
     try {
-      const url = await QRCode.toDataURL(String(data), {
+      const url = await QRCode.toDataURL(value, {
         margin: 1,
         width: 320,
         color: { dark: "#2c2620", light: "#ffffff" },
       });
       setDataUrl(url);
+      setCode(value);
       setSeconds(TTL);
     } catch {
       setError("Erro a desenhar o código.");
@@ -98,7 +101,17 @@ export function QrModal({ onClose }: { onClose: () => void }) {
             <div style={{ width: 168, height: 168 }} />
           )}
         </div>
-        <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-muted)", marginTop: 14, letterSpacing: 1 }}>
+        {code && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: "var(--c-muted)", marginBottom: 4 }}>
+              {T("qr.codeLabel") as string}
+            </div>
+            <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 28, letterSpacing: 4, color: "var(--c-ink)" }}>
+              {`${code.slice(0, 4)} ${code.slice(4)}`}
+            </div>
+          </div>
+        )}
+        <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-muted)", marginTop: 10, letterSpacing: 1 }}>
           {error ? error : `Expira em ${seconds}s`}
         </div>
         <div style={{ marginTop: 16 }}>

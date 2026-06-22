@@ -66,6 +66,23 @@ export function AuthScreen({
       </div>
 
       <Scroll style={{ paddingTop: 18 }}>
+        {state.sent && isReg ? (
+          <div style={{ textAlign: "center", padding: "18px 8px", animation: "popIn .25s ease" }}>
+            <div style={{ width: 72, height: 72, borderRadius: 22, margin: "8px auto 16px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-primary)", background: "color-mix(in srgb, var(--c-primary) 14%, var(--c-surface))" }}>
+              <Icon name="mail" size={34} stroke={2} />
+            </div>
+            <h2 style={{ margin: "0 0 8px", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 21, color: "var(--c-ink)" }}>
+              {T("auth.checkEmailTitle") as string}
+            </h2>
+            <p style={{ margin: "0 auto 22px", maxWidth: 320, fontFamily: "var(--f-body)", fontSize: 14, lineHeight: 1.6, color: "var(--c-muted)" }}>
+              {T("auth.checkEmailSub") as string}
+            </p>
+            <Button full size="lg" icon="arrowRight" onClick={() => setMode("login")}>
+              {T("auth.backToLogin") as string}
+            </Button>
+          </div>
+        ) : (
+        <>
         {/* Toggle login / registo */}
         <div style={{ display: "flex", gap: 6, padding: 5, background: "var(--c-surface2)", borderRadius: 16, border: "1px solid var(--c-line)" }}>
           {([["login", T("auth.tabLogin") as string], ["register", T("auth.tabReg") as string]] as const).map(([m, l]) => (
@@ -124,8 +141,10 @@ export function AuthScreen({
           )}
 
           <div style={{ marginTop: 18 }}>
-            <Button full size="lg" type="submit" icon={isReg ? "sparkle" : "arrowRight"} disabled={pending}>
-              {pending ? "…" : ((isReg ? T("auth.regBtn") : T("auth.loginBtn")) as string)}
+            <Button full size="lg" type="submit" icon={isReg ? "sparkle" : "arrowRight"} loading={pending}>
+              {pending
+                ? ((isReg ? T("auth.regLoading") : T("auth.loginLoading")) as string)
+                : ((isReg ? T("auth.regBtn") : T("auth.loginBtn")) as string)}
             </Button>
           </div>
         </form>
@@ -134,6 +153,8 @@ export function AuthScreen({
           <p style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)", textAlign: "center", marginTop: 16, marginBottom: 4, lineHeight: 1.5 }}>
             {T("auth.terms") as string}
           </p>
+        )}
+        </>
         )}
       </Scroll>
     </div>

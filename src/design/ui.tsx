@@ -88,7 +88,7 @@ export function TabBar({
       style={{
         flexShrink: 0,
         display: "flex",
-        padding: "8px 8px 26px",
+        padding: "8px 8px 8px",
         background: "var(--c-surface)",
         borderTop: "1px solid var(--c-line)",
       }}
@@ -159,6 +159,7 @@ export function Button({
   accent,
   type,
   disabled,
+  loading,
 }: {
   children: ReactNode;
   onClick?: () => void;
@@ -170,7 +171,10 @@ export function Button({
   accent?: string;
   type?: "button" | "submit";
   disabled?: boolean;
+  loading?: boolean;
 }) {
+  const isDisabled = disabled || loading;
+  const iconSize = size === "lg" ? 20 : 18;
   const base: CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
@@ -178,7 +182,7 @@ export function Button({
     gap: 8,
     fontFamily: "var(--f-display)",
     fontWeight: 600,
-    cursor: disabled ? "not-allowed" : "pointer",
+    cursor: isDisabled ? "not-allowed" : "pointer",
     borderRadius: 16,
     border: "1px solid transparent",
     width: full ? "100%" : undefined,
@@ -188,7 +192,7 @@ export function Button({
     WebkitTapHighlightColor: "transparent",
     whiteSpace: "nowrap",
     lineHeight: 1.1,
-    opacity: disabled ? 0.6 : 1,
+    opacity: isDisabled ? 0.6 : 1,
   };
   const c = accent || "var(--c-primary)";
   const variants: Record<BtnVariant, CSSProperties> = {
@@ -202,10 +206,25 @@ export function Button({
     <button
       type={type || "button"}
       onClick={onClick}
-      disabled={disabled}
+      disabled={isDisabled}
       style={{ ...base, ...variants[variant], ...style }}
     >
-      {icon && <Icon name={icon} size={size === "lg" ? 20 : 18} stroke={2.2} />}
+      {loading ? (
+        <span
+          aria-hidden
+          style={{
+            width: iconSize,
+            height: iconSize,
+            borderRadius: "50%",
+            border: "2.5px solid currentColor",
+            borderTopColor: "transparent",
+            opacity: 0.85,
+            animation: "omSpin .6s linear infinite",
+          }}
+        />
+      ) : (
+        icon && <Icon name={icon} size={iconSize} stroke={2.2} />
+      )}
       {children}
     </button>
   );

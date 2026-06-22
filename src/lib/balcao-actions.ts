@@ -4,21 +4,25 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
 const compraSchema = z.object({
-  nonce: z.string().uuid("Código inválido."),
+  code: z
+    .string()
+    .trim()
+    .transform((s) => s.toUpperCase())
+    .pipe(z.string().regex(/^[A-Z2-9]{6,12}$/, "Código inválido.")),
   euros: z.coerce.number().int().min(1, "Mínimo 1€.").max(1000, "Máximo 1000€."),
 });
 
-/** Staff lê o QR do cliente + valor gasto → pontos + carimbos + raspadinhas. */
+/** Staff lê o QR do cliente (código curto) + valor gasto → pontos + carimbos + raspadinhas. */
 export async function registarCompra(
-  nonce: string,
+  code: string,
   euros: number,
 ): Promise<{ pontos?: number; cartolas?: number; error?: string }> {
-  const parsed = compraSchema.safeParse({ nonce, euros });
+  const parsed = compraSchema.safeParse({ code, euros });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("registar_compra_via_nonce", {
-    p_nonce: parsed.data.nonce,
+  const { data, error } = await supabase.rpc("registar_compra_via_code", {
+    p_code: parsed.data.code,
     p_euros: parsed.data.euros,
   });
   if (error) {

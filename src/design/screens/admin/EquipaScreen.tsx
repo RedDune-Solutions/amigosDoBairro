@@ -15,10 +15,12 @@ export function EquipaScreen({
   members,
   invites,
   isOwner,
+  meId,
 }: {
   members: MemberRow[];
   invites: InviteRow[];
   isOwner: boolean;
+  meId: string;
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -100,7 +102,7 @@ export function EquipaScreen({
                     </div>
                   </div>
                 </div>
-                {!m.is_owner && (
+                {!m.is_owner && m.id !== meId && (
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {m.role !== "admin" && isOwner && (
                       <MiniBtn label="Tornar admin" color="var(--c-primary)" onClick={async () => { await setRole(m.id, "admin"); refresh(); }} />

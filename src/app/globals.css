@@ -93,3 +93,6 @@ input::placeholder {
   from { transform: translateX(-50%); }
   to { transform: translateX(0); }
 }
+@keyframes omSpin {
+  to { transform: rotate(360deg); }
+}

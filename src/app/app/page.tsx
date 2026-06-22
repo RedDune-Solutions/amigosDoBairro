@@ -1,7 +1,7 @@
 import { Stage } from "@/design/ui";
 import { AppShell } from "@/design/AppShell";
 import { requireUser } from "@/lib/data";
-import type { AppData, HistoryRow, RewardRow } from "@/design/data";
+import type { AppData, HistoryRow, RewardRow, WalletItemRow } from "@/design/data";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,9 @@ export default async function AppPage() {
     { count: scratchCount },
     { data: scratchData },
     { data: walletData },
+    { data: redemptionsData },
     { data: nextRes },
+    { data: newsData },
   ] = await Promise.all([
     supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at").eq("id", user.id).single(),
     supabase.rpc("meu_saldo"),
@@ -37,7 +39,9 @@ export default async function AppPage() {
     supabase.from("scratch_cards").select("id", { count: "exact", head: true }).eq("status", "por-abrir"),
     supabase.from("scratch_cards").select("id, kind").eq("status", "por-abrir").order("created_at", { ascending: true }),
     supabase.from("wallet_items").select("id, kind, nome_pt, nome_en, desc_pt, desc_en, icon, accent, codigo, status, created_at").order("created_at", { ascending: false }).limit(30),
+    supabase.from("redemptions").select("id, codigo, estado, created_at, rewards(titulo, nome_en, descricao, desc_en, icon, accent)").neq("estado", "cancelado").order("created_at", { ascending: false }).limit(30),
     supabase.from("reservations").select("data, hora, n_pessoas, estado").gte("data", new Date().toISOString().slice(0, 10)).neq("estado", "cancelada").order("data", { ascending: true }).order("hora", { ascending: true }).limit(1).maybeSingle(),
+    supabase.from("news").select("id, titulo_pt, titulo_en, desc_pt, desc_en, icon, accent, ativo, created_at").eq("ativo", true).order("created_at", { ascending: false }).limit(10),
   ]);
 
   const created = profile?.created_at ? new Date(profile.created_at) : new Date();
@@ -58,6 +62,30 @@ export default async function AppPage() {
     kind: e.source as HistoryRow["kind"],
   }));
 
+  // Carteira unificada: prémios de raspadinha (wallet_items) + recompensas
+  // compradas com pontos (redemptions), ambas com código para mostrar ao balcão.
+  type RewRel = { titulo?: string; nome_en?: string | null; descricao?: string | null; desc_en?: string | null; icon?: string | null; accent?: string | null };
+  const relReward = (r: RewRel | RewRel[] | null): RewRel => (Array.isArray(r) ? (r[0] ?? {}) : (r ?? {}));
+  const redemptionWallet: WalletItemRow[] = (redemptionsData ?? []).map((r) => {
+    const rw = relReward(r.rewards as RewRel | RewRel[] | null);
+    return {
+      id: `red_${r.id as string}`,
+      kind: "recompensa",
+      nome_pt: rw.titulo ?? "Recompensa",
+      nome_en: rw.nome_en ?? null,
+      desc_pt: rw.descricao ?? null,
+      desc_en: rw.desc_en ?? null,
+      icon: rw.icon ?? "gift",
+      accent: rw.accent ?? "primary",
+      codigo: r.codigo as string,
+      status: (r.estado as string) === "levantado" ? "usado" : "por-usar",
+      created_at: r.created_at as string,
+    };
+  });
+  const wallet: WalletItemRow[] = [...((walletData ?? []) as WalletItemRow[]), ...redemptionWallet].sort((a, b) =>
+    a.created_at < b.created_at ? 1 : -1,
+  );
+
   const data: AppData = {
     nome,
     firstName: nome.split(" ")[0],
@@ -75,7 +103,8 @@ export default async function AppPage() {
     history,
     pendingScratch: scratchCount ?? 0,
     scratchCards: (scratchData ?? []) as AppData["scratchCards"],
-    wallet: (walletData ?? []) as AppData["wallet"],
+    wallet,
+    news: (newsData ?? []) as AppData["news"],
     nextReservation: nextRes
       ? {
           data: nextRes.data as string,

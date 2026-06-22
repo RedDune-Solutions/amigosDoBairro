@@ -171,13 +171,16 @@ export function Home({
   onQR: () => void;
   onBell: () => void;
 }) {
-  const { T } = useI18n();
+  const { T, lang } = useI18n();
   const toNext = 50 - (points % 50);
   const near = toNext <= 15;
-  const news = [
-    { t: T("home.n1.t") as string, d: T("home.n1.d") as string, a: "var(--c-red)", i: "cake" },
-    { t: T("home.n2.t") as string, d: T("home.n2.d") as string, a: "var(--c-green)", i: "plate" },
-  ];
+  const news = data.news.map((n) => ({
+    t: lang === "en" && n.titulo_en ? n.titulo_en : n.titulo_pt,
+    d: lang === "en" && n.desc_en ? n.desc_en : n.desc_pt ?? "",
+    a: `var(--c-${n.accent || "primary"})`,
+    i: n.icon || "sparkle",
+  }));
+  const hasEvents = news.length > 0 || data.history.length > 0 || data.wallet.length > 0;
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 18px 14px" }}>
@@ -187,7 +190,7 @@ export function Home({
         </div>
         <button onClick={onBell} style={{ width: 42, height: 42, borderRadius: 14, border: "1px solid var(--c-line)", background: "var(--c-surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--c-ink)", position: "relative" }}>
           <Icon name="bell" size={20} />
-          <span style={{ position: "absolute", top: 9, right: 10, width: 8, height: 8, borderRadius: "50%", background: "var(--c-red)", border: "1.5px solid var(--c-surface)" }} />
+          {hasEvents && <span style={{ position: "absolute", top: 9, right: 10, width: 8, height: 8, borderRadius: "50%", background: "var(--c-red)", border: "1.5px solid var(--c-surface)" }} />}
         </button>
       </div>
 
@@ -223,6 +226,7 @@ export function Home({
         </Card>
 
         {/* Novidades */}
+        {news.length > 0 && (
         <div style={{ marginTop: 18 }}>
           <SectionLabel>{T("home.news") as string}</SectionLabel>
           <div style={{ display: "flex", flexDirection: "column", gap: 11, marginTop: 11 }}>
@@ -237,6 +241,7 @@ export function Home({
             ))}
           </div>
         </div>
+        )}
       </Scroll>
     </>
   );

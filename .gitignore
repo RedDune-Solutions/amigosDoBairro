@@ -46,3 +46,5 @@ _docs-clientes/
 
 # Design source (referência local, não parte da app)
 _design-ref/
+
+.vercel

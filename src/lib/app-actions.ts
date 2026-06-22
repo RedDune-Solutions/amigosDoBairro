@@ -30,7 +30,7 @@ export async function openScratch(
     p_card: cardId,
   });
   if (error) {
-    return { error: error.message?.includes("stock") ? "Sem prémios em stock." : "Não foi possível abrir." };
+    return { error: "Não foi possível abrir." };
   }
   return { prize: data as Record<string, unknown> };
 }

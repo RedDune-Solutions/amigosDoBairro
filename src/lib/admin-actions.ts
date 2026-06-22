@@ -24,8 +24,19 @@ const patchSchema = z.object({
   icon: z.string().max(20).optional(),
   accent: z.enum(["primary", "green", "blue", "red"]).optional(),
   weight: z.coerce.number().int().min(1).max(1000).optional(),
-  stock: z.coerce.number().int().min(0).max(100000).optional(),
 });
+
+/** Soma dos pesos (%) dos prémios activos de uma pool, opcionalmente excluindo um id. */
+async function poolWeightSum(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  kind: string,
+  excludeId?: string,
+): Promise<number> {
+  let q = supabase.from("prizes").select("weight").eq("kind", kind).eq("ativo", true);
+  if (excludeId) q = q.neq("id", excludeId);
+  const { data } = await q;
+  return (data ?? []).reduce((s, p) => s + (p.weight as number), 0);
+}
 
 export async function patchPrize(
   input: z.input<typeof patchSchema>,
@@ -36,6 +47,14 @@ export async function patchPrize(
   const { id, ...fields } = parsed.data;
   if (Object.keys(fields).length === 0) return { ok: true };
   const supabase = await createClient();
+  // A probabilidade é absoluta: a soma da pool não pode exceder 100%.
+  if (fields.weight !== undefined) {
+    const { data: row } = await supabase.from("prizes").select("kind").eq("id", id).single();
+    if (row) {
+      const others = await poolWeightSum(supabase, row.kind as string, id);
+      if (others + fields.weight > 100) return { error: "Excede 100% na pool." };
+    }
+  }
   const { error } = await supabase.from("prizes").update(fields).eq("id", id);
   if (error) return { error: "Não foi possível guardar." };
   return { ok: true };
@@ -44,6 +63,8 @@ export async function patchPrize(
 export async function addPrize(kind: "comum" | "especial"): Promise<{ id?: string; error?: string }> {
   await assertAdmin();
   const supabase = await createClient();
+  const sum = await poolWeightSum(supabase, kind);
+  const weight = Math.max(1, Math.min(10, 100 - sum));
   const id = "n_" + Date.now().toString(36);
   const { error } = await supabase.from("prizes").insert({
     id,
@@ -52,8 +73,7 @@ export async function addPrize(kind: "comum" | "especial"): Promise<{ id?: strin
     nome_en: "New prize",
     icon: "gift",
     accent: kind === "especial" ? "primary" : "green",
-    weight: 10,
-    stock: 20,
+    weight,
   });
   if (error) return { error: "Não foi possível adicionar." };
   return { id };
@@ -63,6 +83,60 @@ export async function removePrize(id: string): Promise<{ ok?: boolean; error?: s
   await assertAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("prizes").delete().eq("id", id);
+  if (error) return { error: "Não foi possível remover." };
+  return { ok: true };
+}
+
+// ---------- Recompensas de pontos (catálogo `rewards`) ----------------------
+const rewardSchema = z.object({
+  id: z.string().uuid(),
+  titulo: z.string().trim().max(80).optional(),
+  nome_en: z.string().trim().max(80).optional(),
+  descricao: z.string().trim().max(160).optional(),
+  desc_en: z.string().trim().max(160).optional(),
+  custo_pontos: z.coerce.number().int().min(1).max(100000).optional(),
+  icon: z.string().max(20).optional(),
+  accent: z.enum(["primary", "green", "blue", "red"]).optional(),
+  ativo: z.boolean().optional(),
+});
+
+export async function patchReward(
+  input: z.input<typeof rewardSchema>,
+): Promise<{ ok?: boolean; error?: string }> {
+  await assertAdmin();
+  const parsed = rewardSchema.safeParse(input);
+  if (!parsed.success) return { error: "Dados inválidos." };
+  const { id, ...fields } = parsed.data;
+  if (Object.keys(fields).length === 0) return { ok: true };
+  const supabase = await createClient();
+  const { error } = await supabase.from("rewards").update(fields).eq("id", id);
+  if (error) return { error: "Não foi possível guardar." };
+  return { ok: true };
+}
+
+export async function addReward(): Promise<{ id?: string; error?: string }> {
+  await assertAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("rewards")
+    .insert({
+      titulo: "Nova recompensa",
+      nome_en: "New reward",
+      custo_pontos: 100,
+      icon: "gift",
+      accent: "primary",
+      ativo: true,
+    })
+    .select("id")
+    .single();
+  if (error) return { error: "Não foi possível adicionar." };
+  return { id: data.id as string };
+}
+
+export async function removeReward(id: string): Promise<{ ok?: boolean; error?: string }> {
+  await assertAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.from("rewards").delete().eq("id", id);
   if (error) return { error: "Não foi possível remover." };
   return { ok: true };
 }

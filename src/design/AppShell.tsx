@@ -45,6 +45,7 @@ export function AppShell({ data }: { data: AppData }) {
     }
     setPoints((p) => p - r.custo_pontos);
     flash(T("toast.redeem", L({ pt: r.titulo, en: r.nome_en || r.titulo })) as string);
+    router.refresh();
   }
 
   const showTabBar = ["home", "card", "reservations", "menu", "profile"].includes(tab);

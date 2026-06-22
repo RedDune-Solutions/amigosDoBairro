@@ -19,7 +19,7 @@ const signUpSchema = credentials.extend({
     .or(z.literal("")),
 });
 
-export type AuthState = { error?: string };
+export type AuthState = { error?: string; sent?: boolean };
 
 function safeNext(next: FormDataEntryValue | null): string {
   const value = typeof next === "string" ? next : "";
@@ -58,7 +58,21 @@ export async function signIn(
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
-    return { error: "Email ou palavra-passe incorretos." };
+    // Distinguir credenciais erradas de problemas de serviço/confirmação,
+    // para a mensagem não enganar quando o backend está em baixo.
+    const status = (error as { status?: number }).status;
+    const code = (error as { code?: string }).code ?? "";
+    if (code === "invalid_credentials" || status === 400) {
+      return { error: "Email ou palavra-passe incorretos." };
+    }
+    if (code === "email_not_confirmed") {
+      return { error: "Confirma o teu email antes de entrar." };
+    }
+    if (!status) {
+      // sem status HTTP = não chegou ao servidor (Supabase/Docker em baixo)
+      return { error: "Serviço indisponível. Tenta novamente daqui a pouco." };
+    }
+    return { error: "Não foi possível entrar. Tenta novamente." };
   }
   await postAuthRedirect(supabase, formData);
   return {};
@@ -79,7 +93,7 @@ export async function signUp(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
@@ -88,6 +102,11 @@ export async function signUp(
   });
   if (error) {
     return { error: "Não foi possível criar a conta. Tenta outro email." };
+  }
+  // Sem sessão = confirmação de email pendente → avisar (não redirecionar).
+  // Com sessão (confirmação desligada, ex. local) → entrar normalmente.
+  if (!data.session) {
+    return { sent: true };
   }
   await postAuthRedirect(supabase, formData);
   return {};

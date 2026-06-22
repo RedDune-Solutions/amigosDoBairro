@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { Scroll } from "@/design/ui";
-import { AdminPrizes, AdminStats, AdminSettings, type PrizeAdmin, type AdminStatsData } from "@/design/AdminPanel";
+import { AdminPrizes, AdminRewards, AdminStats, AdminSettings, type PrizeAdmin, type RewardAdmin, type AdminStatsData } from "@/design/AdminPanel";
 import { BalcaoScreen } from "@/design/screens/admin/BalcaoScreen";
 import { ReservasAdmin, type ReservaAdminRow } from "@/design/screens/admin/ReservasAdmin";
 import { EquipaScreen, type MemberRow, type InviteRow } from "@/design/screens/admin/EquipaScreen";
 import { PerfilAdmin } from "@/design/screens/admin/PerfilAdmin";
-import type { AppData } from "@/design/data";
+import { NovidadesAdmin } from "@/design/screens/admin/NovidadesAdmin";
+import type { AppData, NewsRow } from "@/design/data";
 
 type Tab = "inicio" | "balcao" | "premios" | "reservas" | "equipa" | "perfil";
 
@@ -26,32 +27,40 @@ export function AdminShell({
   role,
   nome,
   isOwner,
+  meId,
   me,
   prizes: initialPrizes,
+  rewards: initialRewards,
   stats,
   euroPerStamp,
   stampGoal,
   reservas,
   members,
   invites,
+  news,
 }: {
   role: "staff" | "admin";
   nome: string;
   isOwner: boolean;
+  meId: string;
   me: AppData;
   prizes: PrizeAdmin[];
+  rewards: RewardAdmin[];
   stats: AdminStatsData;
   euroPerStamp: number;
   stampGoal: number;
   reservas: ReservaAdminRow[];
   members: MemberRow[];
   invites: InviteRow[];
+  news: NewsRow[];
 }) {
   const router = useRouter();
   const isAdmin = role === "admin";
   const tabs = TABS.filter((t) => isAdmin || !t.adminOnly);
   const [tab, setTab] = useState<Tab>(isAdmin ? "inicio" : "balcao");
   const [prizes, setPrizes] = useState(initialPrizes);
+  const [rewards, setRewards] = useState(initialRewards);
+  const [prizeMode, setPrizeMode] = useState<"raspadinha" | "pontos">("raspadinha");
 
   let screen: React.ReactNode = null;
   if (tab === "inicio") {
@@ -70,6 +79,7 @@ export function AdminShell({
           <div style={{ marginTop: 11 }}>
             <AdminSettings euroPerStamp={euroPerStamp} stampGoal={stampGoal} />
           </div>
+          <NovidadesAdmin news={news} />
         </Scroll>
       </>
     );
@@ -82,14 +92,28 @@ export function AdminShell({
           <h1 style={{ margin: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 22, color: "var(--c-ink)" }}>Prémios</h1>
         </div>
         <Scroll>
-          <AdminPrizes prizes={prizes} setPrizes={setPrizes} />
+          <div style={{ display: "flex", gap: 6, padding: 5, borderRadius: 15, background: "var(--c-surface2)", border: "1px solid var(--c-line)", marginBottom: 4 }}>
+            {([["raspadinha", "Raspadinha"], ["pontos", "Pontos"]] as const).map(([k, lab]) => {
+              const on = prizeMode === k;
+              return (
+                <button key={k} onClick={() => setPrizeMode(k)} style={{ flex: 1, padding: "10px 8px", borderRadius: 11, cursor: "pointer", border: "none", background: on ? "var(--c-ink)" : "transparent", color: on ? "#fff" : "var(--c-muted)", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 14 }}>
+                  {lab}
+                </button>
+              );
+            })}
+          </div>
+          {prizeMode === "raspadinha" ? (
+            <AdminPrizes prizes={prizes} setPrizes={setPrizes} />
+          ) : (
+            <AdminRewards rewards={rewards} setRewards={setRewards} />
+          )}
         </Scroll>
       </>
     );
   } else if (tab === "reservas") {
     screen = <ReservasAdmin reservas={reservas} />;
   } else if (tab === "equipa") {
-    screen = <EquipaScreen members={members} invites={invites} isOwner={isOwner} />;
+    screen = <EquipaScreen members={members} invites={invites} isOwner={isOwner} meId={meId} />;
   } else if (tab === "perfil") {
     screen = <PerfilAdmin me={me} onSaved={() => router.refresh()} />;
   }

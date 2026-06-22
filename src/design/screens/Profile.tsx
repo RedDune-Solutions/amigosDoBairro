@@ -57,9 +57,6 @@ export function Profile({
   const rows = [
     { icon: "edit", label: T("prof.r.edit") as string, accent: "var(--c-blue)", onClick: onEdit },
     { icon: "bell", label: T("prof.r.notif") as string, accent: "var(--c-primary)", detail: T("prof.r.notifOn") as string },
-    { icon: "card", label: T("prof.r.pay") as string, accent: "var(--c-green)" },
-    { icon: "mapPin", label: T("prof.r.addr") as string, accent: "var(--c-red)" },
-    { icon: "settings", label: T("prof.r.help") as string, accent: "var(--c-muted)" },
   ];
   return (
     <>

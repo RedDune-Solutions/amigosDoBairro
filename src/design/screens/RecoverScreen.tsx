@@ -15,17 +15,19 @@ export function RecoverScreen() {
   const { T } = useI18n();
   const [mode, setMode] = useState<"request" | "reset">("request");
   const [origin, setOrigin] = useState("");
+  const [linkError, setLinkError] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOrigin(window.location.origin);
+    const params = new URLSearchParams(window.location.search);
+    // fluxo novo: /auth/confirm verifica o token no servidor e redireciona p/ ?reset=1
+    if (params.get("reset") === "1") setMode("reset");
+    if (params.get("error")) setLinkError(true);
     const supabase = createClient();
+    // fallback p/ o fluxo antigo por hash (#...type=recovery)
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") setMode("reset");
-    });
-    // se já houver sessão de recovery activa
-    supabase.auth.getSession().then(({ data: s }) => {
-      if (s.session && window.location.hash.includes("recovery")) setMode("reset");
     });
     return () => data.subscription.unsubscribe();
   }, []);
@@ -84,6 +86,11 @@ export function RecoverScreen() {
         ) : (
           <form action={reqAction} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <input type="hidden" name="origin" value={origin} />
+            {linkError && (
+              <p style={{ margin: 0, fontFamily: "var(--f-body)", fontSize: 13.5, fontWeight: 700, color: "var(--c-red)" }}>
+                O link expirou ou já foi usado. Pede um novo aqui.
+              </p>
+            )}
             <Field label={T("auth.email") as string} placeholder="email@exemplo.pt" icon="mail" name="email" type="email" required autoComplete="email" />
             {(reqState as { error?: string }).error && (
               <p style={{ fontFamily: "var(--f-body)", fontSize: 13.5, fontWeight: 700, color: "var(--c-red)" }}>{(reqState as { error?: string }).error}</p>
