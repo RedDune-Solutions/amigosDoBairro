@@ -35,6 +35,19 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+
+  // Redireciona PRESERVANDO os cookies de sessão refrescados (rotação de refresh
+  // token). Sem isto, um redirect deita fora o cookie novo e a sessão quebra —
+  // o utilizador era obrigado a fazer login a cada arranque.
+  const redirectTo = (pathname: string, search = "") => {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname;
+    url.search = search;
+    const res = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c));
+    return res;
+  };
+
   const isPrivate =
     path.startsWith("/app") ||
     path.startsWith("/perfil") ||
@@ -44,10 +57,7 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/admin");
 
   if (!user && isPrivate) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/entrar";
-    url.searchParams.set("next", path);
-    return NextResponse.redirect(url);
+    return redirectTo("/entrar", `?next=${encodeURIComponent(path)}`);
   }
 
   // Manter logado: quem já tem sessão não volta a ver a landing/login —
@@ -60,10 +70,7 @@ export async function updateSession(request: NextRequest) {
       .eq("id", user.id)
       .single();
     const role = (profile?.role as string) ?? "customer";
-    const url = request.nextUrl.clone();
-    url.search = "";
-    url.pathname = role === "admin" || role === "staff" ? "/admin" : "/app";
-    return NextResponse.redirect(url);
+    return redirectTo(role === "admin" || role === "staff" ? "/admin" : "/app");
   }
 
   return supabaseResponse;
