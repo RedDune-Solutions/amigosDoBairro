@@ -15,10 +15,14 @@ export async function createClient() {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
+          // Se o utilizador NÃO escolheu "manter sessão", os cookies de auth
+          // ficam de sessão (sem maxAge/expires) → terminam ao fechar o browser.
+          const persist = cookieStore.get("ab_remember")?.value !== "0";
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            );
+            cookiesToSet.forEach(({ name, value, options }) => {
+              const opts = persist ? options : { ...options, maxAge: undefined, expires: undefined };
+              cookieStore.set(name, value, opts);
+            });
           } catch {
             // Chamado de um Server Component — ignorável quando há middleware
             // a refrescar a sessão.

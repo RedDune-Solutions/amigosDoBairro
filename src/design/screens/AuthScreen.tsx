@@ -123,7 +123,11 @@ export function AuthScreen({
           </div>
 
           {!isReg && (
-            <div style={{ textAlign: "right", marginTop: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer", userSelect: "none" }}>
+                <input type="checkbox" name="remember" value="1" defaultChecked style={{ width: 17, height: 17, accentColor: "var(--c-primary)", cursor: "pointer" }} />
+                <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-ink)" }}>{T("auth.remember") as string}</span>
+              </label>
               <button
                 type="button"
                 onClick={() => router.push("/recuperar")}

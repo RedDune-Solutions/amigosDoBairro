@@ -1,8 +1,19 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+
+/** Grava a preferência "manter sessão iniciada" antes de escrever os cookies de auth. */
+async function setRememberPref(remember: boolean): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set("ab_remember", remember ? "1" : "0", {
+    path: "/",
+    sameSite: "lax",
+    ...(remember ? { maxAge: 60 * 60 * 24 * 400 } : {}),
+  });
+}
 
 const credentials = z.object({
   email: z.string().email("Email inválido."),
@@ -54,6 +65,10 @@ export async function signIn(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
+
+  // Preferência do utilizador: manter sessão (cookie persistente) ou só durante
+  // a sessão do browser (cookie de sessão). Definir ANTES de escrever os cookies.
+  await setRememberPref(formData.get("remember") === "1");
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
@@ -157,5 +172,6 @@ export async function authenticate(
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  (await cookies()).delete("ab_remember");
   redirect("/");
 }

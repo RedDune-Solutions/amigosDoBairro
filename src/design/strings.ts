@@ -54,6 +54,7 @@ export const STRINGS: Record<string, Entry> = {
   "auth.pass": { pt: "Palavra-passe", en: "Password" },
   "auth.phone": { pt: "Telemóvel", en: "Phone" },
   "auth.forgot": { pt: "Esqueci-me da palavra-passe", en: "Forgot password" },
+  "auth.remember": { pt: "Manter sessão iniciada", en: "Stay signed in" },
   "auth.regBtn": { pt: "Criar conta", en: "Create account" },
   "auth.loginBtn": { pt: "Entrar na conta", en: "Sign in" },
   "auth.regLoading": { pt: "A criar conta…", en: "Creating account…" },
