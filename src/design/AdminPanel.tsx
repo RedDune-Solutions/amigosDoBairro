@@ -49,7 +49,32 @@ export type AdminStatsData = {
 const BADGE_ICONS = ["gift", "coffee", "cake", "sandwich", "plate", "percent", "ticket", "star", "sparkle", "trophy", "heart", "tag"];
 const BADGE_ACCENTS = ["primary", "green", "blue", "red"];
 
-function NumStep({ value, onDec, onInc, suffix, w = 58, accent = "var(--c-ink)" }: { value: number; onDec: () => void; onInc: () => void; suffix?: string; w?: number; accent?: string }) {
+function NumStepField({ value, onSet, min = 0, max, suffix, w }: { value: number; onSet: (n: number) => void; min?: number; max?: number; suffix?: string; w: number }) {
+  // Remontado via key={value} no NumStep → text sincroniza com o valor externo.
+  const [text, setText] = useState(String(value));
+  const commit = () => {
+    let n = parseInt(text.replace(/\D/g, ""), 10);
+    if (isNaN(n)) { setText(String(value)); return; }
+    n = Math.max(min, max !== undefined ? Math.min(max, n) : n);
+    setText(String(n));
+    if (n !== value) onSet(n);
+  };
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", width: w }}>
+      <input
+        value={text}
+        inputMode="numeric"
+        onChange={(e) => setText(e.target.value.replace(/\D/g, ""))}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+        style={{ width: suffix ? w - 22 : w, textAlign: "center", border: "none", background: "transparent", outline: "none", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 15, color: "var(--c-ink)" }}
+      />
+      {suffix && <span style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 13, color: "var(--c-muted)" }}>{suffix.trim()}</span>}
+    </div>
+  );
+}
+
+function NumStep({ value, onDec, onInc, onSet, min, max, suffix, w = 58, accent = "var(--c-ink)" }: { value: number; onDec: () => void; onInc: () => void; onSet?: (n: number) => void; min?: number; max?: number; suffix?: string; w?: number; accent?: string }) {
   const btn = (icon: string, fn: () => void) => (
     <button onClick={fn} style={{ width: 30, height: 30, borderRadius: 9, border: "1px solid var(--c-line)", background: "var(--c-surface)", cursor: "pointer", color: accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
       <Icon name={icon} size={16} stroke={2.6} />
@@ -58,7 +83,11 @@ function NumStep({ value, onDec, onInc, suffix, w = 58, accent = "var(--c-ink)" 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
       {btn("minus", onDec)}
-      <div style={{ width: w, textAlign: "center", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 15, color: "var(--c-ink)" }}>{value}{suffix}</div>
+      {onSet ? (
+        <NumStepField key={value} value={value} onSet={onSet} min={min} max={max} suffix={suffix} w={w} />
+      ) : (
+        <div style={{ width: w, textAlign: "center", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 15, color: "var(--c-ink)" }}>{value}{suffix}</div>
+      )}
       {btn("plus", onInc)}
     </div>
   );
@@ -140,7 +169,7 @@ function PrizeRow({ prize, poolTotal, onPatch, onRemove }: { prize: PrizeAdmin; 
           <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 11, color: "var(--c-muted)" }}>
             <Icon name="percent" size={12} /> PROBABILIDADE · <b style={{ color: "var(--c-ink)" }}>{prize.weight}%</b>
           </div>
-          <NumStep value={prize.weight} suffix="%" onDec={() => onPatch({ weight: Math.max(1, prize.weight - 1) })} onInc={() => canInc && onPatch({ weight: Math.min(100, prize.weight + 1) })} w={44} />
+          <NumStep value={prize.weight} suffix="%" w={50} min={1} max={100} onSet={(n) => onPatch({ weight: Math.max(1, Math.min(100, n)) })} onDec={() => onPatch({ weight: Math.max(1, prize.weight - 1) })} onInc={() => canInc && onPatch({ weight: Math.min(100, prize.weight + 1) })} />
         </div>
         <div style={{ height: 8, borderRadius: 100, background: "var(--c-surface2)", overflow: "hidden", marginTop: 8 }}>
           <div style={{ width: `${Math.min(100, prize.weight)}%`, height: "100%", borderRadius: 100, background: `var(--c-${prize.accent})` }} />
@@ -269,7 +298,7 @@ function RewardRow({ reward, onPatch, onRemove }: { reward: RewardAdmin; onPatch
         <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 11, color: "var(--c-muted)" }}>
           <Icon name="star" size={12} fill="currentColor" /> CUSTO EM PONTOS
         </div>
-        <NumStep value={reward.custo_pontos} suffix=" pts" accent="var(--c-primary)" w={62} onDec={() => onPatch({ custo_pontos: Math.max(1, reward.custo_pontos - 10) })} onInc={() => onPatch({ custo_pontos: reward.custo_pontos + 10 })} />
+        <NumStep value={reward.custo_pontos} suffix=" pts" accent="var(--c-primary)" w={78} min={1} onSet={(n) => onPatch({ custo_pontos: Math.max(1, n) })} onDec={() => onPatch({ custo_pontos: Math.max(1, reward.custo_pontos - 10) })} onInc={() => onPatch({ custo_pontos: reward.custo_pontos + 10 })} />
       </div>
     </div>
   );
@@ -424,7 +453,7 @@ export function AdminSettings({ euroPerStamp, stampGoal }: { euroPerStamp: numbe
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 13, borderTop: "1px dashed var(--c-line)" }}>
           <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Cada carimbo custa</span>
-          <NumStep value={eps} suffix="€" accent="var(--c-primary)" onDec={() => { const n = Math.max(1, eps - 1); setEps(n); commit(n, sg); }} onInc={() => { const n = eps + 1; setEps(n); commit(n, sg); }} />
+          <NumStep value={eps} suffix="€" accent="var(--c-primary)" min={1} onSet={(v) => { const n = Math.max(1, v); setEps(n); commit(n, sg); }} onDec={() => { const n = Math.max(1, eps - 1); setEps(n); commit(n, sg); }} onInc={() => { const n = eps + 1; setEps(n); commit(n, sg); }} />
         </div>
       </Card>
       <Card style={{ marginTop: 11, display: "flex", flexDirection: "column", gap: 0 }}>
@@ -437,7 +466,7 @@ export function AdminSettings({ euroPerStamp, stampGoal }: { euroPerStamp: numbe
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 13, borderTop: "1px dashed var(--c-line)" }}>
           <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Carimbos necessários</span>
-          <NumStep value={sg} accent="var(--c-green)" w={34} onDec={() => { const n = Math.max(2, sg - 1); setSg(n); commit(eps, n); }} onInc={() => { const n = sg + 1; setSg(n); commit(eps, n); }} />
+          <NumStep value={sg} accent="var(--c-green)" w={44} min={2} onSet={(v) => { const n = Math.max(2, v); setSg(n); commit(eps, n); }} onDec={() => { const n = Math.max(2, sg - 1); setSg(n); commit(eps, n); }} onInc={() => { const n = sg + 1; setSg(n); commit(eps, n); }} />
         </div>
       </Card>
       <Card style={{ marginTop: 11, display: "flex", alignItems: "center", gap: 12, background: "color-mix(in srgb, var(--c-primary) 8%, var(--c-surface))", borderColor: "color-mix(in srgb, var(--c-primary) 22%, var(--c-line))" }}>

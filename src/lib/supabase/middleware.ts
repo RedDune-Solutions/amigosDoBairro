@@ -50,5 +50,21 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Manter logado: quem já tem sessão não volta a ver a landing/login —
+  // é encaminhado direto para a app (staff/admin → painel).
+  const isEntry = path === "/" || path === "/entrar" || path === "/registo";
+  if (user && isEntry) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const role = (profile?.role as string) ?? "customer";
+    const url = request.nextUrl.clone();
+    url.search = "";
+    url.pathname = role === "admin" || role === "staff" ? "/admin" : "/app";
+    return NextResponse.redirect(url);
+  }
+
   return supabaseResponse;
 }

@@ -1,7 +1,7 @@
 import { Stage } from "@/design/ui";
 import { AppShell } from "@/design/AppShell";
 import { requireUser } from "@/lib/data";
-import type { AppData, HistoryRow, RewardRow, WalletItemRow } from "@/design/data";
+import type { AppData, HistoryRow, RewardRow, WalletItemRow, NotifRow } from "@/design/data";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +30,7 @@ export default async function AppPage() {
     { data: redemptionsData },
     { data: nextRes },
     { data: newsData },
+    { data: notifData },
   ] = await Promise.all([
     supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at").eq("id", user.id).single(),
     supabase.rpc("meu_saldo"),
@@ -42,6 +43,7 @@ export default async function AppPage() {
     supabase.from("redemptions").select("id, codigo, estado, created_at, rewards(titulo, nome_en, descricao, desc_en, icon, accent)").neq("estado", "cancelado").order("created_at", { ascending: false }).limit(30),
     supabase.from("reservations").select("data, hora, n_pessoas, estado").gte("data", new Date().toISOString().slice(0, 10)).neq("estado", "cancelada").order("data", { ascending: true }).order("hora", { ascending: true }).limit(1).maybeSingle(),
     supabase.from("news").select("id, titulo_pt, titulo_en, desc_pt, desc_en, icon, accent, ativo, created_at").eq("ativo", true).order("created_at", { ascending: false }).limit(10),
+    supabase.from("notifications").select("id, kind, title_pt, title_en, body_pt, body_en, icon, accent, read_at, created_at").is("archived_at", null).order("created_at", { ascending: false }).limit(40),
   ]);
 
   const created = profile?.created_at ? new Date(profile.created_at) : new Date();
@@ -105,6 +107,8 @@ export default async function AppPage() {
     scratchCards: (scratchData ?? []) as AppData["scratchCards"],
     wallet,
     news: (newsData ?? []) as AppData["news"],
+    notifications: (notifData ?? []) as NotifRow[],
+    unread: (notifData ?? []).filter((n) => n.read_at === null).length,
     nextReservation: nextRes
       ? {
           data: nextRes.data as string,

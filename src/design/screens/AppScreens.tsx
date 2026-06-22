@@ -180,7 +180,7 @@ export function Home({
     a: `var(--c-${n.accent || "primary"})`,
     i: n.icon || "sparkle",
   }));
-  const hasEvents = news.length > 0 || data.history.length > 0 || data.wallet.length > 0;
+  const hasEvents = data.unread > 0;
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 18px 14px" }}>

@@ -135,7 +135,22 @@ export type AppData = {
   scratchCards: ScratchCardRow[];
   wallet: WalletItemRow[];
   news: NewsRow[];
+  notifications: NotifRow[];
+  unread: number;
   nextReservation: NextReservation;
+};
+
+export type NotifRow = {
+  id: string;
+  kind: "pontos" | "premio" | "reserva" | "novidade";
+  title_pt: string;
+  title_en: string | null;
+  body_pt: string | null;
+  body_en: string | null;
+  icon: string | null;
+  accent: string | null;
+  read_at: string | null;
+  created_at: string;
 };
 
 export type ScratchCardRow = { id: string; kind: "comum" | "especial" };

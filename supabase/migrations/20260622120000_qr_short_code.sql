@@ -1,12 +1,13 @@
 -- =============================================================================
--- QR de acumulação com CÓDIGO CURTO legível (scan + entrada manual no balcão).
+-- QR de acumulação com CÓDIGO CURTO numérico (scan + entrada manual no balcão).
 -- O nonce continua a existir (PK uuid), mas o identificador que o cliente vê e
--- que o staff lê/escreve passa a ser um código curto de 8 chars sem ambíguos.
+-- que o staff lê/escreve passa a ser um código de 6 DÍGITOS (teclado numérico,
+-- fácil de inserir). Curta duração + unicidade entre activos evita colisões.
 -- =============================================================================
 
 alter table public.earn_nonces add column if not exists code text unique;
 
--- Gera um código curto único (alfabeto sem 0/O/1/I/L para evitar erros à mão).
+-- Gera um código de 6 dígitos único entre os nonces ainda válidos.
 create or replace function public.gen_nonce_code()
 returns text
 language plpgsql
@@ -14,16 +15,11 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
-  alphabet constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  v_code   text;
-  i        integer;
-  ok       boolean;
+  v_code text;
+  ok     boolean;
 begin
   loop
-    v_code := '';
-    for i in 1..8 loop
-      v_code := v_code || substr(alphabet, 1 + floor(random() * length(alphabet))::int, 1);
-    end loop;
+    v_code := lpad(floor(random() * 1000000)::int::text, 6, '0');
     -- só colide com nonces ainda válidos (não usados e não expirados)
     select not exists (
       select 1 from public.earn_nonces
@@ -73,7 +69,7 @@ begin
   end if;
 
   select * into v_row from public.earn_nonces
-    where code = upper(btrim(p_code)) for update;
+    where code = btrim(p_code) for update;
   if not found then
     raise exception 'Código inválido.';
   end if;
@@ -89,11 +85,12 @@ begin
 end;
 $$;
 
--- Grants: estas funções correm como `authenticated` (auto-protegem-se por role).
--- criar_nonce_earn foi DROP+CREATE → os privilégios são repostos (default = PUBLIC),
--- por isso revoga-se PUBLIC e regrant-se só a authenticated (paridade com o hardening).
-revoke all on function public.gen_nonce_code() from public;
-revoke all on function public.criar_nonce_earn() from public;
-revoke all on function public.registar_compra_via_code(text, integer) from public;
+-- Grants: o Supabase tem default privileges que concedem EXECUTE directo a
+-- anon/authenticated em funções novas — por isso é preciso revogar de `anon`
+-- explicitamente (revoke from public não chega). gen_nonce_code é interna
+-- (só chamada dentro de criar_nonce_earn, que corre como owner) → sem grants.
+revoke execute on function public.gen_nonce_code() from anon, authenticated, public;
+revoke execute on function public.criar_nonce_earn() from anon, public;
+revoke execute on function public.registar_compra_via_code(text, integer) from anon, public;
 grant execute on function public.criar_nonce_earn() to authenticated;
 grant execute on function public.registar_compra_via_code(text, integer) to authenticated;

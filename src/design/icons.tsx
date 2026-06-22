@@ -38,6 +38,7 @@ export const ICON_PATHS: Record<string, string> = {
   percent: "M6 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0M18 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0M6 18 18 6",
   box: "M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10",
   trash: "M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6",
+  archive: "M3 4h18v4H3zM5 8v12h14V8M9 12h6",
   ticket: "M3 9a2 2 0 0 0 0 6v2a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-2a2 2 0 0 1 0-6V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1zM14 6v12",
   wallet: "M3 8h16a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 8V7a2 2 0 0 1 2-2h12M17 13h.5",
   lock: "M6 11h12v9H6zM9 11V8a3 3 0 0 1 6 0v3",

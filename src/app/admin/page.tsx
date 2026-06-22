@@ -38,6 +38,8 @@ export default async function AdminPage() {
     scratchCards: [],
     wallet: [],
     news: [],
+    notifications: [],
+    unread: 0,
     nextReservation: null,
   };
 

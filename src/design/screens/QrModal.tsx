@@ -106,8 +106,8 @@ export function QrModal({ onClose }: { onClose: () => void }) {
             <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: "var(--c-muted)", marginBottom: 4 }}>
               {T("qr.codeLabel") as string}
             </div>
-            <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 28, letterSpacing: 4, color: "var(--c-ink)" }}>
-              {`${code.slice(0, 4)} ${code.slice(4)}`}
+            <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 34, letterSpacing: 6, color: "var(--c-ink)" }}>
+              {`${code.slice(0, 3)} ${code.slice(3)}`}
             </div>
           </div>
         )}

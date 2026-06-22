@@ -13,6 +13,7 @@ import { QrModal } from "@/design/screens/QrModal";
 import { NotificationsSheet } from "@/design/screens/NotificationsSheet";
 import { type AppData, type RewardRow } from "@/design/data";
 import { redeemReward } from "@/lib/app-actions";
+import { marcarNotificacoesLidas } from "@/lib/notif-actions";
 
 export function AppShell({ data }: { data: AppData }) {
   const { T, L, lang, setLang } = useI18n();
@@ -96,7 +97,15 @@ export function AppShell({ data }: { data: AppData }) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>{screen}</div>
       {showTabBar && <TabBar active={tab} onChange={goTab} />}
       {qr && <QrModal onClose={() => setQr(false)} />}
-      {notif && <NotificationsSheet data={data} onClose={() => setNotif(false)} />}
+      {notif && (
+        <NotificationsSheet
+          data={data}
+          onClose={() => {
+            setNotif(false);
+            if (data.unread > 0) void marcarNotificacoesLidas().then(() => router.refresh());
+          }}
+        />
+      )}
       {toast && (
         <div
           style={{

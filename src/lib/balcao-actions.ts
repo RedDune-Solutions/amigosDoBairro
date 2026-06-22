@@ -7,8 +7,7 @@ const compraSchema = z.object({
   code: z
     .string()
     .trim()
-    .transform((s) => s.toUpperCase())
-    .pipe(z.string().regex(/^[A-Z2-9]{6,12}$/, "Código inválido.")),
+    .pipe(z.string().regex(/^[0-9]{4,8}$/, "Código inválido.")),
   euros: z.coerce.number().int().min(1, "Mínimo 1€.").max(1000, "Máximo 1000€."),
 });
 

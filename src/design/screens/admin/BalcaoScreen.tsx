@@ -29,7 +29,7 @@ export function BalcaoScreen() {
         { facingMode: "environment" },
         { fps: 10, qrbox: 220 },
         (decoded: string) => {
-          setCode(decoded.trim().toUpperCase());
+          setCode(decoded.replace(/\D/g, "").slice(0, 6));
           void stopCamera();
         },
         () => {},
@@ -98,7 +98,7 @@ export function BalcaoScreen() {
 
           <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
             <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Código do cliente</span>
-            <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Lido do QR ou à mão (ex.: ABCD2345)" style={{ ...inputStyle, textTransform: "uppercase", letterSpacing: 1 }} />
+            <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" placeholder="Lido do QR ou à mão (ex.: 123456)" style={{ ...inputStyle, letterSpacing: 3, fontSize: 18 }} />
           </label>
           <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
             <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Valor gasto (€)</span>
