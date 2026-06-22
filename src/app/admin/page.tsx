@@ -28,6 +28,7 @@ export default async function AdminPage() {
     role: profile.role as AppData["role"],
     memberSince: `${MESES[created.getMonth()]} ${created.getFullYear()}`,
     points: 0,
+    earned: 0,
     stamps: 0,
     spendToward: 0,
     euroPerStamp: 15,

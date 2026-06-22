@@ -28,12 +28,14 @@ export function SpendBar({ spend, euroPerStamp }: { spend: number; euroPerStamp:
 // ── Cartão de membro ─────────────────────────────────────────────────────────
 export function MemberCard({
   points,
+  earned,
   nome,
   memberSince,
   onQR,
   compact,
 }: {
   points: number;
+  earned: number;
   nome: string;
   memberSince: string;
   onQR: () => void;
@@ -41,7 +43,7 @@ export function MemberCard({
 }) {
   const { T, L } = useI18n();
   const [tiers, setTiers] = useState(false);
-  const tier = TIERS[tierIndexFor(points)];
+  const tier = TIERS[tierIndexFor(earned)];
   return (
     <>
       <div
@@ -114,16 +116,16 @@ export function MemberCard({
           </button>
         </div>
       </div>
-      {tiers && <TiersSheet points={points} onClose={() => setTiers(false)} />}
+      {tiers && <TiersSheet earned={earned} onClose={() => setTiers(false)} />}
     </>
   );
 }
 
-export function TiersSheet({ points, onClose }: { points: number; onClose: () => void }) {
+export function TiersSheet({ earned, onClose }: { earned: number; onClose: () => void }) {
   const { T, L } = useI18n();
-  const curIdx = tierIndexFor(points);
+  const curIdx = tierIndexFor(earned);
   const next = TIERS[curIdx + 1];
-  const toNext = next ? next.min - points : 0;
+  const toNext = next ? next.min - earned : 0;
   return (
     <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 80, display: "flex", alignItems: "flex-end", background: "rgba(20,14,6,0.45)", backdropFilter: "blur(3px)", animation: "fadeIn .2s ease" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxHeight: "88%", overflowY: "auto", background: "var(--c-surface)", borderRadius: "26px 26px 0 0", padding: "20px 20px 30px", animation: "popIn .25s ease" }}>
@@ -195,7 +197,7 @@ export function Home({
       </div>
 
       <Scroll>
-        <MemberCard points={points} nome={data.nome} memberSince={data.memberSince} onQR={onQR} />
+        <MemberCard points={points} earned={data.earned} nome={data.nome} memberSince={data.memberSince} onQR={onQR} />
 
         {/* Progresso carimbos */}
         <Card style={{ marginTop: 14 }}>
@@ -266,7 +268,7 @@ export function LoyaltyCard({
     <>
       <TopBar title={T("card.title") as string} />
       <Scroll>
-        <MemberCard points={points} nome={data.nome} memberSince={data.memberSince} onQR={onQR} />
+        <MemberCard points={points} earned={data.earned} nome={data.nome} memberSince={data.memberSince} onQR={onQR} />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, marginTop: 14 }}>
           <Card pad={15} style={{ textAlign: "center" }}>

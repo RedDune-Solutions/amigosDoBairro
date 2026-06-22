@@ -21,6 +21,7 @@ export default async function AppPage() {
   const [
     { data: profile },
     { data: saldo },
+    { data: ganhos },
     { data: cfg },
     { data: rewardsData },
     { data: ledgerData },
@@ -34,6 +35,7 @@ export default async function AppPage() {
   ] = await Promise.all([
     supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at").eq("id", user.id).single(),
     supabase.rpc("meu_saldo"),
+    supabase.rpc("meus_pontos_ganhos"),
     supabase.from("loyalty_config").select("euro_per_stamp, stamp_goal").eq("id", true).single(),
     supabase.from("rewards").select("id, titulo, nome_en, descricao, desc_en, custo_pontos, icon, accent").eq("ativo", true).order("ordem", { ascending: true }),
     supabase.from("points_ledger").select("id, delta, reason, source, created_at").order("created_at", { ascending: false }).limit(20),
@@ -97,6 +99,7 @@ export default async function AppPage() {
     role: (profile?.role as AppData["role"]) ?? "customer",
     memberSince,
     points: typeof saldo === "number" ? saldo : 0,
+    earned: typeof ganhos === "number" ? ganhos : 0,
     stamps: profile?.stamps ?? 0,
     spendToward: profile?.spend_toward ?? 0,
     euroPerStamp: cfg?.euro_per_stamp ?? 15,

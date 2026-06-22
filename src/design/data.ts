@@ -10,6 +10,8 @@ export type Tier = {
   perks: { pt: string[]; en: string[] };
 };
 
+// Níveis (badges) por pontos GANHOS ao longo do tempo (lifetime, nunca descem).
+// Subida exponencial agressiva: 0 · 100 · 300 · 800 · 2000 · 5000.
 export const TIERS: Tier[] = [
   {
     id: "novo",
@@ -23,43 +25,66 @@ export const TIERS: Tier[] = [
     },
   },
   {
-    id: "amigo",
+    id: "cliente",
     min: 100,
-    icon: "sandwich",
+    icon: "coffee",
     accent: "green",
+    name: { pt: "Cliente da Casa", en: "House Regular" },
+    perks: {
+      pt: ["Tudo do nível anterior", "Ofertas só para membros"],
+      en: ["Everything from the previous tier", "Member-only offers"],
+    },
+  },
+  {
+    id: "amigo",
+    min: 300,
+    icon: "sandwich",
+    accent: "primary",
     name: { pt: "Amigo do Bairro", en: "Neighbourhood Friend" },
     perks: {
-      pt: ["Tudo do escalão anterior", "Raspadinha extra no aniversário", "Ofertas só para membros"],
-      en: ["Everything from the previous tier", "Extra scratch card on your birthday", "Member-only offers"],
+      pt: ["Tudo do nível anterior", "Raspadinha extra no aniversário"],
+      en: ["Everything from the previous tier", "Extra scratch card on your birthday"],
+    },
+  },
+  {
+    id: "habitue",
+    min: 800,
+    icon: "cake",
+    accent: "red",
+    name: { pt: "Habitué do Café", en: "Café Regular" },
+    perks: {
+      pt: ["Tudo do nível anterior", "Reservas com prioridade"],
+      en: ["Everything from the previous tier", "Priority bookings"],
     },
   },
   {
     id: "dourado",
-    min: 200,
+    min: 2000,
     icon: "gift",
     accent: "primary",
     name: { pt: "Vizinho Dourado", en: "Golden Neighbour" },
     perks: {
-      pt: ["Tudo do escalão anterior", "Café grátis todos os meses", "Reservas com prioridade"],
-      en: ["Everything from the previous tier", "Free coffee every month", "Priority bookings"],
+      pt: ["Tudo do nível anterior", "Café grátis todos os meses"],
+      en: ["Everything from the previous tier", "Free coffee every month"],
     },
   },
   {
     id: "lenda",
-    min: 400,
-    icon: "plate",
+    min: 5000,
+    icon: "trophy",
     accent: "red",
     name: { pt: "Lenda do Bairro", en: "Neighbourhood Legend" },
     perks: {
-      pt: ["Tudo do escalão anterior", "Brunch grátis por trimestre", "Convites para eventos da casa"],
+      pt: ["Tudo do nível anterior", "Brunch grátis por trimestre", "Convites para eventos da casa"],
       en: ["Everything from the previous tier", "Free brunch every quarter", "Invites to house events"],
     },
   },
 ];
 
-export function tierIndexFor(points: number): number {
+// Recebe os pontos GANHOS (lifetime), não o saldo atual.
+export function tierIndexFor(earned: number): number {
   let idx = 0;
-  for (let i = 0; i < TIERS.length; i++) if (points >= TIERS[i].min) idx = i;
+  for (let i = 0; i < TIERS.length; i++) if (earned >= TIERS[i].min) idx = i;
   return idx;
 }
 
@@ -125,6 +150,7 @@ export type AppData = {
   role: "customer" | "staff" | "admin";
   memberSince: string;
   points: number;
+  earned: number;
   stamps: number;
   spendToward: number;
   euroPerStamp: number;

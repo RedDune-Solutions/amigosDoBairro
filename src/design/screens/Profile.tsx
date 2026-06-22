@@ -52,7 +52,7 @@ export function Profile({
 }) {
   const { T, L } = useI18n();
   const [tiers, setTiers] = useState(false);
-  const tier = TIERS[tierIndexFor(points)];
+  const tier = TIERS[tierIndexFor(data.earned)];
   const isAdmin = data.role === "admin";
   const rows = [
     { icon: "edit", label: T("prof.r.edit") as string, accent: "var(--c-blue)", onClick: onEdit },
@@ -120,7 +120,7 @@ export function Profile({
         </form>
         <p style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)", marginTop: 14 }}>Os Amigos do Bairro · v1.0</p>
       </Scroll>
-      {tiers && <TiersSheet points={points} onClose={() => setTiers(false)} />}
+      {tiers && <TiersSheet earned={data.earned} onClose={() => setTiers(false)} />}
     </>
   );
 }
