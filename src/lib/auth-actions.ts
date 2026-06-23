@@ -153,6 +153,10 @@ export async function updatePassword(
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: "Não foi possível atualizar. Pede um novo link." };
+  // Não iniciar sessão a partir da recuperação: termina a sessão de recovery
+  // para o utilizador entrar normalmente (e escolher "manter sessão") no login.
+  await supabase.auth.signOut();
+  (await cookies()).delete("ab_remember");
   return { ok: true };
 }
 

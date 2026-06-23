@@ -37,10 +37,12 @@ export function RecoverScreen() {
 
   useEffect(() => {
     if ((setState as { ok?: boolean }).ok) {
-      const t = setTimeout(() => router.push("/app"), 900);
+      // Sessão de recovery foi terminada no servidor → hard reload para o login
+      // (soft-nav manteria a sessão antiga no client @supabase/ssr).
+      const t = setTimeout(() => window.location.assign("/entrar"), 1100);
       return () => clearTimeout(t);
     }
-  }, [setState, router]);
+  }, [setState]);
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>

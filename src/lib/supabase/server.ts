@@ -15,9 +15,10 @@ export async function createClient() {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
-          // Se o utilizador NÃO escolheu "manter sessão", os cookies de auth
-          // ficam de sessão (sem maxAge/expires) → terminam ao fechar o browser.
-          const persist = cookieStore.get("ab_remember")?.value !== "0";
+          // Só um login normal com "manter sessão" marcado torna os cookies
+          // persistentes (ab_remember === "1"). Qualquer outro caso (recuperação
+          // de password, confirmação de email, etc.) → cookies de sessão.
+          const persist = cookieStore.get("ab_remember")?.value === "1";
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               const opts = persist ? options : { ...options, maxAge: undefined, expires: undefined };

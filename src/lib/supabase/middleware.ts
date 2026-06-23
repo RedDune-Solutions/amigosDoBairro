@@ -17,8 +17,9 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          // Respeita a preferência "manter sessão": sem ela, cookies de sessão.
-          const persist = request.cookies.get("ab_remember")?.value !== "0";
+          // Persistente só com login normal + "manter sessão" (ab_remember==="1").
+          // Recuperação de password / confirmação de email → cookies de sessão.
+          const persist = request.cookies.get("ab_remember")?.value === "1";
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
