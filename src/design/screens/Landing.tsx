@@ -291,7 +291,7 @@ export function Landing() {
                 </div>
               </div>
               <a
-                href="tel:+351912021759"
+                href="tel:+351289034275"
                 style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, color: "var(--c-ink)", textDecoration: "none" }}
               >
                 <Icon name="phone" size={16} color="var(--c-green)" /> {T("land.phoneVal") as string}
