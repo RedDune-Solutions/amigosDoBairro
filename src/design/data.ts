@@ -62,7 +62,7 @@ export const TIERS: Tier[] = [
     min: 2000,
     icon: "gift",
     accent: "primary",
-    name: { pt: "Vizinho Dourado", en: "Golden Neighbour" },
+    name: { pt: "Amigo do Peito", en: "Close Friend" },
     perks: {
       pt: ["Tudo do nível anterior", "Café grátis todos os meses"],
       en: ["Everything from the previous tier", "Free coffee every month"],
