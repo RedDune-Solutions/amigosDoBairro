@@ -22,6 +22,7 @@ export function AuthScreen({
   const router = useRouter();
   const { T, lang, setLang } = useI18n();
   const [mode, setMode] = useState<"login" | "register">(initialMode);
+  const [remember, setRemember] = useState(true);
   const isReg = mode === "register";
   const [state, formAction, pending] = useActionState(authenticate, initial);
 
@@ -151,10 +152,13 @@ export function AuthScreen({
 
           {!isReg && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer", userSelect: "none" }}>
-                <input type="checkbox" name="remember" value="1" defaultChecked style={{ width: 17, height: 17, accentColor: "var(--c-primary)", cursor: "pointer" }} />
+              <button type="button" onClick={() => setRemember((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none", border: "none", background: "transparent", padding: 0 }}>
+                <input type="hidden" name="remember" value={remember ? "1" : "0"} />
+                <span style={{ width: 19, height: 19, borderRadius: 6, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: remember ? "none" : "1.5px solid var(--c-line)", background: remember ? "var(--c-primary)" : "var(--c-surface)", color: "#fff" }}>
+                  {remember && <Icon name="check" size={13} stroke={3} color="#fff" />}
+                </span>
                 <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-ink)" }}>{T("auth.remember") as string}</span>
-              </label>
+              </button>
               <button
                 type="button"
                 onClick={() => router.push("/recuperar")}

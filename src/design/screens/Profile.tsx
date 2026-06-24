@@ -57,7 +57,6 @@ export function Profile({
   const isAdmin = data.role === "admin";
   const rows = [
     { icon: "edit", label: T("prof.r.edit") as string, accent: "var(--c-blue)", onClick: onEdit },
-    { icon: "bell", label: T("prof.r.notif") as string, accent: "var(--c-primary)", detail: T("prof.r.notifOn") as string },
     { icon: "sparkle", label: T("prof.r.faq") as string, accent: "var(--c-green)", onClick: () => setFaq(true) },
   ];
   return (
@@ -111,7 +110,6 @@ export function Profile({
             <button key={i} onClick={r.onClick} style={{ width: "100%", display: "flex", alignItems: "center", gap: 13, padding: "13px 16px", border: "none", borderTop: i ? "1px solid var(--c-line)" : "none", background: "transparent", cursor: "pointer", textAlign: "left" }}>
               <IconTile icon={r.icon} accent={r.accent} size={38} iconSize={18} />
               <span style={{ flex: 1, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>{r.label}</span>
-              {r.detail && <span style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>{r.detail}</span>}
               <Icon name="chevronRight" size={18} color="var(--c-muted)" />
             </button>
           ))}
