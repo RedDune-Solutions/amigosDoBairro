@@ -11,6 +11,7 @@ import { PreferencesChart } from "@/design/screens/admin/PreferencesChart";
 import type { AppData, FoodCategory, FoodPrefStat } from "@/design/data";
 import { signOut } from "@/lib/auth-actions";
 import { addFoodCategory, patchFoodCategory, removeFoodCategory } from "@/lib/menu-actions";
+import { enviarCampanha } from "@/lib/push-actions";
 
 function initials(name: string) {
   const p = (name || "").trim().split(/\s+/).filter(Boolean);
@@ -54,7 +55,55 @@ function FoodOptionRow({ opt }: { opt: FoodCategory }) {
   );
 }
 
-type View = "home" | "perfil" | "equipa" | "comida";
+function CampanhaForm({ foodCategories }: { foodCategories: FoodCategory[] }) {
+  const [titulo, setTitulo] = useState("");
+  const [corpo, setCorpo] = useState("");
+  const [segmento, setSegmento] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function send() {
+    if (busy || titulo.trim().length < 2 || corpo.trim().length < 2) return;
+    setBusy(true);
+    setRes(null);
+    const r = await enviarCampanha({ titulo, corpo, segmento });
+    setBusy(false);
+    if (r.error) {
+      setRes({ ok: false, text: r.error });
+      return;
+    }
+    setRes({ ok: true, text: `Enviada a ${r.enviados} de ${r.alvo} dispositivos.` });
+    setTitulo("");
+    setCorpo("");
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", border: "1px solid var(--c-line)", background: "var(--c-surface)", borderRadius: 12,
+    padding: "11px 13px", fontFamily: "var(--f-body)", fontSize: 14.5, color: "var(--c-ink)", outline: "none",
+  };
+
+  return (
+    <Card style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+      <div>
+        <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12, color: "var(--c-muted)", marginBottom: 5 }}>SEGMENTO</div>
+        <select value={segmento} onChange={(e) => setSegmento(e.target.value)} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+          <option value="">Todos os clientes</option>
+          {foodCategories.map((f) => (
+            <option key={f.id} value={f.slug}>Gostam de {f.label_pt}</option>
+          ))}
+        </select>
+      </div>
+      <input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Título (ex.: Pastéis quentinhos! 🥐)" maxLength={80} style={inputStyle} />
+      <textarea value={corpo} onChange={(e) => setCorpo(e.target.value)} placeholder="Mensagem (ex.: Hoje há pastéis acabados de fazer até às 12h.)" maxLength={300} rows={3} style={{ ...inputStyle, resize: "vertical", fontFamily: "var(--f-body)" }} />
+      {res && <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: res.ok ? "var(--c-green)" : "var(--c-red)" }}>{res.text}</div>}
+      <Button full icon="bell" onClick={send} disabled={busy || titulo.trim().length < 2 || corpo.trim().length < 2}>
+        {busy ? "A enviar…" : "Enviar notificação"}
+      </Button>
+    </Card>
+  );
+}
+
+type View = "home" | "perfil" | "equipa" | "comida" | "campanhas";
 
 export function ConfiguracoesAdmin({
   me,
@@ -130,6 +179,24 @@ export function ConfiguracoesAdmin({
     );
   }
 
+  // Sub-página: Campanhas push
+  if (view === "campanhas") {
+    return (
+      <>
+        <TopBar title="Campanhas push" onBack={() => setView("home")} />
+        <Scroll>
+          <p style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", margin: "0 2px 14px", lineHeight: 1.5 }}>
+            Envia uma notificação para o telemóvel dos clientes que ativaram. Escolhe o segmento pela comida preferida para campanhas mais certeiras.
+          </p>
+          <CampanhaForm foodCategories={foodCategories} />
+          <p style={{ fontFamily: "var(--f-body)", fontSize: 11.5, color: "var(--c-muted)", margin: "12px 2px 0", lineHeight: 1.5 }}>
+            Só recebe quem ativou as notificações no perfil. No iPhone é preciso ter a app adicionada ao ecrã principal.
+          </p>
+        </Scroll>
+      </>
+    );
+  }
+
   // Home das configurações
   return (
     <>
@@ -172,6 +239,15 @@ export function ConfiguracoesAdmin({
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Comida & preferências</div>
                 <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>Opções de comida e gráfico de preferências</div>
+              </div>
+              <Icon name="chevronRight" size={20} color="var(--c-muted)" />
+            </Card>
+
+            <Card onClick={() => setView("campanhas")} style={{ marginTop: 11, display: "flex", alignItems: "center", gap: 13 }}>
+              <IconTile icon="bell" accent="var(--c-green)" size={42} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Campanhas push</div>
+                <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>Enviar notificações segmentadas</div>
               </div>
               <Icon name="chevronRight" size={20} color="var(--c-muted)" />
             </Card>

@@ -5,6 +5,7 @@ import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/ui";
 import { TiersSheet } from "@/design/screens/AppScreens";
+import { PushOptIn } from "@/design/screens/PushOptIn";
 import { TIERS, tierIndexFor, type AppData, type FoodCategory } from "@/design/data";
 import { updateProfile } from "@/lib/app-actions";
 import { signOut } from "@/lib/auth-actions";
@@ -89,6 +90,8 @@ export function Profile({
           </div>
           <LangToggle value={lang} onChange={setLang} flags />
         </Card>
+
+        <PushOptIn />
 
         {isAdmin && (
           <button onClick={onAdmin} style={{ width: "100%", marginTop: 16, display: "flex", alignItems: "center", gap: 13, padding: 15, borderRadius: 18, cursor: "pointer", textAlign: "left", border: "none", color: "#fff", background: "linear-gradient(135deg, var(--c-ink), color-mix(in srgb, var(--c-ink) 70%, var(--c-primary)))", boxShadow: "0 12px 26px -12px rgba(40,30,10,0.5)" }}>

@@ -22,5 +22,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return () => data.subscription.unsubscribe();
   }, [router, pathname]);
 
+  // Regista o service worker (Web Push + base PWA).
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  }, []);
+
   return <LangProvider>{children}</LangProvider>;
 }
