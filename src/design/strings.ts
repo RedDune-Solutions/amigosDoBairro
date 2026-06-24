@@ -100,7 +100,7 @@ export const STRINGS: Record<string, Entry> = {
 
   // LoyaltyCard
   "card.title": { pt: "O meu cartão", en: "My card" },
-  "card.pointsCap": { pt: "pontos · 1€ = 1pt", en: "points · €1 = 1pt" },
+  "card.pointsCap": { pt: "pontos · 1€ = 10pt", en: "points · €1 = 10pt" },
   "card.stampsCap": { pt: "carimbos · 10 = raspadinhas", en: "stamps · 10 = scratch cards" },
   "card.yourStamps": { pt: "Os teus carimbos", en: "Your stamps" },
   "card.perStamp": { pt: "compra ≥15€ = 1 carimbo", en: "purchase ≥€15 = 1 stamp" },

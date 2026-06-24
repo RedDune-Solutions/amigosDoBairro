@@ -132,6 +132,7 @@ export function AuthScreen({
                   <Icon name="heart" size={18} color="var(--c-muted)" style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
                   <select
                     name="food_pref"
+                    required
                     defaultValue=""
                     style={{ width: "100%", appearance: "none", WebkitAppearance: "none", borderRadius: 14, border: "1px solid var(--c-line)", background: "var(--c-surface)", padding: "13px 38px 13px 40px", fontFamily: "var(--f-body)", fontSize: 15, color: "var(--c-ink)", outline: "none", cursor: "pointer" }}
                   >
