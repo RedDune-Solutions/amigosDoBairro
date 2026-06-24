@@ -8,6 +8,7 @@ import type { MemberRow, InviteRow } from "@/design/screens/admin/EquipaScreen";
 import type { AppData, NewsRow } from "@/design/data";
 
 export const dynamic = "force-dynamic";
+export const metadata = { robots: { index: false, follow: false } };
 
 const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 

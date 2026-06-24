@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/data";
 import type { AppData, HistoryRow, RewardRow, WalletItemRow, NotifRow } from "@/design/data";
 
 export const dynamic = "force-dynamic";
+export const metadata = { robots: { index: false, follow: false } };
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
