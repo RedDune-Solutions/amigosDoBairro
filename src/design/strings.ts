@@ -155,7 +155,23 @@ export const STRINGS: Record<string, Entry> = {
   "prof.r.edit": { pt: "Editar perfil", en: "Edit profile" },
   "prof.r.notif": { pt: "Notificações", en: "Notifications" },
   "prof.r.notifOn": { pt: "Ativas", en: "On" },
+  "prof.r.faq": { pt: "Perguntas frequentes", en: "FAQ" },
   "prof.admin": { pt: "Painel de administração", en: "Admin panel" },
+
+  // FAQ
+  "faq.title": { pt: "Perguntas frequentes", en: "FAQ" },
+  "faq.s.points": { pt: "Sistema de pontos", en: "Points system" },
+  "faq.s.stamps": { pt: "Sistema de carimbos", en: "Stamp system" },
+  "faq.p1.q": { pt: "Como funcionam os meus pontos?", en: "How do my points work?" },
+  "faq.p1.a": { pt: "Cada compra ou interação gera pontos. Cada 1€ gasto vale 10 pontos. Ganhas ainda 150 pontos ao registares-te, 10 pontos no primeiro login do dia e 20 pontos ao fazer check-in no café.", en: "Every purchase or interaction earns points. Each €1 spent is worth 10 points. You also get 150 points when you sign up, 10 points on your first login of the day and 20 points for checking in at the café." },
+  "faq.p2.q": { pt: "Os meus pontos expiram?", en: "Do my points expire?" },
+  "faq.p2.a": { pt: "Sim. Cada lote de pontos é válido durante 180 dias (6 meses) a contar do momento em que o acumulaste.", en: "Yes. Each batch of points is valid for 180 days (6 months) from the moment you earned it." },
+  "faq.p3.q": { pt: "Por que ordem são descontados os pontos?", en: "In what order are points spent?" },
+  "faq.p3.a": { pt: "Usamos sempre primeiro os teus pontos mais antigos — os que estão mais perto de expirar — protegendo o resto do teu saldo, enquanto os pontos novos mantêm a sua validade.", en: "We always use your oldest points first — the ones closest to expiring — protecting the rest of your balance, while newer points keep their validity." },
+  "faq.c1.q": { pt: "Como ganho carimbos?", en: "How do I earn stamps?" },
+  "faq.c1.a": { pt: "Cada compra de valor igual ou superior a 15€ numa única transação vale 1 carimbo. Há um limite de 2 carimbos por semana.", en: "Each purchase of €15 or more in a single transaction earns 1 stamp. There's a limit of 2 stamps per week." },
+  "faq.c2.q": { pt: "O que acontece ao completar o cartão?", en: "What happens when I complete the card?" },
+  "faq.c2.a": { pt: "Ao atingir os 10 carimbos, o cartão reinicia e recebes de imediato duas raspadinhas: uma de prémios regulares e uma de grandes prémios.", en: "When you reach 10 stamps, the card resets and you immediately get two scratch cards: one for regular prizes and one for big prizes." },
   "prof.adminSub": { pt: "Gerir prémios, resgates e estatísticas", en: "Manage prizes, redemptions and stats" },
   "prof.logout": { pt: "Terminar sessão", en: "Log out" },
 

@@ -34,8 +34,8 @@ export default async function AppPage() {
     { data: notifData },
   ] = await Promise.all([
     supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at").eq("id", user.id).single(),
-    supabase.rpc("meu_saldo"),
-    supabase.rpc("meus_pontos_ganhos"),
+    supabase.rpc("meu_saldo_v2"),
+    supabase.rpc("meus_pontos_ganhos_v2"),
     supabase.from("loyalty_config").select("euro_per_stamp, stamp_goal").eq("id", true).single(),
     supabase.from("rewards").select("id, titulo, nome_en, descricao, desc_en, custo_pontos, icon, accent").eq("ativo", true).order("ordem", { ascending: true }),
     supabase.from("points_ledger").select("id, delta, reason, source, created_at").order("created_at", { ascending: false }).limit(20),
