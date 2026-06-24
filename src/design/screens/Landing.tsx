@@ -10,7 +10,7 @@ const MARQUEE_TOP = ["/galeria/bagel.jpg", "/galeria/burger-sumos.jpg", "/galeri
 const MARQUEE_BOTTOM = ["/galeria/panquecas.jpg", "/galeria/sandes.jpg", "/galeria/brunch.jpg"];
 
 function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) {
-  const loop = [...tiles, ...tiles, ...tiles];
+  const loop = [...tiles, ...tiles];
   return (
     <div style={{ overflow: "hidden", width: "100%" }}>
       <div
