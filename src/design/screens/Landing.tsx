@@ -272,12 +272,17 @@ export function Landing() {
                   {hoursVal[1]}
                 </div>
               </div>
-              <a
-                href="tel:+351289034275"
-                style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, color: "var(--c-ink)", textDecoration: "none" }}
-              >
-                <Icon name="phone" size={16} color="var(--c-green)" /> {T("land.phoneVal") as string}
-              </a>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, color: "var(--c-ink)" }}>
+                <Icon name="phone" size={16} color="var(--c-green)" />
+                <a
+                  href="https://wa.me/351289034275"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--c-green)", textDecoration: "none", fontWeight: 800 }}
+                >
+                  {T("land.phoneVal") as string}
+                </a>
+              </div>
             </div>
           </Card>
         </div>
