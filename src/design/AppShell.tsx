@@ -11,11 +11,11 @@ import { Reservations } from "@/design/screens/Reservations";
 import { Profile, EditProfile } from "@/design/screens/Profile";
 import { QrModal } from "@/design/screens/QrModal";
 import { NotificationsSheet } from "@/design/screens/NotificationsSheet";
-import { type AppData, type RewardRow, type MenuCatRow } from "@/design/data";
+import { type AppData, type RewardRow, type MenuCatRow, type FoodCategory } from "@/design/data";
 import { redeemReward, reclamarLoginDiario } from "@/lib/app-actions";
 import { marcarNotificacoesLidas } from "@/lib/notif-actions";
 
-export function AppShell({ data, menu }: { data: AppData; menu?: MenuCatRow[] }) {
+export function AppShell({ data, menu, foodCategories = [] }: { data: AppData; menu?: MenuCatRow[]; foodCategories?: FoodCategory[] }) {
   const { T, L, lang, setLang } = useI18n();
   const router = useRouter();
   const [tab, setTab] = useState("home");
@@ -88,6 +88,7 @@ export function AppShell({ data, menu }: { data: AppData; menu?: MenuCatRow[] })
     screen = editing ? (
       <EditProfile
         data={data}
+        foodCategories={foodCategories}
         onBack={() => setEditing(false)}
         onSaved={() => {
           flash(T("edit.saved") as string);

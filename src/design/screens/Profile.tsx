@@ -5,7 +5,7 @@ import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/ui";
 import { TiersSheet } from "@/design/screens/AppScreens";
-import { TIERS, tierIndexFor, type AppData } from "@/design/data";
+import { TIERS, tierIndexFor, type AppData, type FoodCategory } from "@/design/data";
 import { updateProfile } from "@/lib/app-actions";
 import { signOut } from "@/lib/auth-actions";
 import { createClient } from "@/lib/supabase/client";
@@ -214,22 +214,25 @@ function EditField({
 
 export function EditProfile({
   data,
+  foodCategories = [],
   onBack,
   onSaved,
 }: {
   data: AppData;
+  foodCategories?: FoodCategory[];
   onBack: () => void;
   onSaved: () => void;
 }) {
-  const { T } = useI18n();
+  const { T, lang } = useI18n();
   const [name, setName] = useState(data.nome);
   const [phone, setPhone] = useState(data.telefone);
+  const [foodPref, setFoodPref] = useState<string>(data.foodPref ?? "");
   const [avatar, setAvatar] = useState<string | null>(data.avatarUrl);
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const initials = initialsFrom(name);
-  const dirty = name !== data.nome || phone !== data.telefone;
+  const dirty = name !== data.nome || phone !== data.telefone || foodPref !== (data.foodPref ?? "");
   const valid = name.trim().length > 1;
 
   async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -262,7 +265,7 @@ export function EditProfile({
   async function save() {
     if (!valid || !dirty || busy) return;
     setBusy(true);
-    const res = await updateProfile({ nome: name, telefone: phone });
+    const res = await updateProfile({ nome: name, telefone: phone, food_pref: foodPref || null });
     setBusy(false);
     if (res.error) return;
     onSaved();
@@ -294,6 +297,30 @@ export function EditProfile({
           <EditField icon="mail" accent="var(--c-primary)" label={T("edit.email") as string} value={data.email} readOnly />
           <EditField icon="phone" accent="var(--c-green)" label={T("edit.phone") as string} value={phone} onChange={setPhone} placeholder="+351 ..." inputType="tel" last />
         </Card>
+
+        {foodCategories.length > 0 && (
+          <Card style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 13, padding: "12px 16px" }}>
+            <IconTile icon="heart" accent="var(--c-red)" size={40} iconSize={19} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 11.5, letterSpacing: 0.4, textTransform: "uppercase", color: "var(--c-muted)" }}>
+                {lang === "en" ? "Favourite food" : "Comida preferida"}
+              </div>
+              <div style={{ position: "relative", marginTop: 2 }}>
+                <select
+                  value={foodPref}
+                  onChange={(e) => setFoodPref(e.target.value)}
+                  style={{ width: "100%", appearance: "none", WebkitAppearance: "none", border: "none", outline: "none", background: "transparent", fontFamily: "var(--f-body)", fontWeight: 600, fontSize: 15.5, color: foodPref ? "var(--c-ink)" : "var(--c-muted)", padding: "3px 22px 0 0", cursor: "pointer" }}
+                >
+                  <option value="">{lang === "en" ? "Not set" : "Sem escolha"}</option>
+                  {foodCategories.map((f) => (
+                    <option key={f.id} value={f.slug}>{lang === "en" && f.label_en ? f.label_en : f.label_pt}</option>
+                  ))}
+                </select>
+                <Icon name="chevronRight" size={16} color="var(--c-muted)" style={{ position: "absolute", right: 2, top: "50%", transform: "translateY(-50%) rotate(90deg)", pointerEvents: "none" }} />
+              </div>
+            </div>
+          </Card>
+        )}
 
         <Card style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 13, background: "color-mix(in srgb, var(--c-primary) 7%, var(--c-surface))", borderColor: "color-mix(in srgb, var(--c-primary) 20%, var(--c-line))" }}>
           <IconTile icon="star" accent="var(--c-primary)" size={40} iconSize={19} />

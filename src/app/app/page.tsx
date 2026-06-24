@@ -1,7 +1,7 @@
 import { Stage } from "@/design/ui";
 import { AppShell } from "@/design/AppShell";
 import { requireUser } from "@/lib/data";
-import { getMenu } from "@/lib/menu-actions";
+import { getMenu, getFoodCategories } from "@/lib/menu-actions";
 import type { AppData, HistoryRow, RewardRow, WalletItemRow, NotifRow } from "@/design/data";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export default async function AppPage() {
     { data: notifData },
     { data: lotsData },
   ] = await Promise.all([
-    supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at").eq("id", user.id).single(),
+    supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at, food_pref").eq("id", user.id).single(),
     supabase.rpc("meu_saldo_v2"),
     supabase.rpc("meus_pontos_ganhos_v2"),
     supabase.from("loyalty_config").select("euro_per_stamp, stamp_goal").eq("id", true).single(),
@@ -114,6 +114,7 @@ export default async function AppPage() {
     avatarUrl: (profile?.avatar_url as string | null) ?? null,
     role: (profile?.role as AppData["role"]) ?? "customer",
     memberSince,
+    foodPref: (profile?.food_pref as string | null) ?? null,
     points: typeof saldo === "number" ? saldo : 0,
     earned: typeof ganhos === "number" ? ganhos : 0,
     stamps: profile?.stamps ?? 0,
@@ -139,11 +140,11 @@ export default async function AppPage() {
       : null,
   };
 
-  const menu = await getMenu();
+  const [menu, foodCategories] = await Promise.all([getMenu(), getFoodCategories()]);
 
   return (
     <Stage>
-      <AppShell data={data} menu={menu} />
+      <AppShell data={data} menu={menu} foodCategories={foodCategories} />
     </Stage>
   );
 }

@@ -180,6 +180,7 @@ export type AppData = {
   avatarUrl: string | null;
   role: "customer" | "staff" | "admin";
   memberSince: string;
+  foodPref: string | null;
   points: number;
   earned: number;
   stamps: number;

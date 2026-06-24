@@ -29,6 +29,7 @@ export default async function AdminPage() {
     avatarUrl: (profile as { avatar_url?: string | null }).avatar_url ?? null,
     role: profile.role as AppData["role"],
     memberSince: `${MESES[created.getMonth()]} ${created.getFullYear()}`,
+    foodPref: null,
     points: 0,
     earned: 0,
     stamps: 0,

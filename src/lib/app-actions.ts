@@ -48,6 +48,7 @@ export async function updateProfile(input: {
   nome: string;
   telefone: string;
   avatar_url?: string | null;
+  food_pref?: string | null;
 }): Promise<{ ok?: boolean; error?: string }> {
   const nome = input.nome.trim();
   const telefone = input.telefone.trim();
@@ -57,11 +58,12 @@ export async function updateProfile(input: {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada." };
-  const patch: { nome: string; telefone: string | null; avatar_url?: string | null } = {
+  const patch: { nome: string; telefone: string | null; avatar_url?: string | null; food_pref?: string | null } = {
     nome,
     telefone: telefone || null,
   };
   if (input.avatar_url !== undefined) patch.avatar_url = input.avatar_url;
+  if (input.food_pref !== undefined) patch.food_pref = input.food_pref || null;
   const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
   if (error) return { error: "Não foi possível guardar." };
   return { ok: true };
