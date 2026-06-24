@@ -5,21 +5,12 @@ import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { Scroll, Card, IconTile, Button, LogoBadge, SectionLabel } from "@/design/ui";
 
-const MARQUEE_TOP = [
-  { icon: "coffee", from: "#E8A14C", to: "#C9772A" },
-  { icon: "cake", from: "#E67E73", to: "#C2503F" },
-  { icon: "plate", from: "#7BB88C", to: "#4E9468" },
-  { icon: "sandwich", from: "#6FA8C9", to: "#3E7FA6" },
-];
-const MARQUEE_BOTTOM = [
-  { icon: "star", from: "#D8A24A", to: "#A8761E" },
-  { icon: "gift", from: "#B98AC9", to: "#8A5BA6" },
-  { icon: "coffee", from: "#E0905A", to: "#B5632A" },
-  { icon: "cake", from: "#E8B05C", to: "#C98A2A" },
-];
+// Fotos reais do café (@osamigosdobairro).
+const MARQUEE_TOP = ["/galeria/bagel.jpg", "/galeria/burger-sumos.jpg", "/galeria/brunch.jpg"];
+const MARQUEE_BOTTOM = ["/galeria/panquecas.jpg", "/galeria/sandes.jpg", "/galeria/brunch.jpg"];
 
-function MarqueeRow({ tiles, dir }: { tiles: typeof MARQUEE_TOP; dir: "left" | "right" }) {
-  const loop = [...tiles, ...tiles];
+function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) {
+  const loop = [...tiles, ...tiles, ...tiles];
   return (
     <div style={{ overflow: "hidden", width: "100%" }}>
       <div
@@ -27,10 +18,10 @@ function MarqueeRow({ tiles, dir }: { tiles: typeof MARQUEE_TOP; dir: "left" | "
           display: "flex",
           gap: 8,
           width: "max-content",
-          animation: `${dir === "left" ? "omMarqueeL" : "omMarqueeR"} 22s linear infinite`,
+          animation: `${dir === "left" ? "omMarqueeL" : "omMarqueeR"} 28s linear infinite`,
         }}
       >
-        {loop.map((s, i) => (
+        {loop.map((src, i) => (
           <div
             key={i}
             style={{
@@ -39,25 +30,11 @@ function MarqueeRow({ tiles, dir }: { tiles: typeof MARQUEE_TOP; dir: "left" | "
               height: 88,
               borderRadius: 14,
               overflow: "hidden",
-              background: `linear-gradient(140deg, ${s.from}, ${s.to})`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
+              background: "var(--c-surface2)",
             }}
           >
-            <div
-              style={{
-                position: "absolute",
-                top: -18,
-                right: -12,
-                width: 60,
-                height: 60,
-                borderRadius: "50%",
-                background: "rgba(255,255,255,0.14)",
-              }}
-            />
-            <Icon name={s.icon} size={40} stroke={1.7} color="rgba(255,255,255,0.92)" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={src} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           </div>
         ))}
       </div>
