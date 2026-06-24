@@ -58,6 +58,18 @@ export async function registarCheckin(code: string): Promise<{ pontos?: number; 
   return { pontos: res?.pontos };
 }
 
+/** Estado do check-in de um código SEM o consumir (para desativar a checkbox). */
+export async function estadoCheckin(code: string): Promise<{ valid: boolean; already: boolean }> {
+  const c = z.string().trim().regex(/^[0-9]{4,8}$/);
+  const parsed = c.safeParse(code);
+  if (!parsed.success) return { valid: false, already: false };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("checkin_estado_por_code", { p_code: parsed.data });
+  if (error) return { valid: false, already: false };
+  const res = data as { valid?: boolean; already?: boolean } | null;
+  return { valid: Boolean(res?.valid), already: Boolean(res?.already) };
+}
+
 /** Valida um voucher por código (raspadinha ou resgate de pontos). */
 export async function validarVoucher(codigo: string): Promise<{ ok?: boolean; error?: string }> {
   const code = codigo.trim().toUpperCase();

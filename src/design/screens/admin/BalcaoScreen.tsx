@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/design/icons";
 import { TopBar, Scroll, Card, Button } from "@/design/ui";
-import { registarCompra, validarVoucher } from "@/lib/balcao-actions";
+import { registarCompra, validarVoucher, estadoCheckin } from "@/lib/balcao-actions";
 
 const READER_ID = "balcao-qr";
 
@@ -11,6 +11,7 @@ export function BalcaoScreen() {
   const [code, setCode] = useState("");
   const [euros, setEuros] = useState("");
   const [checkin, setCheckin] = useState(false);
+  const [alreadyToday, setAlreadyToday] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [camError, setCamError] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -60,6 +61,24 @@ export function BalcaoScreen() {
     };
   }, []);
 
+  // Estado do check-in do código atual (sem o consumir): desativa a checkbox
+  // se este cliente já fez check-in hoje.
+  useEffect(() => {
+    if (!/^[0-9]{4,8}$/.test(code)) {
+      setAlreadyToday(false);
+      return;
+    }
+    let alive = true;
+    estadoCheckin(code).then((r) => {
+      if (!alive) return;
+      setAlreadyToday(r.valid && r.already);
+      if (r.valid && r.already) setCheckin(false);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [code]);
+
   async function submit() {
     if (busy) return;
     setBusy(true);
@@ -108,11 +127,13 @@ export function BalcaoScreen() {
             <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Valor gasto (€)</span>
             <input value={euros} onChange={(e) => setEuros(e.target.value)} type="number" min={1} placeholder="15" style={inputStyle} />
           </label>
-          <button type="button" onClick={() => setCheckin((v) => !v)} disabled={busy} style={{ display: "flex", alignItems: "center", gap: 10, cursor: busy ? "default" : "pointer", border: "1px solid var(--c-line)", borderRadius: 12, background: "var(--c-surface)", padding: "11px 13px", textAlign: "left" }}>
-            <span style={{ width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: checkin ? "none" : "1.5px solid var(--c-line)", background: checkin ? "var(--c-primary)" : "var(--c-surface)", color: "#fff" }}>
-              {checkin && <Icon name="check" size={14} stroke={3} color="#fff" />}
+          <button type="button" onClick={() => !alreadyToday && setCheckin((v) => !v)} disabled={busy || alreadyToday} style={{ display: "flex", alignItems: "center", gap: 10, cursor: busy || alreadyToday ? "default" : "pointer", border: "1px solid var(--c-line)", borderRadius: 12, background: alreadyToday ? "var(--c-surface2)" : "var(--c-surface)", padding: "11px 13px", textAlign: "left", opacity: alreadyToday ? 0.6 : 1 }}>
+            <span style={{ width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: checkin && !alreadyToday ? "none" : "1.5px solid var(--c-line)", background: checkin && !alreadyToday ? "var(--c-primary)" : "var(--c-surface)", color: "#fff" }}>
+              {checkin && !alreadyToday && <Icon name="check" size={14} stroke={3} color="#fff" />}
             </span>
-            <span style={{ flex: 1, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-ink)" }}>Fazer check-in do cliente <span style={{ color: "var(--c-muted)", fontWeight: 600 }}>(+20 pts · 1×/dia)</span></span>
+            <span style={{ flex: 1, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-ink)" }}>
+              {alreadyToday ? "Check-in já feito hoje" : <>Fazer check-in do cliente <span style={{ color: "var(--c-muted)", fontWeight: 600 }}>(+20 pts · 1×/dia)</span></>}
+            </span>
           </button>
           {msg && (
             <p style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: msg.ok ? "var(--c-green)" : "var(--c-red)" }}>{msg.text}</p>
