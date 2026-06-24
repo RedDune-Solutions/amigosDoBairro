@@ -46,6 +46,15 @@ export type AdminStatsData = {
   activeClients: number;
 };
 
+export type LogRow = {
+  quando: string;
+  tipo: string;
+  staff: string;
+  cliente: string;
+  detalhe: string;
+  pontos: number;
+};
+
 const BADGE_ICONS = ["gift", "coffee", "cake", "sandwich", "plate", "percent", "ticket", "star", "sparkle", "trophy", "heart", "tag"];
 const BADGE_ACCENTS = ["primary", "green", "blue", "red"];
 
@@ -429,6 +438,62 @@ export function AdminStats({ stats, prizes }: { stats: AdminStatsData; prizes: P
           </div>
         ))}
       </Card>
+    </>
+  );
+}
+
+export function AdminLog({ log }: { log: LogRow[] }) {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? log.filter((r) => r.staff.toLowerCase().includes(q) || r.cliente.toLowerCase().includes(q) || r.detalhe.toLowerCase().includes(q) || r.tipo.toLowerCase().includes(q))
+    : log;
+
+  function fmt(iso: string): string {
+    const d = new Date(iso);
+    return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  }
+
+  return (
+    <>
+      <p style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", margin: "0 2px 12px", lineHeight: 1.5 }}>
+        Quem da equipa deu pontos, fez ajustes ou entregou prémios. Movimentos mais recentes primeiro.
+      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "11px 13px", borderRadius: 14, background: "var(--c-surface)", border: "1px solid var(--c-line)", marginBottom: 12 }}>
+        <Icon name="search" size={18} color="var(--c-muted)" stroke={2.2} />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Procurar funcionário, cliente ou prémio…" style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", fontFamily: "var(--f-body)", fontWeight: 600, fontSize: 13.5, color: "var(--c-ink)" }} />
+      </div>
+      {!filtered.length ? (
+        <Card style={{ textAlign: "center", padding: "26px 18px", color: "var(--c-muted)", fontFamily: "var(--f-body)", fontSize: 13 }}>
+          {log.length ? `Sem resultados para “${query}”.` : "Ainda sem ações registadas."}
+        </Card>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          {filtered.map((r, i) => {
+            const pos = r.pontos > 0;
+            const neg = r.pontos < 0;
+            return (
+              <Card key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                    <span style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 13.5, color: "var(--c-ink)" }}>{r.tipo}</span>
+                    <span style={{ fontFamily: "var(--f-body)", fontSize: 11.5, color: "var(--c-muted)" }}>{fmt(r.quando)}</span>
+                  </div>
+                  <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-ink)", marginTop: 2 }}>
+                    <b>{r.staff}</b> → {r.cliente}
+                  </div>
+                  {r.detalhe && <div style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.detalhe}</div>}
+                </div>
+                {r.pontos !== 0 && (
+                  <span style={{ flexShrink: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 14, color: pos ? "var(--c-green)" : neg ? "var(--c-red)" : "var(--c-muted)" }}>
+                    {pos ? "+" : ""}{r.pontos}
+                  </span>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }

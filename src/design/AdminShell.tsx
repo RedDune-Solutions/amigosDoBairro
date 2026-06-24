@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { Scroll } from "@/design/ui";
-import { AdminPrizes, AdminRewards, AdminStats, type PrizeAdmin, type RewardAdmin, type AdminStatsData } from "@/design/AdminPanel";
+import { AdminPrizes, AdminRewards, AdminStats, AdminLog, type PrizeAdmin, type RewardAdmin, type AdminStatsData, type LogRow } from "@/design/AdminPanel";
 import { BalcaoScreen } from "@/design/screens/admin/BalcaoScreen";
 import { ReservasAdmin, type ReservaAdminRow } from "@/design/screens/admin/ReservasAdmin";
 import { EquipaScreen, type MemberRow, type InviteRow } from "@/design/screens/admin/EquipaScreen";
@@ -36,6 +36,7 @@ export function AdminShell({
   members,
   invites,
   news,
+  log,
 }: {
   role: "staff" | "admin";
   nome: string;
@@ -49,6 +50,7 @@ export function AdminShell({
   members: MemberRow[];
   invites: InviteRow[];
   news: NewsRow[];
+  log: LogRow[];
 }) {
   const router = useRouter();
   const isAdmin = role === "admin";
@@ -72,6 +74,10 @@ export function AdminShell({
         <Scroll>
           <AdminStats stats={stats} prizes={prizes} />
           <NovidadesAdmin news={news} />
+          <div style={{ marginTop: 22, fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: "var(--c-muted)" }}>Registo de ações</div>
+          <div style={{ marginTop: 11 }}>
+            <AdminLog log={log} />
+          </div>
         </Scroll>
       </>
     );

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { Stage } from "@/design/ui";
 import { AdminShell } from "@/design/AdminShell";
 import { getProfile } from "@/lib/data";
-import type { PrizeAdmin, RewardAdmin, AdminStatsData } from "@/design/AdminPanel";
+import type { PrizeAdmin, RewardAdmin, AdminStatsData, LogRow } from "@/design/AdminPanel";
 import type { ReservaAdminRow } from "@/design/screens/admin/ReservasAdmin";
 import type { MemberRow, InviteRow } from "@/design/screens/admin/EquipaScreen";
 import type { AppData, NewsRow } from "@/design/data";
@@ -56,6 +56,7 @@ export default async function AdminPage() {
     { count: redLevantado },
     { count: activeClients },
     { data: newsData },
+    { data: logData },
   ] = await Promise.all([
     isAdmin
       ? supabase.from("prizes").select("id, kind, nome_pt, nome_en, desc_pt, desc_en, icon, accent, weight").order("kind").order("id")
@@ -74,6 +75,7 @@ export default async function AdminPage() {
     isAdmin ? supabase.from("redemptions").select("id", { count: "exact", head: true }).eq("estado", "levantado") : Promise.resolve({ count: 0 }),
     isAdmin ? supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "customer") : Promise.resolve({ count: 0 }),
     isAdmin ? supabase.from("news").select("id, titulo_pt, titulo_en, desc_pt, desc_en, icon, accent, ativo, created_at").order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    isAdmin ? supabase.rpc("historico_acoes", { p_limit: 100 }) : Promise.resolve({ data: [] }),
   ]);
 
   type Rel = { nome?: string } | { nome?: string }[] | null;
@@ -110,6 +112,7 @@ export default async function AdminPage() {
         members={(membersData ?? []) as MemberRow[]}
         invites={(invitesData ?? []) as InviteRow[]}
         news={(newsData ?? []) as NewsRow[]}
+        log={(logData ?? []) as LogRow[]}
       />
     </Stage>
   );
