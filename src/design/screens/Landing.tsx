@@ -275,7 +275,7 @@ export function Landing() {
               <div style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, color: "var(--c-ink)" }}>
                 <Icon name="phone" size={16} color="var(--c-green)" />
                 <a
-                  href="https://wa.me/351289034275"
+                  href="https://wa.me/351932305505"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: "var(--c-green)", textDecoration: "none", fontWeight: 800 }}
