@@ -1,14 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { TopBar, Scroll, Card } from "@/design/ui";
-import type { MenuCatRow } from "@/design/data";
+import { createClient } from "@/lib/supabase/client";
+import type { MenuCatRow, MenuItemRow } from "@/design/data";
 import {
   addMenuCategory, patchMenuCategory, removeMenuCategory,
   addMenuItem, patchMenuItem, removeMenuItem,
 } from "@/lib/menu-actions";
+
+function ItemPhoto({ item }: { item: MenuItemRow }) {
+  const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function pick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    const supabase = createClient();
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${item.id}.${ext}`;
+    const { error } = await supabase.storage.from("menu").upload(path, file, { upsert: true, contentType: file.type });
+    if (!error) {
+      const { data: pub } = supabase.storage.from("menu").getPublicUrl(path);
+      await patchMenuItem({ id: item.id, image_url: `${pub.publicUrl}?t=${Date.now()}` });
+      router.refresh();
+    }
+    setBusy(false);
+  }
+  async function remove() {
+    await patchMenuItem({ id: item.id, image_url: null });
+    router.refresh();
+  }
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <button onClick={() => fileRef.current?.click()} disabled={busy} style={{ width: 52, height: 52, borderRadius: 12, flexShrink: 0, overflow: "hidden", border: "1px solid var(--c-line)", background: "var(--c-surface2)", cursor: busy ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-muted)", padding: 0 }}>
+        {item.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        ) : (
+          <Icon name="camera" size={20} stroke={2} />
+        )}
+      </button>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <button onClick={() => fileRef.current?.click()} disabled={busy} style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-primary)" }}>
+          {busy ? "A enviar…" : item.image_url ? "Trocar foto" : "Adicionar foto"}
+        </button>
+        {item.image_url && (
+          <button onClick={remove} style={{ marginLeft: 12, border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-red)" }}>Remover</button>
+        )}
+      </div>
+      <input ref={fileRef} type="file" accept="image/*" onChange={pick} style={{ display: "none" }} />
+    </div>
+  );
+}
 
 const ICONS = ["coffee", "sandwich", "cake", "plate", "star", "heart", "tag", "gift"];
 const ACCENTS = ["primary", "green", "blue", "red"];
@@ -101,6 +150,7 @@ export function MenuAdmin({ menu }: { menu: MenuCatRow[] }) {
                     </div>
                     <Lang flag="PT" value={it.desc_pt || ""} ph="Descrição" onCommit={(v) => { void patchMenuItem({ id: it.id, desc_pt: v }); }} />
                     <Lang flag="EN" value={it.desc_en || ""} ph="Description" onCommit={(v) => { void patchMenuItem({ id: it.id, desc_en: v }); }} />
+                    <ItemPhoto item={it} />
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 11.5, color: "var(--c-muted)", width: 50 }}>PREÇO €</span>
                       <div style={{ width: 90 }}>

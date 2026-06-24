@@ -6,7 +6,8 @@ import { useI18n } from "@/design/i18n";
 import { TopBar, Scroll, Card, Chip, IconTile } from "@/design/ui";
 import { MENU, type Bi, type MenuCatRow } from "@/design/data";
 
-type Norm = { label: Bi; accent: string; icon: string; items: { name: Bi; desc: Bi; price: string }[] };
+type NormItem = { name: Bi; desc: Bi; price: string; image: string | null };
+type Norm = { label: Bi; accent: string; icon: string; items: NormItem[] };
 
 function fromRows(rows: MenuCatRow[]): Norm[] {
   return rows.map((c) => ({
@@ -17,12 +18,13 @@ function fromRows(rows: MenuCatRow[]): Norm[] {
       name: { pt: it.name_pt, en: it.name_en || it.name_pt },
       desc: { pt: it.desc_pt || "", en: it.desc_en || it.desc_pt || "" },
       price: it.price,
+      image: it.image_url,
     })),
   }));
 }
 
 function fromStatic(): Norm[] {
-  return MENU.map((m) => ({ label: m.cat, accent: m.accent, icon: m.icon, items: m.items }));
+  return MENU.map((m) => ({ label: m.cat, accent: m.accent, icon: m.icon, items: m.items.map((it) => ({ ...it, image: null })) }));
 }
 
 export function MenuScreen({ menu }: { menu?: MenuCatRow[] }) {
@@ -49,8 +51,13 @@ export function MenuScreen({ menu }: { menu?: MenuCatRow[] }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
           {active.items.map((it, i) => (
             <Card key={i} style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 58, height: 58, borderRadius: 16, flexShrink: 0, background: `color-mix(in srgb, var(--c-${active.accent}) 15%, var(--c-surface))`, color: `var(--c-${active.accent})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Icon name={active.icon} size={28} stroke={1.9} />
+              <div style={{ width: 58, height: 58, borderRadius: 16, flexShrink: 0, overflow: "hidden", background: `color-mix(in srgb, var(--c-${active.accent}) 15%, var(--c-surface))`, color: `var(--c-${active.accent})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {it.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={it.image} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                ) : (
+                  <Icon name={active.icon} size={28} stroke={1.9} />
+                )}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 16, color: "var(--c-ink)" }}>{L(it.name)}</div>

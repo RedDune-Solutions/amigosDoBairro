@@ -22,7 +22,7 @@ export async function getMenu(): Promise<MenuCatRow[]> {
   if (!cats || cats.length === 0) return [];
   const { data: items } = await supabase
     .from("menu_items")
-    .select("id, category_id, name_pt, name_en, desc_pt, desc_en, price, ordem")
+    .select("id, category_id, name_pt, name_en, desc_pt, desc_en, price, image_url, ordem")
     .order("ordem", { ascending: true });
   return (cats as { id: string; label_pt: string; label_en: string | null; icon: string; accent: string }[]).map((c) => ({
     id: c.id,
@@ -39,6 +39,7 @@ export async function getMenu(): Promise<MenuCatRow[]> {
         desc_pt: it.desc_pt as string | null,
         desc_en: it.desc_en as string | null,
         price: it.price as string,
+        image_url: (it.image_url as string | null) ?? null,
       })),
   }));
 }
@@ -121,6 +122,7 @@ const itemSchema = z.object({
   desc_pt: z.string().trim().max(160).optional(),
   desc_en: z.string().trim().max(160).optional(),
   price: z.string().trim().max(12).optional(),
+  image_url: z.string().trim().max(400).nullable().optional(),
 });
 
 export async function patchMenuItem(input: z.input<typeof itemSchema>): Promise<{ ok?: boolean; error?: string }> {

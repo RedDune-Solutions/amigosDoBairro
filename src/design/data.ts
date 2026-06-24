@@ -139,6 +139,7 @@ export type MenuItemRow = {
   desc_pt: string | null;
   desc_en: string | null;
   price: string;
+  image_url: string | null;
 };
 export type MenuCatRow = {
   id: string;
