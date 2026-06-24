@@ -98,7 +98,6 @@ export function AppShell({ data, menu, foodCategories = [] }: { data: AppData; m
     ) : (
       <Profile
         data={data}
-        points={points}
         lang={lang}
         setLang={setLang}
         onEdit={() => setEditing(true)}

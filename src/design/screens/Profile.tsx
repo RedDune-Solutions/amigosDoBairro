@@ -37,14 +37,12 @@ function Avatar({ url, initials, size }: { url: string | null; initials: string;
 
 export function Profile({
   data,
-  points,
   lang,
   setLang,
   onEdit,
   onAdmin,
 }: {
   data: AppData;
-  points: number;
   lang: Lang;
   setLang: (l: Lang) => void;
   onEdit: () => void;
@@ -75,7 +73,7 @@ export function Profile({
         </div>
 
         <Card style={{ marginTop: 16, display: "flex", padding: "16px 8px" }}>
-          {[[points, T("prof.stat.points") as string], [data.stamps, T("prof.stat.stamps") as string], [data.history.filter((h) => h.pts > 0).length, T("prof.stat.visits") as string]].map(([v, l], i) => (
+          {[[data.earned, T("prof.stat.points") as string], [data.stamps, T("prof.stat.stamps") as string], [data.history.filter((h) => h.pts > 0).length, T("prof.stat.visits") as string]].map(([v, l], i) => (
             <div key={i} style={{ flex: 1, textAlign: "center", borderLeft: i ? "1px solid var(--c-line)" : "none" }}>
               <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 22, color: "var(--c-ink)" }}>{v}</div>
               <div style={{ fontFamily: "var(--f-body)", fontWeight: 600, fontSize: 12, color: "var(--c-muted)" }}>{l}</div>

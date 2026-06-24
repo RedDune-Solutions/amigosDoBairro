@@ -25,22 +25,25 @@ function mapNonceError(m: string): string {
             : "Não foi possível registar.";
 }
 
-/** Staff lê o código do cliente + valor gasto → pontos (€×10) + carimbo (≥15€). */
+/** Staff lê o código do cliente + valor gasto → pontos (€×10) + carimbo (≥15€).
+ *  Check-in opcional na mesma operação (1/dia por cliente). */
 export async function registarCompra(
   code: string,
   euros: number,
-): Promise<{ pontos?: number; carimbo?: boolean; cartola?: boolean; error?: string }> {
+  checkin = false,
+): Promise<{ pontos?: number; carimbo?: boolean; cartola?: boolean; checkin?: boolean; checkinAlready?: boolean; error?: string }> {
   const parsed = compraSchema.safeParse({ code, euros });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("registar_compra_via_code_v2", {
+  const { data, error } = await supabase.rpc("registar_compra_via_code_v3", {
     p_code: parsed.data.code,
     p_euros: parsed.data.euros,
+    p_checkin: checkin,
   });
   if (error) return { error: mapNonceError(error.message ?? "") };
-  const res = data as { pontos?: number; carimbo?: boolean; cartola?: boolean } | null;
-  return { pontos: res?.pontos, carimbo: res?.carimbo, cartola: res?.cartola };
+  const res = data as { pontos?: number; carimbo?: boolean; cartola?: boolean; checkin?: boolean; checkin_already?: boolean } | null;
+  return { pontos: res?.pontos, carimbo: res?.carimbo, cartola: res?.cartola, checkin: res?.checkin, checkinAlready: res?.checkin_already };
 }
 
 /** Staff lê o código do cliente → check-in do dia (+20 pts, 1/dia). */

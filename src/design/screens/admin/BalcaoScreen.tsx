@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Icon } from "@/design/icons";
 import { TopBar, Scroll, Card, Button } from "@/design/ui";
-import { registarCompra, registarCheckin, validarVoucher } from "@/lib/balcao-actions";
+import { registarCompra, validarVoucher } from "@/lib/balcao-actions";
 
 const READER_ID = "balcao-qr";
 
 export function BalcaoScreen() {
   const [code, setCode] = useState("");
   const [euros, setEuros] = useState("");
+  const [checkin, setCheckin] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [camError, setCamError] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -62,32 +64,20 @@ export function BalcaoScreen() {
     if (busy) return;
     setBusy(true);
     setMsg(null);
-    const res = await registarCompra(code, Number(euros));
+    const res = await registarCompra(code, Number(euros), checkin);
     setBusy(false);
     if (res.error) {
       setMsg({ ok: false, text: res.error });
       return;
     }
+    const ciTxt = res.checkin ? " · check-in +20 ✓" : res.checkinAlready ? " · check-in já feito hoje" : "";
     setMsg({
       ok: true,
-      text: `+${res.pontos} pontos${res.carimbo ? " · +1 carimbo" : ""}${res.cartola ? " · cartola completa! 2 raspadinhas 🎉" : ""}`,
+      text: `+${res.pontos} pontos${res.carimbo ? " · +1 carimbo" : ""}${res.cartola ? " · cartola completa! 2 raspadinhas 🎉" : ""}${ciTxt}`,
     });
     setCode("");
     setEuros("");
-  }
-
-  async function checkin() {
-    if (busy) return;
-    setBusy(true);
-    setMsg(null);
-    const res = await registarCheckin(code);
-    setBusy(false);
-    if (res.error) {
-      setMsg({ ok: false, text: res.error });
-      return;
-    }
-    setMsg({ ok: true, text: `Check-in feito · +${res.pontos} pontos ✓` });
-    setCode("");
+    setCheckin(false);
   }
 
   async function validate() {
@@ -118,14 +108,17 @@ export function BalcaoScreen() {
             <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Valor gasto (€)</span>
             <input value={euros} onChange={(e) => setEuros(e.target.value)} type="number" min={1} placeholder="15" style={inputStyle} />
           </label>
+          <button type="button" onClick={() => setCheckin((v) => !v)} disabled={busy} style={{ display: "flex", alignItems: "center", gap: 10, cursor: busy ? "default" : "pointer", border: "1px solid var(--c-line)", borderRadius: 12, background: "var(--c-surface)", padding: "11px 13px", textAlign: "left" }}>
+            <span style={{ width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: checkin ? "none" : "1.5px solid var(--c-line)", background: checkin ? "var(--c-primary)" : "var(--c-surface)", color: "#fff" }}>
+              {checkin && <Icon name="check" size={14} stroke={3} color="#fff" />}
+            </span>
+            <span style={{ flex: 1, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-ink)" }}>Fazer check-in do cliente <span style={{ color: "var(--c-muted)", fontWeight: 600 }}>(+20 pts · 1×/dia)</span></span>
+          </button>
           {msg && (
             <p style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: msg.ok ? "var(--c-green)" : "var(--c-red)" }}>{msg.text}</p>
           )}
           <Button full icon="check" onClick={submit} disabled={busy || !code || !euros}>
             {busy ? "A registar…" : "Registar compra"}
-          </Button>
-          <Button full variant="outline" icon="mapPin" onClick={checkin} disabled={busy || !code}>
-            Check-in do cliente (+20 pts)
           </Button>
         </Card>
 
