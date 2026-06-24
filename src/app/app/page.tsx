@@ -1,6 +1,7 @@
 import { Stage } from "@/design/ui";
 import { AppShell } from "@/design/AppShell";
 import { requireUser } from "@/lib/data";
+import { getMenu } from "@/lib/menu-actions";
 import type { AppData, HistoryRow, RewardRow, WalletItemRow, NotifRow } from "@/design/data";
 
 export const dynamic = "force-dynamic";
@@ -138,9 +139,11 @@ export default async function AppPage() {
       : null,
   };
 
+  const menu = await getMenu();
+
   return (
     <Stage>
-      <AppShell data={data} />
+      <AppShell data={data} menu={menu} />
     </Stage>
   );
 }

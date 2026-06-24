@@ -145,9 +145,13 @@ export const STRINGS: Record<string, Entry> = {
   "res.today": { pt: "Hoje", en: "Today" },
   "res.tomorrow": { pt: "Amanhã", en: "Tomorrow" },
 
+  // Splash / loading
+  "splash.tag": { pt: "CAFÉ & SNACK-BAR DO BAIRRO", en: "NEIGHBOURHOOD CAFÉ & SNACK-BAR" },
+  "splash.load": { pt: "A preparar o teu balcão…", en: "Warming up your counter…" },
+
   // Menu
   "menu.title": { pt: "Menu", en: "Menu" },
-  "menu.pointNote": { pt: ["Cada euro gasto vale ", "1 ponto", " no teu cartão."], en: ["Every euro spent is worth ", "1 point", " on your card."] },
+  "menu.pointNote": { pt: ["Cada euro gasto vale ", "10 pontos", " no teu cartão."], en: ["Every euro spent is worth ", "10 points", " on your card."] },
 
   // Perfil
   "prof.title": { pt: "Perfil", en: "Profile" },

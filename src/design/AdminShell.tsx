@@ -7,21 +7,29 @@ import { Scroll } from "@/design/ui";
 import { AdminPrizes, AdminRewards, AdminStats, AdminLog, type PrizeAdmin, type RewardAdmin, type AdminStatsData, type LogRow } from "@/design/AdminPanel";
 import { BalcaoScreen } from "@/design/screens/admin/BalcaoScreen";
 import { ReservasAdmin, type ReservaAdminRow } from "@/design/screens/admin/ReservasAdmin";
-import { EquipaScreen, type MemberRow, type InviteRow } from "@/design/screens/admin/EquipaScreen";
-import { PerfilAdmin } from "@/design/screens/admin/PerfilAdmin";
+import { type MemberRow, type InviteRow } from "@/design/screens/admin/EquipaScreen";
+import { MenuAdmin } from "@/design/screens/admin/MenuAdmin";
+import { ConfiguracoesAdmin } from "@/design/screens/admin/ConfiguracoesAdmin";
 import { NovidadesAdmin } from "@/design/screens/admin/NovidadesAdmin";
-import type { AppData, NewsRow } from "@/design/data";
+import type { AppData, NewsRow, MenuCatRow, FoodCategory, FoodPrefStat } from "@/design/data";
 
-type Tab = "inicio" | "balcao" | "premios" | "reservas" | "equipa" | "perfil";
+type Tab = "inicio" | "balcao" | "premios" | "reservas" | "menu" | "config";
 
 const TABS: { id: Tab; icon: string; label: string; adminOnly: boolean }[] = [
   { id: "inicio", icon: "chart", label: "Início", adminOnly: true },
   { id: "balcao", icon: "qr", label: "Balcão", adminOnly: false },
   { id: "premios", icon: "gift", label: "Prémios", adminOnly: true },
   { id: "reservas", icon: "calendar", label: "Reservas", adminOnly: false },
-  { id: "equipa", icon: "users", label: "Equipa", adminOnly: true },
-  { id: "perfil", icon: "user", label: "Perfil", adminOnly: false },
+  { id: "menu", icon: "coffee", label: "Menu", adminOnly: true },
+  { id: "config", icon: "settings", label: "Configurações", adminOnly: false },
 ];
+
+/** Início mostra só as ações de hoje. */
+function isToday(iso: string): boolean {
+  const d = new Date(iso);
+  const n = new Date();
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+}
 
 export function AdminShell({
   role,
@@ -37,6 +45,9 @@ export function AdminShell({
   invites,
   news,
   log,
+  menu,
+  foodCategories,
+  prefStats,
 }: {
   role: "staff" | "admin";
   nome: string;
@@ -51,6 +62,9 @@ export function AdminShell({
   invites: InviteRow[];
   news: NewsRow[];
   log: LogRow[];
+  menu: MenuCatRow[];
+  foodCategories: FoodCategory[];
+  prefStats: FoodPrefStat[];
 }) {
   const router = useRouter();
   const isAdmin = role === "admin";
@@ -59,6 +73,8 @@ export function AdminShell({
   const [prizes, setPrizes] = useState(initialPrizes);
   const [rewards, setRewards] = useState(initialRewards);
   const [prizeMode, setPrizeMode] = useState<"raspadinha" | "pontos">("raspadinha");
+
+  const todayLog = log.filter((r) => isToday(r.quando));
 
   let screen: React.ReactNode = null;
   if (tab === "inicio") {
@@ -74,9 +90,12 @@ export function AdminShell({
         <Scroll>
           <AdminStats stats={stats} prizes={prizes} />
           <NovidadesAdmin news={news} />
-          <div style={{ marginTop: 22, fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: "var(--c-muted)" }}>Registo de ações</div>
+          <div style={{ marginTop: 22, display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+            <div style={{ fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: "var(--c-muted)" }}>Ações de hoje</div>
+            <button onClick={() => setTab("config")} style={{ border: "none", background: "transparent", cursor: "pointer", fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 12.5, color: "var(--c-primary)" }}>Ver mais →</button>
+          </div>
           <div style={{ marginTop: 11 }}>
-            <AdminLog log={log} />
+            <AdminLog log={todayLog} />
           </div>
         </Scroll>
       </>
@@ -110,10 +129,23 @@ export function AdminShell({
     );
   } else if (tab === "reservas") {
     screen = <ReservasAdmin reservas={reservas} />;
-  } else if (tab === "equipa") {
-    screen = <EquipaScreen members={members} invites={invites} isOwner={isOwner} meId={meId} />;
-  } else if (tab === "perfil") {
-    screen = <PerfilAdmin me={me} onSaved={() => router.refresh()} />;
+  } else if (tab === "menu") {
+    screen = <MenuAdmin menu={menu} />;
+  } else if (tab === "config") {
+    screen = (
+      <ConfiguracoesAdmin
+        me={me}
+        isAdmin={isAdmin}
+        isOwner={isOwner}
+        meId={meId}
+        members={members}
+        invites={invites}
+        log={log}
+        foodCategories={foodCategories}
+        prefStats={prefStats}
+        onSaved={() => router.refresh()}
+      />
+    );
   }
 
   return (

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
 import { IconTile } from "@/design/ui";
@@ -21,13 +20,11 @@ function timeAgo(iso: string, lang: "pt" | "en"): string {
 
 export function NotificationsSheet({ data, onClose }: { data: AppData; onClose: () => void }) {
   const { lang } = useI18n();
-  const router = useRouter();
   const [items, setItems] = useState<NotifRow[]>(data.notifications);
 
   async function archive(id: string) {
-    setItems((xs) => xs.filter((x) => x.id !== id)); // optimista
-    await arquivarNotificacao(id);
-    router.refresh();
+    setItems((xs) => xs.filter((x) => x.id !== id)); // optimista — instantâneo
+    void arquivarNotificacao(id); // fire-and-forget; sync no fecho do sheet
   }
 
   return (

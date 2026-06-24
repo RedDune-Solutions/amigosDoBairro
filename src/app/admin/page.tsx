@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Stage } from "@/design/ui";
 import { AdminShell } from "@/design/AdminShell";
 import { getProfile } from "@/lib/data";
+import { getMenu, getFoodCategories, getFoodPrefStats } from "@/lib/menu-actions";
 import type { PrizeAdmin, RewardAdmin, AdminStatsData, LogRow } from "@/design/AdminPanel";
 import type { ReservaAdminRow } from "@/design/screens/admin/ReservasAdmin";
 import type { MemberRow, InviteRow } from "@/design/screens/admin/EquipaScreen";
@@ -99,6 +100,12 @@ export default async function AdminPage() {
     activeClients: activeClients ?? 0,
   };
 
+  const [menu, foodCategories, prefStats] = await Promise.all([
+    getMenu(),
+    isAdmin ? getFoodCategories(false) : Promise.resolve([]),
+    isAdmin ? getFoodPrefStats() : Promise.resolve([]),
+  ]);
+
   return (
     <Stage>
       <AdminShell
@@ -115,6 +122,9 @@ export default async function AdminPage() {
         invites={(invitesData ?? []) as InviteRow[]}
         news={(newsData ?? []) as NewsRow[]}
         log={(logData ?? []) as LogRow[]}
+        menu={menu}
+        foodCategories={foodCategories}
+        prefStats={prefStats}
       />
     </Stage>
   );

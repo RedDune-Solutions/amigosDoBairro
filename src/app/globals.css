@@ -107,3 +107,18 @@ a.footer-brand-link:focus-visible {
 @keyframes omSpin {
   to { transform: rotate(360deg); }
 }
+
+/* Splash / loading */
+@keyframes splashSpin  { to { transform: rotate(360deg); } }
+@keyframes splashFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+@keyframes splashDot   { 0%,100% { transform: translateY(0); opacity: .45; } 40% { transform: translateY(-9px); opacity: 1; } }
+@keyframes splashSteam { 0% { opacity: 0; transform: translateY(6px) scaleY(.7); } 35% { opacity: .9; } 100% { opacity: 0; transform: translateY(-16px) scaleY(1.25); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .om-splash [style*="splashSpin"],
+  .om-splash [style*="splashFloat"],
+  .om-splash [style*="splashDot"],
+  .om-splash [style*="splashSteam"] {
+    animation: none !important;
+  }
+}

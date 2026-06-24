@@ -11,11 +11,11 @@ import { Reservations } from "@/design/screens/Reservations";
 import { Profile, EditProfile } from "@/design/screens/Profile";
 import { QrModal } from "@/design/screens/QrModal";
 import { NotificationsSheet } from "@/design/screens/NotificationsSheet";
-import { type AppData, type RewardRow } from "@/design/data";
+import { type AppData, type RewardRow, type MenuCatRow } from "@/design/data";
 import { redeemReward, reclamarLoginDiario } from "@/lib/app-actions";
 import { marcarNotificacoesLidas } from "@/lib/notif-actions";
 
-export function AppShell({ data }: { data: AppData }) {
+export function AppShell({ data, menu }: { data: AppData; menu?: MenuCatRow[] }) {
   const { T, L, lang, setLang } = useI18n();
   const router = useRouter();
   const [tab, setTab] = useState("home");
@@ -83,7 +83,7 @@ export function AppShell({ data }: { data: AppData }) {
       />
     );
   } else if (tab === "menu") {
-    screen = <MenuScreen />;
+    screen = <MenuScreen menu={menu} />;
   } else if (tab === "profile") {
     screen = editing ? (
       <EditProfile

@@ -6,15 +6,18 @@ import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { Scroll, Button, Field, LogoBadge } from "@/design/ui";
 import { authenticate, type AuthState } from "@/lib/auth-actions";
+import type { FoodCategory } from "@/design/data";
 
 const initial: AuthState = {};
 
 export function AuthScreen({
   initialMode = "login",
   next,
+  foodCategories = [],
 }: {
   initialMode?: "login" | "register";
   next?: string;
+  foodCategories?: FoodCategory[];
 }) {
   const router = useRouter();
   const { T, lang, setLang } = useI18n();
@@ -119,6 +122,29 @@ export function AuthScreen({
             <Field label={T("auth.pass") as string} placeholder="••••••••" icon="lock" name="password" type="password" required autoComplete={isReg ? "new-password" : "current-password"} />
             {isReg && (
               <Field label={T("auth.phone") as string} placeholder="+351 ..." icon="phone" name="telefone" type="tel" autoComplete="tel" />
+            )}
+            {isReg && foodCategories.length > 0 && (
+              <div>
+                <label style={{ display: "block", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-ink)", marginBottom: 6 }}>
+                  {lang === "en" ? "Favourite food" : "Comida preferida"}
+                </label>
+                <div style={{ position: "relative" }}>
+                  <Icon name="heart" size={18} color="var(--c-muted)" style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                  <select
+                    name="food_pref"
+                    defaultValue=""
+                    style={{ width: "100%", appearance: "none", WebkitAppearance: "none", borderRadius: 14, border: "1px solid var(--c-line)", background: "var(--c-surface)", padding: "13px 38px 13px 40px", fontFamily: "var(--f-body)", fontSize: 15, color: "var(--c-ink)", outline: "none", cursor: "pointer" }}
+                  >
+                    <option value="">{lang === "en" ? "Choose…" : "Escolhe…"}</option>
+                    {foodCategories.map((f) => (
+                      <option key={f.id} value={f.slug}>
+                        {lang === "en" && f.label_en ? f.label_en : f.label_pt}
+                      </option>
+                    ))}
+                  </select>
+                  <Icon name="chevronRight" size={16} color="var(--c-muted)" style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%) rotate(90deg)", pointerEvents: "none" }} />
+                </div>
+              </div>
             )}
           </div>
 

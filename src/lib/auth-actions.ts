@@ -28,6 +28,7 @@ const signUpSchema = credentials.extend({
     .regex(/^[0-9 +]{6,20}$/, "Telefone inválido.")
     .optional()
     .or(z.literal("")),
+  food_pref: z.string().trim().max(40).optional().or(z.literal("")),
 });
 
 export type AuthState = { error?: string; sent?: boolean };
@@ -102,6 +103,7 @@ export async function signUp(
     password: formData.get("password"),
     nome: formData.get("nome"),
     telefone: formData.get("telefone"),
+    food_pref: formData.get("food_pref"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
@@ -112,7 +114,11 @@ export async function signUp(
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      data: { nome: parsed.data.nome, telefone: parsed.data.telefone || null },
+      data: {
+        nome: parsed.data.nome,
+        telefone: parsed.data.telefone || null,
+        food_pref: parsed.data.food_pref || null,
+      },
     },
   });
   if (error) {

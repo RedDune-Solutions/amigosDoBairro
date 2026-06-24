@@ -4,27 +4,47 @@ import { useState } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
 import { TopBar, Scroll, Card, Chip, IconTile } from "@/design/ui";
-import { MENU } from "@/design/data";
+import { MENU, type Bi, type MenuCatRow } from "@/design/data";
 
-export function MenuScreen() {
+type Norm = { label: Bi; accent: string; icon: string; items: { name: Bi; desc: Bi; price: string }[] };
+
+function fromRows(rows: MenuCatRow[]): Norm[] {
+  return rows.map((c) => ({
+    label: { pt: c.label_pt, en: c.label_en || c.label_pt },
+    accent: c.accent,
+    icon: c.icon,
+    items: c.items.map((it) => ({
+      name: { pt: it.name_pt, en: it.name_en || it.name_pt },
+      desc: { pt: it.desc_pt || "", en: it.desc_en || it.desc_pt || "" },
+      price: it.price,
+    })),
+  }));
+}
+
+function fromStatic(): Norm[] {
+  return MENU.map((m) => ({ label: m.cat, accent: m.accent, icon: m.icon, items: m.items }));
+}
+
+export function MenuScreen({ menu }: { menu?: MenuCatRow[] }) {
   const { T, L } = useI18n();
+  const cats: Norm[] = menu && menu.length ? fromRows(menu) : fromStatic();
   const [catKey, setCatKey] = useState(0);
-  const active = MENU[catKey];
+  const active = cats[Math.min(catKey, cats.length - 1)];
   const note = T("menu.pointNote") as string[];
   return (
     <>
       <TopBar title={T("menu.title") as string} />
       <div style={{ display: "flex", gap: 9, overflowX: "auto", padding: "0 18px 12px", flexShrink: 0 }} className="om-scroll">
-        {MENU.map((m, i) => (
+        {cats.map((m, i) => (
           <Chip key={i} active={catKey === i} accent={`var(--c-${m.accent})`} onClick={() => setCatKey(i)}>
-            {L(m.cat)}
+            {L(m.label)}
           </Chip>
         ))}
       </div>
       <Scroll>
         <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 6 }}>
           <IconTile icon={active.icon} accent={`var(--c-${active.accent})`} size={44} />
-          <h2 style={{ margin: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 20, color: "var(--c-ink)" }}>{L(active.cat)}</h2>
+          <h2 style={{ margin: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 20, color: "var(--c-ink)" }}>{L(active.label)}</h2>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
           {active.items.map((it, i) => (

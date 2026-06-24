@@ -20,8 +20,8 @@ export const TIERS: Tier[] = [
     accent: "blue",
     name: { pt: "Vizinho Novo", en: "New Neighbour" },
     perks: {
-      pt: ["Acumula 1 ponto por cada euro", "Cartão de carimbos digital"],
-      en: ["Earn 1 point per euro spent", "Digital stamp card"],
+      pt: ["Acumula 10 pontos por cada euro", "Cartão de carimbos digital"],
+      en: ["Earn 10 points per euro spent", "Digital stamp card"],
     },
   },
   {
@@ -130,6 +130,37 @@ export const MENU: MenuCat[] = [
     ],
   },
 ];
+
+// Menu vindo da BD (editável no admin). Mesma forma do MENU estático para a UI.
+export type MenuItemRow = {
+  id: string;
+  name_pt: string;
+  name_en: string | null;
+  desc_pt: string | null;
+  desc_en: string | null;
+  price: string;
+};
+export type MenuCatRow = {
+  id: string;
+  label_pt: string;
+  label_en: string | null;
+  icon: string;
+  accent: string;
+  items: MenuItemRow[];
+};
+
+// Opções de comida preferida (dropdown no registo, editável pela admin).
+export type FoodCategory = {
+  id: string;
+  slug: string;
+  label_pt: string;
+  label_en: string | null;
+  ordem: number;
+  ativo: boolean;
+};
+
+// Agregado para o gráfico de preferências (admin).
+export type FoodPrefStat = { slug: string; label: string; count: number };
 
 export const RES_TIMES = ["09:00", "10:30", "12:00", "13:00", "13:30", "16:00", "17:30", "19:00"];
 

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
-import { TopBar, Scroll, Card, Button, SectionLabel } from "@/design/ui";
+import { Card, Button, SectionLabel } from "@/design/ui";
 import { inviteStaff, setRole, removeMember, cancelInvite } from "@/lib/team-actions";
 
 export type MemberRow = { id: string; nome: string | null; role: "customer" | "staff" | "admin"; is_owner: boolean };
@@ -11,7 +11,7 @@ export type InviteRow = { email: string; role: string };
 
 const roleLabel: Record<string, string> = { admin: "Admin", staff: "Staff", customer: "Cliente" };
 
-export function EquipaScreen({
+export function EquipaSection({
   members,
   invites,
   isOwner,
@@ -45,8 +45,7 @@ export function EquipaScreen({
 
   return (
     <>
-      <TopBar title="Equipa" />
-      <Scroll>
+      <div style={{ display: "contents" }}>
         {/* Convidar */}
         <Card style={{ display: "flex", flexDirection: "column", gap: 11 }}>
           <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 16, color: "var(--c-ink)" }}>Convidar staff</div>
@@ -117,7 +116,7 @@ export function EquipaScreen({
             ))}
           </div>
         </div>
-      </Scroll>
+      </div>
     </>
   );
 }
