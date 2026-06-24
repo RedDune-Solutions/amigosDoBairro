@@ -73,6 +73,17 @@ input::placeholder {
   opacity: 0.7;
 }
 
+a.footer-brand-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
+a.footer-brand-link:hover,
+a.footer-brand-link:focus-visible {
+  color: #5a0e0e;
+}
+
 @keyframes toastIn {
   from { opacity: 0; transform: translate(-50%, 12px); }
   to { opacity: 1; transform: translate(-50%, 0); }

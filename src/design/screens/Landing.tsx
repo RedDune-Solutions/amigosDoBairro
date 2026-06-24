@@ -80,6 +80,11 @@ export function Landing() {
   const title = T("land.title") as string[];
   const hoursVal = T("land.hoursVal") as string[];
   const whereVal = T("land.whereVal") as string[];
+  const footerLabel = lang === "pt"
+    ? "Feito com carinho para o Bairro · Fornecido por "
+    : "Made with love for the neighbourhood · Powered by ";
+  const footerLinkText = "RedDune Solutions";
+  const footerLinkHref = "https://reddunesolutions.pt";
 
   const features = [
     { icon: "star", accent: "var(--c-primary)", title: T("land.f1.t") as string, desc: T("land.f1.d") as string },
@@ -302,7 +307,16 @@ export function Landing() {
 
         <div style={{ textAlign: "center", padding: "22px 18px 24px" }}>
           <p style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)", margin: 0 }}>
-            {T("land.footer") as string}
+            {footerLabel}
+            <a
+              href={footerLinkHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-brand-link"
+              style={{ textDecoration: "underline" }}
+            >
+              {footerLinkText}
+            </a>
           </p>
         </div>
       </Scroll>
