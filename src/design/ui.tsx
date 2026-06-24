@@ -88,7 +88,7 @@ export function TabBar({
       style={{
         flexShrink: 0,
         display: "flex",
-        padding: "8px 6px 26px",
+        padding: "10px",
         background: "var(--c-surface)",
         borderTop: "1px solid var(--c-line)",
       }}

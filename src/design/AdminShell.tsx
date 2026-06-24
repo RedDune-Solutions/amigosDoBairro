@@ -151,7 +151,7 @@ export function AdminShell({
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>{screen}</div>
-      <div style={{ flexShrink: 0, display: "flex", padding: "8px 6px 26px", background: "var(--c-surface)", borderTop: "1px solid var(--c-line)" }}>
+      <div style={{ flexShrink: 0, display: "flex", padding: "10px", background: "var(--c-surface)", borderTop: "1px solid var(--c-line)" }}>
         {tabs.map((t) => {
           const on = tab === t.id;
           return (
