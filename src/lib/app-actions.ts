@@ -6,7 +6,7 @@ export async function redeemReward(
   rewardId: string,
 ): Promise<{ codigo?: string; error?: string }> {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("resgatar_recompensa", {
+  const { data, error } = await supabase.rpc("resgatar_recompensa_v2", {
     p_reward: rewardId,
   });
   if (error) {
@@ -20,6 +20,15 @@ export async function redeemReward(
     };
   }
   return { codigo: String(data) };
+}
+
+/** Reclama o bónus de login diário (+10) e, na 1ª vez, o bónus de registo (+150). */
+export async function reclamarLoginDiario(): Promise<{ login?: boolean; signup?: boolean }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("reclamar_login_diario_v2");
+  if (error) return {};
+  const r = data as { login?: boolean; signup?: boolean } | null;
+  return { login: r?.login, signup: r?.signup };
 }
 
 export async function openScratch(

@@ -47,7 +47,6 @@ export default async function AdminPage() {
   const [
     { data: prizesData },
     { data: rewardsAdminData },
-    { data: cfg },
     { data: resData },
     { data: membersData },
     { data: invitesData },
@@ -64,7 +63,6 @@ export default async function AdminPage() {
     isAdmin
       ? supabase.from("rewards").select("id, titulo, nome_en, descricao, desc_en, custo_pontos, icon, accent, ativo").order("ordem", { ascending: true })
       : Promise.resolve({ data: [] }),
-    supabase.from("loyalty_config").select("euro_per_stamp, stamp_goal").eq("id", true).single(),
     supabase.from("reservations").select("id, data, hora, n_pessoas, estado, profiles(nome)").gte("data", new Date().toISOString().slice(0, 10)).order("data", { ascending: true }).order("hora", { ascending: true }).limit(60),
     isAdmin
       ? supabase.from("profiles").select("id, nome, role, is_owner").in("role", ["staff", "admin"]).order("role")
@@ -108,8 +106,6 @@ export default async function AdminPage() {
         prizes={(prizesData ?? []) as PrizeAdmin[]}
         rewards={(rewardsAdminData ?? []) as RewardAdmin[]}
         stats={stats}
-        euroPerStamp={cfg?.euro_per_stamp ?? 15}
-        stampGoal={cfg?.stamp_goal ?? 10}
         reservas={reservas}
         members={(membersData ?? []) as MemberRow[]}
         invites={(invitesData ?? []) as InviteRow[]}

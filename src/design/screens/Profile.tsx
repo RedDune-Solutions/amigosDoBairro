@@ -52,11 +52,13 @@ export function Profile({
 }) {
   const { T, L } = useI18n();
   const [tiers, setTiers] = useState(false);
+  const [faq, setFaq] = useState(false);
   const tier = TIERS[tierIndexFor(data.earned)];
   const isAdmin = data.role === "admin";
   const rows = [
     { icon: "edit", label: T("prof.r.edit") as string, accent: "var(--c-blue)", onClick: onEdit },
     { icon: "bell", label: T("prof.r.notif") as string, accent: "var(--c-primary)", detail: T("prof.r.notifOn") as string },
+    { icon: "sparkle", label: T("prof.r.faq") as string, accent: "var(--c-green)", onClick: () => setFaq(true) },
   ];
   return (
     <>
@@ -121,7 +123,50 @@ export function Profile({
         <p style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)", marginTop: 14 }}>Os Amigos do Bairro · v1.0</p>
       </Scroll>
       {tiers && <TiersSheet earned={data.earned} onClose={() => setTiers(false)} />}
+      {faq && <FaqSheet onClose={() => setFaq(false)} />}
     </>
+  );
+}
+
+function FaqSheet({ onClose }: { onClose: () => void }) {
+  const { T } = useI18n();
+  const sections: { title: string; items: { q: string; a: string }[] }[] = [
+    {
+      title: T("faq.s.points") as string,
+      items: [
+        { q: T("faq.p1.q") as string, a: T("faq.p1.a") as string },
+        { q: T("faq.p2.q") as string, a: T("faq.p2.a") as string },
+        { q: T("faq.p3.q") as string, a: T("faq.p3.a") as string },
+      ],
+    },
+    {
+      title: T("faq.s.stamps") as string,
+      items: [
+        { q: T("faq.c1.q") as string, a: T("faq.c1.a") as string },
+        { q: T("faq.c2.q") as string, a: T("faq.c2.a") as string },
+      ],
+    },
+  ];
+  return (
+    <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 80, display: "flex", alignItems: "flex-end", background: "rgba(20,14,6,0.45)", backdropFilter: "blur(3px)", animation: "fadeIn .2s ease" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxHeight: "88%", overflowY: "auto", background: "var(--c-surface)", borderRadius: "26px 26px 0 0", padding: "20px 18px 30px", animation: "popIn .25s ease" }}>
+        <div style={{ width: 40, height: 4, borderRadius: 100, background: "var(--c-line)", margin: "0 auto 16px" }} />
+        <h3 style={{ margin: "0 0 16px", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 19, color: "var(--c-ink)", textAlign: "center" }}>{T("faq.title") as string}</h3>
+        {sections.map((s) => (
+          <div key={s.title} style={{ marginBottom: 18 }}>
+            <SectionLabel>{s.title}</SectionLabel>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+              {s.items.map((it) => (
+                <Card key={it.q}>
+                  <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 14.5, color: "var(--c-ink)", marginBottom: 5 }}>{it.q}</div>
+                  <div style={{ fontFamily: "var(--f-body)", fontSize: 13.5, lineHeight: 1.55, color: "var(--c-muted)" }}>{it.a}</div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

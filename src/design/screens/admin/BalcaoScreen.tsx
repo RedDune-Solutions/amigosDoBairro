@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { TopBar, Scroll, Card, Button } from "@/design/ui";
-import { registarCompra, validarVoucher } from "@/lib/balcao-actions";
+import { registarCompra, registarCheckin, validarVoucher } from "@/lib/balcao-actions";
 
 const READER_ID = "balcao-qr";
 
@@ -70,10 +70,24 @@ export function BalcaoScreen() {
     }
     setMsg({
       ok: true,
-      text: `+${res.pontos} pontos${res.cartolas ? ` · ${res.cartolas * 2} raspadinhas!` : ""}`,
+      text: `+${res.pontos} pontos${res.carimbo ? " · +1 carimbo" : ""}${res.cartola ? " · cartola completa! 2 raspadinhas 🎉" : ""}`,
     });
     setCode("");
     setEuros("");
+  }
+
+  async function checkin() {
+    if (busy) return;
+    setBusy(true);
+    setMsg(null);
+    const res = await registarCheckin(code);
+    setBusy(false);
+    if (res.error) {
+      setMsg({ ok: false, text: res.error });
+      return;
+    }
+    setMsg({ ok: true, text: `Check-in feito · +${res.pontos} pontos ✓` });
+    setCode("");
   }
 
   async function validate() {
@@ -109,6 +123,9 @@ export function BalcaoScreen() {
           )}
           <Button full icon="check" onClick={submit} disabled={busy || !code || !euros}>
             {busy ? "A registar…" : "Registar compra"}
+          </Button>
+          <Button full variant="outline" icon="mapPin" onClick={checkin} disabled={busy || !code}>
+            Check-in do cliente (+20 pts)
           </Button>
         </Card>
 

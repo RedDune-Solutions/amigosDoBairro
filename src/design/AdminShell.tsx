@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { Scroll } from "@/design/ui";
-import { AdminPrizes, AdminRewards, AdminStats, AdminSettings, type PrizeAdmin, type RewardAdmin, type AdminStatsData } from "@/design/AdminPanel";
+import { AdminPrizes, AdminRewards, AdminStats, type PrizeAdmin, type RewardAdmin, type AdminStatsData } from "@/design/AdminPanel";
 import { BalcaoScreen } from "@/design/screens/admin/BalcaoScreen";
 import { ReservasAdmin, type ReservaAdminRow } from "@/design/screens/admin/ReservasAdmin";
 import { EquipaScreen, type MemberRow, type InviteRow } from "@/design/screens/admin/EquipaScreen";
@@ -32,8 +32,6 @@ export function AdminShell({
   prizes: initialPrizes,
   rewards: initialRewards,
   stats,
-  euroPerStamp,
-  stampGoal,
   reservas,
   members,
   invites,
@@ -47,8 +45,6 @@ export function AdminShell({
   prizes: PrizeAdmin[];
   rewards: RewardAdmin[];
   stats: AdminStatsData;
-  euroPerStamp: number;
-  stampGoal: number;
   reservas: ReservaAdminRow[];
   members: MemberRow[];
   invites: InviteRow[];
@@ -75,10 +71,6 @@ export function AdminShell({
         </div>
         <Scroll>
           <AdminStats stats={stats} prizes={prizes} />
-          <div style={{ marginTop: 20, fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: "var(--c-muted)" }}>Regras de fidelidade</div>
-          <div style={{ marginTop: 11 }}>
-            <AdminSettings euroPerStamp={euroPerStamp} stampGoal={stampGoal} />
-          </div>
           <NovidadesAdmin news={news} />
         </Scroll>
       </>

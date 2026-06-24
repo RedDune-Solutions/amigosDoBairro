@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/design/i18n";
 import { TabBar } from "@/design/ui";
@@ -12,7 +12,7 @@ import { Profile, EditProfile } from "@/design/screens/Profile";
 import { QrModal } from "@/design/screens/QrModal";
 import { NotificationsSheet } from "@/design/screens/NotificationsSheet";
 import { type AppData, type RewardRow } from "@/design/data";
-import { redeemReward } from "@/lib/app-actions";
+import { redeemReward, reclamarLoginDiario } from "@/lib/app-actions";
 import { marcarNotificacoesLidas } from "@/lib/notif-actions";
 
 export function AppShell({ data }: { data: AppData }) {
@@ -31,6 +31,20 @@ export function AppShell({ data }: { data: AppData }) {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(null), 2400);
   }
+
+  // Bónus de login diário (+10) e, na 1ª vez, bónus de registo (+150).
+  useEffect(() => {
+    let alive = true;
+    reclamarLoginDiario().then((r) => {
+      if (!alive || (!r.login && !r.signup)) return;
+      flash(r.signup ? "Bem-vindo! +150 pontos 🎉" : "+10 pontos de login diário ✓");
+      router.refresh();
+    });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function goTab(t: string) {
     setEditing(false);
