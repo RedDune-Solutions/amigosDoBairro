@@ -19,12 +19,29 @@ function initials(name: string) {
 
 const roleLabel: Record<string, string> = { admin: "Administração", staff: "Staff" };
 
+/** Checkbox custom — certo a branco sobre fundo de cor (contraste). */
+function Check({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  const [on, setOn] = useState(checked);
+  return (
+    <button
+      type="button"
+      onClick={() => { const v = !on; setOn(v); onChange(v); }}
+      style={{ display: "flex", alignItems: "center", gap: 9, border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: "var(--f-body)", fontSize: 12.5, fontWeight: 600, color: "var(--c-muted)" }}
+    >
+      <span style={{ width: 20, height: 20, borderRadius: 7, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: on ? "none" : "1.5px solid var(--c-line)", background: on ? "var(--c-primary)" : "var(--c-surface)", color: "#fff" }}>
+        {on && <Icon name="check" size={13} stroke={3} color="#fff" />}
+      </span>
+      {label}
+    </button>
+  );
+}
+
 function FoodOptionRow({ opt }: { opt: FoodCategory }) {
   const router = useRouter();
   const [pt, setPt] = useState(opt.label_pt);
   const [en, setEn] = useState(opt.label_en || "");
   return (
-    <div style={{ padding: 11, borderRadius: 13, border: "1px solid var(--c-line)", background: "var(--c-surface)", display: "flex", flexDirection: "column", gap: 7 }}>
+    <div style={{ padding: 11, borderRadius: 13, border: "1px solid var(--c-line)", background: "var(--c-surface)", display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <input value={pt} onChange={(e) => setPt(e.target.value)} onBlur={() => { if (pt !== opt.label_pt) void patchFoodCategory({ id: opt.id, label_pt: pt }); }} placeholder="PT" style={{ flex: 1, minWidth: 0, border: "1px solid var(--c-line)", background: "var(--c-surface2)", borderRadius: 10, padding: "8px 11px", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-ink)", outline: "none" }} />
         <input value={en} onChange={(e) => setEn(e.target.value)} onBlur={() => { if (en !== (opt.label_en || "")) void patchFoodCategory({ id: opt.id, label_en: en }); }} placeholder="EN" style={{ flex: 1, minWidth: 0, border: "1px solid var(--c-line)", background: "var(--c-surface2)", borderRadius: 10, padding: "8px 11px", fontFamily: "var(--f-body)", fontWeight: 600, fontSize: 13, color: "var(--c-ink)", outline: "none" }} />
@@ -32,13 +49,12 @@ function FoodOptionRow({ opt }: { opt: FoodCategory }) {
           <Icon name="trash" size={14} stroke={2} />
         </button>
       </div>
-      <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer", fontFamily: "var(--f-body)", fontSize: 12.5, fontWeight: 600, color: "var(--c-muted)" }}>
-        <input type="checkbox" defaultChecked={opt.ativo} onChange={(e) => { void patchFoodCategory({ id: opt.id, ativo: e.target.checked }); }} style={{ width: 16, height: 16, accentColor: "var(--c-primary)", cursor: "pointer" }} />
-        Visível no registo
-      </label>
+      <Check checked={opt.ativo} onChange={(v) => { void patchFoodCategory({ id: opt.id, ativo: v }); }} label="Visível no registo" />
     </div>
   );
 }
+
+type View = "home" | "perfil" | "equipa" | "comida";
 
 export function ConfiguracoesAdmin({
   me,
@@ -64,18 +80,61 @@ export function ConfiguracoesAdmin({
   onSaved: () => void;
 }) {
   const router = useRouter();
-  const [editing, setEditing] = useState(false);
-  const [showLog, setShowLog] = useState(false);
+  const [view, setView] = useState<View>("home");
 
-  if (editing) {
-    return <EditProfile data={me} onBack={() => setEditing(false)} onSaved={onSaved} />;
+  if (view === "perfil") {
+    return <EditProfile data={me} onBack={() => setView("home")} onSaved={onSaved} />;
   }
 
+  // Sub-página: Equipa & registo de ações
+  if (view === "equipa") {
+    return (
+      <>
+        <TopBar title="Equipa & ações" onBack={() => setView("home")} />
+        <Scroll>
+          <EquipaSection members={members} invites={invites} isOwner={isOwner} meId={meId} />
+          <div style={{ marginTop: 24 }}><SectionLabel>Registo de ações</SectionLabel></div>
+          <div style={{ marginTop: 11 }}>
+            <AdminLog log={log} />
+          </div>
+        </Scroll>
+      </>
+    );
+  }
+
+  // Sub-página: Comida & preferências
+  if (view === "comida") {
+    return (
+      <>
+        <TopBar title="Comida & preferências" onBack={() => setView("home")} />
+        <Scroll>
+          <SectionLabel>Comida preferida dos clientes</SectionLabel>
+          <div style={{ marginTop: 11 }}>
+            <PreferencesChart stats={prefStats} />
+          </div>
+
+          <div style={{ marginTop: 22 }}><SectionLabel>Opções de comida (registo)</SectionLabel></div>
+          <p style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", margin: "8px 2px 11px", lineHeight: 1.5 }}>
+            As escolhas que o cliente vê ao criar conta. Edita, desativa ou adiciona.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            {foodCategories.map((opt) => (
+              <FoodOptionRow key={opt.id} opt={opt} />
+            ))}
+          </div>
+          <button onClick={async () => { await addFoodCategory(); router.refresh(); }} style={{ width: "100%", marginTop: 11, padding: "12px 0", borderRadius: 14, border: "1.5px dashed color-mix(in srgb, var(--c-ink) 25%, var(--c-line))", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-ink)", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <Icon name="plus" size={17} stroke={2.4} /> Adicionar opção
+          </button>
+        </Scroll>
+      </>
+    );
+  }
+
+  // Home das configurações
   return (
     <>
       <TopBar title="Configurações" />
       <Scroll>
-        {/* Perfil */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "4px 0 8px" }}>
           {me.avatarUrl ? (
             <div style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", background: "var(--c-surface2)" }}>
@@ -91,65 +150,43 @@ export function ConfiguracoesAdmin({
           <span style={{ fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 12.5, color: "var(--c-primary)" }}>{roleLabel[me.role] ?? "Equipa"}</span>
         </div>
 
-        <Card onClick={() => setEditing(true)} style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 13 }}>
+        <Card onClick={() => setView("perfil")} style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 13 }}>
           <IconTile icon="edit" accent="var(--c-blue)" size={42} />
           <div style={{ flex: 1, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Editar perfil</div>
           <Icon name="chevronRight" size={20} color="var(--c-muted)" />
         </Card>
 
-        <Card onClick={() => router.push("/app")} style={{ marginTop: 11, display: "flex", alignItems: "center", gap: 13 }}>
-          <IconTile icon="coffee" accent="var(--c-primary)" size={42} />
-          <div style={{ flex: 1, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Ver app de cliente</div>
-          <Icon name="chevronRight" size={20} color="var(--c-muted)" />
-        </Card>
-
         {isAdmin && (
           <>
-            {/* Preferências dos clientes */}
-            <div style={{ marginTop: 22 }}><SectionLabel>Comida preferida dos clientes</SectionLabel></div>
-            <div style={{ marginTop: 11 }}>
-              <PreferencesChart stats={prefStats} />
-            </div>
-
-            {/* Opções de comida */}
-            <div style={{ marginTop: 22 }}><SectionLabel>Opções de comida (registo)</SectionLabel></div>
-            <p style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", margin: "8px 2px 11px", lineHeight: 1.5 }}>
-              As escolhas que o cliente vê ao criar conta. Edita, desativa ou adiciona.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-              {foodCategories.map((opt) => (
-                <FoodOptionRow key={opt.id} opt={opt} />
-              ))}
-            </div>
-            <button onClick={async () => { await addFoodCategory(); router.refresh(); }} style={{ width: "100%", marginTop: 11, padding: "12px 0", borderRadius: 14, border: "1.5px dashed color-mix(in srgb, var(--c-ink) 25%, var(--c-line))", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-ink)", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              <Icon name="plus" size={17} stroke={2.4} /> Adicionar opção
-            </button>
-
-            {/* Equipa */}
-            <div style={{ marginTop: 24 }}><SectionLabel>Equipa</SectionLabel></div>
-            <div style={{ marginTop: 11 }}>
-              <EquipaSection members={members} invites={invites} isOwner={isOwner} meId={meId} />
-            </div>
-
-            {/* Registo completo de ações */}
-            <div style={{ marginTop: 24 }}><SectionLabel>Registo de ações</SectionLabel></div>
-            <Card onClick={() => setShowLog((s) => !s)} style={{ marginTop: 11, display: "flex", alignItems: "center", gap: 13 }}>
-              <IconTile icon="sliders" accent="var(--c-green)" size={42} />
+            <Card onClick={() => setView("equipa")} style={{ marginTop: 11, display: "flex", alignItems: "center", gap: 13 }}>
+              <IconTile icon="users" accent="var(--c-primary)" size={42} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Ver registo completo</div>
-                <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>{log.length} ações</div>
+                <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Equipa & ações</div>
+                <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>Convidar, gerir equipa e registo de ações</div>
               </div>
-              <Icon name="chevronRight" size={20} color="var(--c-muted)" style={{ transform: showLog ? "rotate(90deg)" : "none" }} />
+              <Icon name="chevronRight" size={20} color="var(--c-muted)" />
             </Card>
-            {showLog && (
-              <div style={{ marginTop: 12 }}>
-                <AdminLog log={log} />
+
+            <Card onClick={() => setView("comida")} style={{ marginTop: 11, display: "flex", alignItems: "center", gap: 13 }}>
+              <IconTile icon="heart" accent="var(--c-red)" size={42} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Comida & preferências</div>
+                <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>Opções de comida e gráfico de preferências</div>
               </div>
-            )}
+              <Icon name="chevronRight" size={20} color="var(--c-muted)" />
+            </Card>
           </>
         )}
 
-        <form action={signOut} style={{ marginTop: 20 }}>
+        {/* Ver app de cliente — hiperligação simples */}
+        <button
+          onClick={() => router.push("/app")}
+          style={{ display: "flex", alignItems: "center", gap: 7, margin: "16px auto 0", border: "none", background: "transparent", cursor: "pointer", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-primary)" }}
+        >
+          Ver app de cliente <Icon name="chevronRight" size={16} color="var(--c-primary)" />
+        </button>
+
+        <form action={signOut} style={{ marginTop: 18 }}>
           <Button full variant="soft" accent="var(--c-red)" icon="logout" type="submit">Terminar sessão</Button>
         </form>
         <p style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)", marginTop: 14 }}>Os Amigos do Bairro · v1.0</p>
