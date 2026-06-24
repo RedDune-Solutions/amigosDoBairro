@@ -163,6 +163,7 @@ export type AppData = {
   news: NewsRow[];
   notifications: NotifRow[];
   unread: number;
+  expiring: { pts: number; dias: number } | null;
   nextReservation: NextReservation;
 };
 

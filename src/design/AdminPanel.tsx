@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { Card, IconTile, Button, SectionLabel } from "@/design/ui";
-import { patchPrize, addPrize, removePrize, updateLoyalty, validateVoucher, patchReward, addReward, removeReward } from "@/lib/admin-actions";
+import { patchPrize, addPrize, removePrize, validateVoucher, patchReward, addReward, removeReward } from "@/lib/admin-actions";
 
 export type RewardAdmin = {
   id: string;
@@ -99,15 +99,6 @@ function NumStep({ value, onDec, onInc, onSet, min, max, suffix, w = 58, accent 
       )}
       {btn("plus", onInc)}
     </div>
-  );
-}
-
-function AdminTabBtn({ icon, label, active, onClick }: { icon: string; label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "9px 0", cursor: "pointer", border: "none", borderRadius: 13, background: active ? "var(--c-ink)" : "transparent", color: active ? "#fff" : "var(--c-muted)" }}>
-      <Icon name={icon} size={19} stroke={active ? 2.4 : 2} />
-      <span style={{ fontFamily: "var(--f-body)", fontWeight: active ? 800 : 600, fontSize: 11 }}>{label}</span>
-    </button>
   );
 }
 
@@ -498,98 +489,3 @@ export function AdminLog({ log }: { log: LogRow[] }) {
   );
 }
 
-export function AdminSettings({ euroPerStamp, stampGoal }: { euroPerStamp: number; stampGoal: number }) {
-  const router = useRouter();
-  const [eps, setEps] = useState(euroPerStamp);
-  const [sg, setSg] = useState(stampGoal);
-  const commit = (e: number, s: number) => { void updateLoyalty(e, s).then(() => router.refresh()); };
-  return (
-    <>
-      <p style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", margin: "0 2px 14px", lineHeight: 1.5 }}>
-        Regras do cartão de carimbos. As alterações aplicam-se a novos carimbos.
-      </p>
-      <Card style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
-          <IconTile icon="coffee" accent="var(--c-primary)" size={46} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 16, color: "var(--c-ink)" }}>Valor por carimbo</div>
-            <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", marginTop: 2, lineHeight: 1.4 }}>Euros gastos para ganhar 1 carimbo</div>
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 13, borderTop: "1px dashed var(--c-line)" }}>
-          <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Cada carimbo custa</span>
-          <NumStep value={eps} suffix="€" accent="var(--c-primary)" min={1} onSet={(v) => { const n = Math.max(1, v); setEps(n); commit(n, sg); }} onDec={() => { const n = Math.max(1, eps - 1); setEps(n); commit(n, sg); }} onInc={() => { const n = eps + 1; setEps(n); commit(n, sg); }} />
-        </div>
-      </Card>
-      <Card style={{ marginTop: 11, display: "flex", flexDirection: "column", gap: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
-          <IconTile icon="star" accent="var(--c-green)" size={46} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 16, color: "var(--c-ink)" }}>Carimbos por cartola</div>
-            <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", marginTop: 2, lineHeight: 1.4 }}>Ao completar a cartola, ganha 2 raspadinhas (1 especial + 1 comum)</div>
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 13, borderTop: "1px dashed var(--c-line)" }}>
-          <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Carimbos necessários</span>
-          <NumStep value={sg} accent="var(--c-green)" w={44} min={2} onSet={(v) => { const n = Math.max(2, v); setSg(n); commit(eps, n); }} onDec={() => { const n = Math.max(2, sg - 1); setSg(n); commit(eps, n); }} onInc={() => { const n = sg + 1; setSg(n); commit(eps, n); }} />
-        </div>
-      </Card>
-      <Card style={{ marginTop: 11, display: "flex", alignItems: "center", gap: 12, background: "color-mix(in srgb, var(--c-primary) 8%, var(--c-surface))", borderColor: "color-mix(in srgb, var(--c-primary) 22%, var(--c-line))" }}>
-        <Icon name="sparkle" size={20} color="var(--c-primary)" />
-        <span style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-ink)", lineHeight: 1.45 }}>
-          Regra atual: a cada <b>{eps}€</b> = 1 carimbo · <b>{sg} carimbos</b> = 1 especial + 1 comum.
-        </span>
-      </Card>
-    </>
-  );
-}
-
-export function AdminPanel({
-  prizes: initialPrizes,
-  vouchers,
-  stats,
-  euroPerStamp,
-  stampGoal,
-}: {
-  prizes: PrizeAdmin[];
-  vouchers: VoucherRow[];
-  stats: AdminStatsData;
-  euroPerStamp: number;
-  stampGoal: number;
-}) {
-  const router = useRouter();
-  const [sec, setSec] = useState<"prizes" | "redeem" | "stats" | "settings">("prizes");
-  const [prizes, setPrizes] = useState(initialPrizes);
-
-  return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--c-bg)" }}>
-      <div style={{ padding: "6px 18px 12px", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={() => router.push("/app")} style={{ width: 40, height: 40, borderRadius: 14, border: "1px solid var(--c-line)", background: "var(--c-surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--c-ink)" }}>
-            <Icon name="chevronLeft" size={20} stroke={2.4} />
-          </button>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <Icon name="shield" size={18} color="var(--c-primary)" fill="color-mix(in srgb, var(--c-primary) 18%, transparent)" />
-              <h1 style={{ margin: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 21, color: "var(--c-ink)", letterSpacing: -0.3 }}>Administração</h1>
-            </div>
-            <div style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)" }}>Os Amigos do Bairro · Daniela</div>
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 4, marginTop: 12, padding: 5, borderRadius: 16, background: "var(--c-surface)", border: "1px solid var(--c-line)" }}>
-          <AdminTabBtn icon="gift" label="Prémios" active={sec === "prizes"} onClick={() => setSec("prizes")} />
-          <AdminTabBtn icon="ticket" label="Resgates" active={sec === "redeem"} onClick={() => setSec("redeem")} />
-          <AdminTabBtn icon="chart" label="Stats" active={sec === "stats"} onClick={() => setSec("stats")} />
-          <AdminTabBtn icon="sliders" label="Regras" active={sec === "settings"} onClick={() => setSec("settings")} />
-        </div>
-      </div>
-
-      <div className="om-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "4px 18px 22px" }}>
-        {sec === "prizes" && <AdminPrizes prizes={prizes} setPrizes={setPrizes} />}
-        {sec === "redeem" && <AdminRedemptions vouchers={vouchers} />}
-        {sec === "stats" && <AdminStats stats={stats} prizes={prizes} />}
-        {sec === "settings" && <AdminSettings euroPerStamp={euroPerStamp} stampGoal={stampGoal} />}
-      </div>
-    </div>
-  );
-}

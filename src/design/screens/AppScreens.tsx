@@ -6,21 +6,13 @@ import { useI18n } from "@/design/i18n";
 import { Scroll, Card, IconTile, Button, LogoBadge, Stamp, SectionLabel, TopBar } from "@/design/ui";
 import { TIERS, tierIndexFor, type AppData, type RewardRow, type HistoryRow } from "@/design/data";
 
-// ── Barra de progresso de gasto ──────────────────────────────────────────────
-export function SpendBar({ spend, euroPerStamp }: { spend: number; euroPerStamp: number }) {
+// ── Regra dos carimbos (V2: compra ≥15€ = 1 carimbo, máx 2/semana) ───────────
+function StampRule() {
   const { T } = useI18n();
-  const pct = Math.max(0, Math.min(100, (spend / euroPerStamp) * 100));
   return (
-    <div style={{ marginTop: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 11.5, marginBottom: 6 }}>
-        <span style={{ color: "var(--c-muted)" }}>{T("card.nextStamp") as string}</span>
-        <span style={{ color: "var(--c-primary)" }}>
-          {spend}€ <span style={{ color: "var(--c-muted)" }}>/ {euroPerStamp}€</span>
-        </span>
-      </div>
-      <div style={{ height: 9, borderRadius: 100, background: "color-mix(in srgb, var(--c-primary) 12%, var(--c-surface2))", overflow: "hidden" }}>
-        <div style={{ width: pct + "%", height: "100%", borderRadius: 100, background: "linear-gradient(90deg, var(--c-primary), color-mix(in srgb, var(--c-primary) 60%, var(--c-red)))", transition: "width .5s cubic-bezier(.4,.8,.3,1)" }} />
-      </div>
+    <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 12, background: "color-mix(in srgb, var(--c-primary) 8%, var(--c-surface2))" }}>
+      <Icon name="sparkle" size={15} color="var(--c-primary)" />
+      <span style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-ink)", lineHeight: 1.4 }}>{T("card.stampRule") as string}</span>
     </div>
   );
 }
@@ -205,7 +197,7 @@ export function Home({
             <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15.5, color: "var(--c-ink)" }}>{T("home.stampCard") as string}</div>
             <div style={{ fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 13, color: "var(--c-primary)" }}>{data.stamps}/{data.stampGoal}</div>
           </div>
-          <SpendBar spend={data.spendToward} euroPerStamp={data.euroPerStamp} />
+          <StampRule />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 9, marginTop: 12 }}>
             {Array.from({ length: data.stampGoal }).map((_, i) => (
               <Stamp key={i} filled={i < data.stamps} idx={i + 1} />
@@ -270,6 +262,15 @@ export function LoyaltyCard({
       <Scroll>
         <MemberCard points={points} earned={data.earned} nome={data.nome} memberSince={data.memberSince} onQR={onQR} />
 
+        {data.expiring && (
+          <Card style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 11, background: "color-mix(in srgb, var(--c-red) 9%, var(--c-surface))", borderColor: "color-mix(in srgb, var(--c-red) 25%, var(--c-line))" }}>
+            <Icon name="clock" size={20} color="var(--c-red)" />
+            <span style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-ink)", lineHeight: 1.4 }}>
+              {T("card.expiring", data.expiring.pts, data.expiring.dias) as string}
+            </span>
+          </Card>
+        )}
+
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, marginTop: 14 }}>
           <Card pad={15} style={{ textAlign: "center" }}>
             <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 30, color: "var(--c-primary)", lineHeight: 1 }}>{points}</div>
@@ -287,9 +288,9 @@ export function LoyaltyCard({
         <Card style={{ marginTop: 14 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 16, color: "var(--c-ink)" }}>{T("card.yourStamps") as string}</div>
-            <div style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)" }}>{T("card.perStamp", data.euroPerStamp) as string}</div>
+            <div style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)" }}>{T("card.perStamp") as string}</div>
           </div>
-          <SpendBar spend={data.spendToward} euroPerStamp={data.euroPerStamp} />
+          <StampRule />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, marginTop: 14 }}>
             {Array.from({ length: data.stampGoal }).map((_, i) => (
               <Stamp key={i} filled={i < data.stamps} idx={i + 1} />

@@ -298,7 +298,7 @@ export function PrizesScreen({
             {(pending.length ? T("pz.havePending", pending.length) : T("pz.noneYet")) as string}
           </div>
           <div style={{ position: "relative", fontFamily: "var(--f-body)", fontWeight: 600, fontSize: 13, marginTop: 4, opacity: 0.85 }}>
-            {(pending.length ? T("pz.eachTen") : T("pz.toNext", stampsLeft, stampsLeft * data.euroPerStamp)) as string}
+            {(pending.length ? T("pz.eachTen") : T("pz.toNext", stampsLeft)) as string}
           </div>
         </div>
 

@@ -141,21 +141,6 @@ export async function removeReward(id: string): Promise<{ ok?: boolean; error?: 
   return { ok: true };
 }
 
-export async function updateLoyalty(
-  euroPerStamp: number,
-  stampGoal: number,
-): Promise<{ ok?: boolean; error?: string }> {
-  await assertAdmin();
-  if (euroPerStamp < 1 || stampGoal < 2) return { error: "Valores inválidos." };
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("loyalty_config")
-    .update({ euro_per_stamp: euroPerStamp, stamp_goal: stampGoal })
-    .eq("id", true);
-  if (error) return { error: "Não foi possível guardar." };
-  return { ok: true };
-}
-
 /** Confirmar / cancelar reserva (staff ou admin). */
 export async function atualizarReserva(formData: FormData): Promise<void> {
   await assertStaff();

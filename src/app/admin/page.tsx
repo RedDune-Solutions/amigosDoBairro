@@ -41,6 +41,7 @@ export default async function AdminPage() {
     news: [],
     notifications: [],
     unread: 0,
+    expiring: null,
     nextReservation: null,
   };
 

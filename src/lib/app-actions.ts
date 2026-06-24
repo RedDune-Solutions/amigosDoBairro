@@ -86,6 +86,12 @@ export async function createReservation(input: {
     hora: input.hora,
     n_pessoas: input.n_pessoas,
   });
-  if (error) return { error: "Não foi possível reservar." };
+  if (error) {
+    return {
+      error: (error.message ?? "").includes("Limite")
+        ? "Já tens 3 reservas ativas. Cancela uma para marcar outra."
+        : "Não foi possível reservar.",
+    };
+  }
   return { ok: true };
 }
