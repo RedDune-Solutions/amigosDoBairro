@@ -5,9 +5,15 @@ import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { Scroll, Card, IconTile, Button, LogoBadge, SectionLabel } from "@/design/ui";
 
-// Marquee = fotos do ESPAÇO / ambiente do café. A do batido já mostra o ambiente
-// (interior + mesa). Juntar aqui mais fotos do espaço para o marquee ganhar variedade.
-const ESPACO: string[] = ["/galeria/burger-sumos.jpg"];
+// Marquee = fotos do ESPAÇO / ambiente do café (@osamigosdobairro): interior,
+// pessoas no salão e bebidas servidas à mesa. Comida (pratos) vai p/ "Da nossa casa".
+const ESPACO: string[] = [
+  "/galeria/foto-10.jpg",       // interior — mesas, cadeiras azuis, quadro do batido
+  "/galeria/foto-06.jpg",       // cliente a beber o batido no salão
+  "/galeria/burger-sumos.jpg",  // interior + pessoa + sumo
+  "/galeria/foto-05.jpg",       // batido morango servido à mesa (interior atrás)
+  "/galeria/foto-14.jpg",       // três batidos à mesa (salão atrás)
+];
 
 function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) {
   const loop = [...tiles, ...tiles];
@@ -44,7 +50,7 @@ function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) 
 
 function PhotoCarousel() {
   if (ESPACO.length === 0) return null; // sem fotos do espaço → não mostra o marquee
-  // Preenche a fila para o marquee ficar cheio mesmo com poucas fotos (repete).
+  // Garante fila cheia mesmo com poucas fotos (repete até ≥5).
   const row: string[] = [];
   while (row.length < 5) row.push(...ESPACO);
   return (
@@ -75,10 +81,14 @@ export function Landing() {
 
   // Fotos reais da comida (@osamigosdobairro) — apresentação de comida.
   const comida = [
-    { src: "/galeria/brunch.jpg", n: { pt: "Brunch", en: "Brunch" } },
-    { src: "/galeria/bagel.jpg", n: { pt: "Bagel", en: "Bagel" } },
-    { src: "/galeria/panquecas.jpg", n: { pt: "Panquecas", en: "Pancakes" } },
-    { src: "/galeria/sandes.jpg", n: { pt: "Sandes caseira", en: "Homemade sandwich" } },
+    { src: "/galeria/foto-19.jpg", n: { pt: "Panquecas", en: "Pancakes" } },
+    { src: "/galeria/foto-08.jpg", n: { pt: "Brunch", en: "Brunch" } },
+    { src: "/galeria/foto-18.jpg", n: { pt: "Bagel com ovo", en: "Egg bagel" } },
+    { src: "/galeria/foto-11.jpg", n: { pt: "Bowl saudável", en: "Healthy bowl" } },
+    { src: "/galeria/foto-15.jpg", n: { pt: "Sandes", en: "Sandwich" } },
+    { src: "/galeria/foto-13.jpg", n: { pt: "Muffin com ovo", en: "Egg muffin" } },
+    { src: "/galeria/foto-02.jpg", n: { pt: "Brownie", en: "Brownie" } },
+    { src: "/galeria/foto-03.jpg", n: { pt: "Taça de iogurte", en: "Yogurt bowl" } },
   ];
 
   return (
