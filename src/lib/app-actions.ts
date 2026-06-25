@@ -91,6 +91,8 @@ export async function createReservation(input: {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada." };
+  const { data: prof } = await supabase.from("profiles").select("reservas_bloqueadas").eq("id", user.id).single();
+  if (prof?.reservas_bloqueadas) return { error: "O café bloqueou as reservas desta conta. Fala connosco." };
   const today = new Date().toISOString().slice(0, 10);
   if (input.data < today) return { error: "Data no passado." };
   if (input.n_pessoas < 1 || input.n_pessoas > 12) return { error: "Nº de pessoas inválido." };
@@ -101,10 +103,13 @@ export async function createReservation(input: {
     n_pessoas: input.n_pessoas,
   });
   if (error) {
+    const m = error.message ?? "";
     return {
-      error: (error.message ?? "").includes("esse dia")
-        ? "Já tens uma reserva para esse dia. Cancela-a para pedir outra."
-        : "Não foi possível reservar.",
+      error: m.includes("bloqueadas")
+        ? "O café bloqueou as reservas desta conta. Fala connosco."
+        : m.includes("esse dia")
+          ? "Já tens uma reserva para esse dia. Cancela-a para pedir outra."
+          : "Não foi possível reservar.",
     };
   }
   return { ok: true };

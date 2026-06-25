@@ -76,6 +76,7 @@ export function AppShell({ data, menu, foodCategories = [] }: { data: AppData; m
     screen = (
       <Reservations
         mine={data.reservations}
+        blocked={data.reservasBloqueadas}
         onBooked={() => {
           flash(T("toast.bookingOk") as string);
           router.refresh();

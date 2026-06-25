@@ -237,6 +237,7 @@ export type AppData = {
   unread: number;
   expiring: { pts: number; dias: number } | null;
   reservations: Reservation[];
+  reservasBloqueadas: boolean;
 };
 
 export type ClienteRow = {
@@ -246,6 +247,7 @@ export type ClienteRow = {
   food_pref: string | null;
   created_at: string;
   banned: boolean;
+  reservas_bloqueadas: boolean;
 };
 
 export type NotifRow = {

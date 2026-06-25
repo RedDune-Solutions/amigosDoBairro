@@ -30,6 +30,19 @@ export async function enviarAviso(input: z.input<typeof avisoSchema>): Promise<{
   return { ok: true };
 }
 
+const resBlockSchema = z.object({ userId: z.string().uuid(), bloq: z.boolean() });
+
+/** Bloqueia/permite SÓ as reservas de um cliente (no-show), sem suspender a conta. */
+export async function definirReservasBloqueadas(input: z.input<typeof resBlockSchema>): Promise<{ ok?: boolean; error?: string }> {
+  await assertAdmin();
+  const parsed = resBlockSchema.safeParse(input);
+  if (!parsed.success) return { error: "Dados inválidos." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("definir_reservas_bloqueadas", { p_user: parsed.data.userId, p_bloq: parsed.data.bloq });
+  if (error) return { error: (error.message ?? "").includes("clientes") ? "Só contas de cliente." : "Não foi possível atualizar." };
+  return { ok: true };
+}
+
 const banSchema = z.object({ userId: z.string().uuid(), banned: z.boolean() });
 
 /** Suspende (banned=true) ou reativa (false) a conta de um cliente. */

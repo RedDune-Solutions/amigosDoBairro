@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { Card, Button } from "@/design/ui";
 import type { ClienteRow, FoodCategory } from "@/design/data";
-import { enviarAviso, definirSuspensao } from "@/lib/clientes-actions";
+import { enviarAviso, definirSuspensao, definirReservasBloqueadas } from "@/lib/clientes-actions";
 
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 function membro(iso: string): string {
@@ -49,6 +49,16 @@ function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null
     router.refresh();
   }
 
+  async function toggleResBlock() {
+    if (busy) return;
+    setBusy(true);
+    const r = await definirReservasBloqueadas({ userId: c.id, bloq: !c.reservas_bloqueadas });
+    setBusy(false);
+    if (r.error) { setMsg({ ok: false, text: r.error }); return; }
+    setOpen(false);
+    router.refresh();
+  }
+
   const inputStyle: React.CSSProperties = {
     width: "100%", border: "1px solid var(--c-line)", background: "var(--c-surface)", borderRadius: 11,
     padding: "10px 12px", fontFamily: "var(--f-body)", fontSize: 14, color: "var(--c-ink)", outline: "none",
@@ -75,6 +85,7 @@ function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>
             <span><Icon name="calendar" size={13} /> Membro desde <b style={{ color: "var(--c-ink)" }}>{membro(c.created_at)}</b></span>
             {foodLabel && <span><Icon name="heart" size={13} /> Gosta de <b style={{ color: "var(--c-ink)" }}>{foodLabel}</b></span>}
+            {c.reservas_bloqueadas && <span style={{ fontWeight: 800, color: "var(--c-red)" }}>Reservas bloqueadas</span>}
           </div>
 
           {avisoOpen ? (
@@ -99,6 +110,7 @@ function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null
               ) : (
                 <MiniBtn label="Suspender" icon="lock" color="var(--c-red)" onClick={() => setConfirming(true)} />
               )}
+              <MiniBtn label={c.reservas_bloqueadas ? "Permitir reservas" : "Bloquear reservas"} icon="calendar" color={c.reservas_bloqueadas ? "var(--c-green)" : "var(--c-red)"} onClick={toggleResBlock} />
             </div>
           )}
           {msg && <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: msg.ok ? "var(--c-green)" : "var(--c-red)" }}>{msg.text}</div>}

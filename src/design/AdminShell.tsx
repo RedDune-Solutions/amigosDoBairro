@@ -75,6 +75,7 @@ export function AdminShell({
   const [prizes, setPrizes] = useState(initialPrizes);
   const [rewards, setRewards] = useState(initialRewards);
   const [prizeMode, setPrizeMode] = useState<"raspadinha" | "pontos">("raspadinha");
+  const [configView, setConfigView] = useState<"home" | "equipa">("home");
 
   const todayLog = log.filter((r) => isToday(r.quando));
 
@@ -94,7 +95,7 @@ export function AdminShell({
           <NovidadesAdmin news={news} />
           <div style={{ marginTop: 22, display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
             <div style={{ fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: "var(--c-muted)" }}>Ações de hoje</div>
-            <button onClick={() => setTab("config")} style={{ border: "none", background: "transparent", cursor: "pointer", fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 12.5, color: "var(--c-primary)" }}>Ver mais →</button>
+            <button onClick={() => { setConfigView("equipa"); setTab("config"); }} style={{ border: "none", background: "transparent", cursor: "pointer", fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 12.5, color: "var(--c-primary)" }}>Ver mais →</button>
           </div>
           <div style={{ marginTop: 11 }}>
             <AdminLog log={todayLog} />
@@ -146,6 +147,7 @@ export function AdminShell({
         foodCategories={foodCategories}
         prefStats={prefStats}
         clientes={clientes}
+        initialView={configView}
         onSaved={() => router.refresh()}
       />
     );
@@ -160,7 +162,7 @@ export function AdminShell({
           return (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => { if (t.id === "config") setConfigView("home"); setTab(t.id); }}
               style={{ flex: 1, border: "none", background: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "6px 0", color: on ? "var(--c-primary)" : "var(--c-muted)" }}
             >
               <Icon name={t.icon} size={22} stroke={on ? 2.4 : 2} />

@@ -23,9 +23,11 @@ type Day = { key: number; wd: string; day: number; mon: string; full: string; is
 
 export function Reservations({
   mine,
+  blocked = false,
   onBooked,
 }: {
   mine: Reservation[];
+  blocked?: boolean;
   onBooked: () => void;
 }) {
   const { T } = useI18n();
@@ -139,11 +141,22 @@ export function Reservations({
           </div>
         )}
 
+        {blocked ? (
+          <Card style={{ display: "flex", flexDirection: "column", gap: 4, background: "color-mix(in srgb, var(--c-red) 8%, var(--c-surface))", borderColor: "color-mix(in srgb, var(--c-red) 25%, var(--c-line))" }}>
+            <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 16, color: "var(--c-red)" }}>{T("res.blockedTitle") as string}</div>
+            <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)", lineHeight: 1.5 }}>{T("res.blockedSub") as string}</div>
+          </Card>
+        ) : (
+        <>
         {mine.length > 0 && (
           <div style={{ marginBottom: 6 }}>
             <h2 style={{ margin: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 18, color: "var(--c-ink)" }}>{T("res.newReq") as string}</h2>
           </div>
         )}
+        <Card style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 6, background: "color-mix(in srgb, var(--c-red) 6%, var(--c-surface))", borderColor: "color-mix(in srgb, var(--c-red) 20%, var(--c-line))" }}>
+          <Icon name="bell" size={18} color="var(--c-red)" stroke={2.2} />
+          <span style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-ink)", lineHeight: 1.45 }}>{T("res.noShowWarn") as string}</span>
+        </Card>
         <SectionLabel>{T("res.chooseDay") as string}</SectionLabel>
         <div style={{ display: "flex", gap: 9, overflowX: "auto", padding: "12px 0 4px" }} className="om-scroll">
           {days.map((d) => {
@@ -208,6 +221,8 @@ export function Reservations({
             {time ? (T("res.request", day.wd, time) as string) : (T("res.pickHour") as string)}
           </Button>
         </div>
+        </>
+        )}
       </Scroll>
     </>
   );

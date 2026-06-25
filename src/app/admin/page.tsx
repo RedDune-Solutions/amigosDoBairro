@@ -46,6 +46,7 @@ export default async function AdminPage() {
     unread: 0,
     expiring: null,
     reservations: [],
+    reservasBloqueadas: false,
   };
 
   const [
@@ -81,7 +82,7 @@ export default async function AdminPage() {
     isAdmin ? supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "customer") : Promise.resolve({ count: 0 }),
     isAdmin ? supabase.from("news").select("id, titulo_pt, titulo_en, desc_pt, desc_en, icon, accent, ativo, created_at").order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
     isAdmin ? supabase.rpc("historico_acoes", { p_limit: 100 }) : Promise.resolve({ data: [] }),
-    isAdmin ? supabase.from("profiles").select("id, nome, telefone, food_pref, created_at, banned").eq("role", "customer").order("created_at", { ascending: false }).limit(500) : Promise.resolve({ data: [] }),
+    isAdmin ? supabase.from("profiles").select("id, nome, telefone, food_pref, created_at, banned, reservas_bloqueadas").eq("role", "customer").order("created_at", { ascending: false }).limit(500) : Promise.resolve({ data: [] }),
   ]);
 
   type Rel = { nome?: string } | { nome?: string }[] | null;

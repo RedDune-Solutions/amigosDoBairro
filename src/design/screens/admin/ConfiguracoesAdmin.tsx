@@ -117,6 +117,7 @@ export function ConfiguracoesAdmin({
   foodCategories,
   prefStats,
   clientes,
+  initialView,
   onSaved,
 }: {
   me: AppData;
@@ -129,10 +130,11 @@ export function ConfiguracoesAdmin({
   foodCategories: FoodCategory[];
   prefStats: FoodPrefStat[];
   clientes: ClienteRow[];
+  initialView?: "home" | "equipa";
   onSaved: () => void;
 }) {
   const router = useRouter();
-  const [view, setView] = useState<View>("home");
+  const [view, setView] = useState<View>(initialView ?? "home");
 
   if (view === "perfil") {
     return <EditProfile data={me} onBack={() => setView("home")} onSaved={onSaved} />;
