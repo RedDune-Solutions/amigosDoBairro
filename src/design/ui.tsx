@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type CSSProperties, type ReactNode } from "react";
+import { useRef, useState, useTransition, type CSSProperties, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
@@ -218,6 +218,74 @@ export function DashedAddButton({ label, onClick, style }: { label: string; onCl
     >
       {pending ? <Spinner size={16} /> : <><Icon name="plus" size={17} stroke={2.4} /> {label}</>}
     </button>
+  );
+}
+
+// ── Bottom sheet com arrastar-para-fechar ────────────────────────────────────
+// O grabber é mesmo funcional: arrastar para baixo (>110px) fecha; senão volta.
+// Tocar fora também fecha (com animação). Conteúdo scrolla por baixo do grabber.
+export function BottomSheet({ onClose, children, maxHeight = "86%" }: { onClose: () => void; children: ReactNode; maxHeight?: string }) {
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const startY = useRef<number | null>(null);
+  const dyRef = useRef(0);
+
+  function doClose() {
+    if (closing) return;
+    setDragging(false);
+    setClosing(true);
+    setTimeout(onClose, 230);
+  }
+  function onDown(e: React.PointerEvent) {
+    startY.current = e.clientY;
+    setDragging(true);
+    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { /* noop */ }
+  }
+  function onMove(e: React.PointerEvent) {
+    if (startY.current == null) return;
+    const dy = Math.max(0, e.clientY - startY.current);
+    dyRef.current = dy;
+    setDragY(dy);
+  }
+  function onUp() {
+    if (startY.current == null) return;
+    startY.current = null;
+    setDragging(false);
+    const dy = dyRef.current;
+    dyRef.current = 0;
+    if (dy > 110) doClose();
+    else setDragY(0);
+  }
+
+  return (
+    <div
+      onClick={doClose}
+      style={{ position: "absolute", inset: 0, zIndex: 80, display: "flex", alignItems: "flex-end", background: "rgba(20,14,6,0.45)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", animation: "fadeIn .2s ease", opacity: closing ? 0 : 1, transition: "opacity .22s ease" }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "100%",
+          maxHeight,
+          display: "flex",
+          flexDirection: "column",
+          background: "var(--c-surface)",
+          borderRadius: "26px 26px 0 0",
+          boxShadow: "0 -10px 40px -12px rgba(20,14,6,0.4)",
+          transform: closing ? "translateY(100%)" : `translateY(${dragY}px)`,
+          transition: dragging ? "none" : "transform .24s cubic-bezier(.32,.72,0,1)",
+          animation: closing ? undefined : "sheetUp .28s cubic-bezier(.32,.72,0,1)",
+        }}
+      >
+        <div onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ flexShrink: 0, padding: "11px 0 7px", cursor: "grab", touchAction: "none" }}>
+          <div style={{ width: 40, height: 5, borderRadius: 100, background: "var(--c-line)", margin: "0 auto" }} />
+        </div>
+        <div className="om-scroll" style={{ flex: "1 1 auto", minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: "2px 18px 28px" }}>
+          {children}
+        </div>
+      </div>
+    </div>
   );
 }
 

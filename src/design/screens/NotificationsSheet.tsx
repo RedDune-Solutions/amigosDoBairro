@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
-import { IconTile } from "@/design/ui";
+import { IconTile, BottomSheet } from "@/design/ui";
 import type { AppData, NotifRow } from "@/design/data";
 import { arquivarNotificacao } from "@/lib/notif-actions";
 
@@ -28,9 +28,7 @@ export function NotificationsSheet({ data, onClose }: { data: AppData; onClose: 
   }
 
   return (
-    <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 80, display: "flex", alignItems: "flex-end", background: "rgba(20,14,6,0.45)", backdropFilter: "blur(3px)", animation: "fadeIn .2s ease" }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxHeight: "82%", overflowY: "auto", background: "var(--c-surface)", borderRadius: "26px 26px 0 0", padding: "20px 18px 28px", animation: "popIn .25s ease" }}>
-        <div style={{ width: 40, height: 4, borderRadius: 100, background: "var(--c-line)", margin: "0 auto 14px" }} />
+    <BottomSheet onClose={onClose} maxHeight="82%">
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
           <Icon name="bell" size={20} color="var(--c-primary)" />
           <h3 style={{ margin: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 19, color: "var(--c-ink)" }}>
@@ -72,7 +70,6 @@ export function NotificationsSheet({ data, onClose }: { data: AppData; onClose: 
             })}
           </div>
         )}
-      </div>
-    </div>
+    </BottomSheet>
   );
 }

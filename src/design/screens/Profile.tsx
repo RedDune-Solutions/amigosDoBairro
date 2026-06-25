@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
-import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Spinner } from "@/design/ui";
+import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Spinner, BottomSheet } from "@/design/ui";
 import { TiersSheet } from "@/design/screens/AppScreens";
 import { PushOptIn } from "@/design/screens/PushOptIn";
 import { InstallApp } from "@/design/screens/InstallApp";
@@ -149,9 +149,7 @@ function FaqSheet({ onClose }: { onClose: () => void }) {
     },
   ];
   return (
-    <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 80, display: "flex", alignItems: "flex-end", background: "rgba(20,14,6,0.45)", backdropFilter: "blur(3px)", animation: "fadeIn .2s ease" }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxHeight: "88%", overflowY: "auto", background: "var(--c-surface)", borderRadius: "26px 26px 0 0", padding: "20px 18px 30px", animation: "popIn .25s ease" }}>
-        <div style={{ width: 40, height: 4, borderRadius: 100, background: "var(--c-line)", margin: "0 auto 16px" }} />
+    <BottomSheet onClose={onClose} maxHeight="88%">
         <h3 style={{ margin: "0 0 16px", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 19, color: "var(--c-ink)", textAlign: "center" }}>{T("faq.title") as string}</h3>
         {sections.map((s) => (
           <div key={s.title} style={{ marginBottom: 18 }}>
@@ -166,8 +164,7 @@ function FaqSheet({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         ))}
-      </div>
-    </div>
+    </BottomSheet>
   );
 }
 

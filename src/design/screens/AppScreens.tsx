@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
-import { Scroll, Card, IconTile, Button, LogoBadge, Stamp, SectionLabel, TopBar } from "@/design/ui";
+import { Scroll, Card, IconTile, Button, LogoBadge, Stamp, SectionLabel, TopBar, BottomSheet } from "@/design/ui";
 import { TIERS, tierIndexFor, type AppData, type RewardRow, type HistoryRow } from "@/design/data";
 
 // ── Regra dos carimbos (V2: compra ≥15€ = 1 carimbo, máx 2/semana) ───────────
@@ -119,9 +119,7 @@ export function TiersSheet({ earned, onClose }: { earned: number; onClose: () =>
   const next = TIERS[curIdx + 1];
   const toNext = next ? next.min - earned : 0;
   return (
-    <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 80, display: "flex", alignItems: "flex-end", background: "rgba(20,14,6,0.45)", backdropFilter: "blur(3px)", animation: "fadeIn .2s ease" }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxHeight: "88%", overflowY: "auto", background: "var(--c-surface)", borderRadius: "26px 26px 0 0", padding: "20px 20px 30px", animation: "popIn .25s ease" }}>
-        <div style={{ width: 40, height: 4, borderRadius: 100, background: "var(--c-line)", margin: "0 auto 16px" }} />
+    <BottomSheet onClose={onClose} maxHeight="88%">
         <h3 style={{ margin: "0 0 3px", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 19, color: "var(--c-ink)", textAlign: "center" }}>{T("tiers.title") as string}</h3>
         <p style={{ margin: "0 0 18px", fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)", textAlign: "center", lineHeight: 1.45 }}>
           {next ? (T("tiers.toNext", toNext, L(next.name)) as string) : (T("tiers.sub") as string)}
@@ -146,8 +144,7 @@ export function TiersSheet({ earned, onClose }: { earned: number; onClose: () =>
             );
           })}
         </div>
-      </div>
-    </div>
+    </BottomSheet>
   );
 }
 
