@@ -51,16 +51,18 @@ export const metadata: Metadata = {
   verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
     ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
     : undefined,
-  icons: {
-    icon: [{ url: "/logo.jpeg", type: "image/jpeg" }],
-    apple: [{ url: "/logo.jpeg" }],
-  },
+  // Ícones via convenção de ficheiros do App Router: src/app/favicon.ico
+  // (quadrado, p/ o Google), icon.png e apple-icon.png. Não definir `icons`
+  // aqui senão a convenção de ficheiros é ignorada.
 };
 
 export const viewport: Viewport = {
   themeColor: "#fbf3e7",
   width: "device-width",
   initialScale: 1,
+  // Necessário para os env(safe-area-inset-*) resolverem na PWA (footer não
+  // fica por baixo da barra de navegação do Android).
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

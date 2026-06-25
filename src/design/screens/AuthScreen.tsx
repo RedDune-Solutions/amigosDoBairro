@@ -151,18 +151,18 @@ export function AuthScreen({
           </div>
 
           {!isReg && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, rowGap: 8, marginTop: 12 }}>
               <button type="button" onClick={() => setRemember((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none", border: "none", background: "transparent", padding: 0 }}>
                 <input type="hidden" name="remember" value={remember ? "1" : "0"} />
                 <span style={{ width: 19, height: 19, borderRadius: 6, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: remember ? "none" : "1.5px solid var(--c-line)", background: remember ? "var(--c-primary)" : "var(--c-surface)", color: "#fff" }}>
                   {remember && <Icon name="check" size={13} stroke={3} color="#fff" />}
                 </span>
-                <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-ink)" }}>{T("auth.remember") as string}</span>
+                <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-ink)", whiteSpace: "nowrap" }}>{T("auth.remember") as string}</span>
               </button>
               <button
                 type="button"
                 onClick={() => router.push("/recuperar")}
-                style={{ border: "none", background: "transparent", cursor: "pointer", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-primary)" }}
+                style={{ border: "none", background: "transparent", cursor: "pointer", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-primary)", whiteSpace: "nowrap", padding: 0 }}
               >
                 {T("auth.forgot") as string}
               </button>

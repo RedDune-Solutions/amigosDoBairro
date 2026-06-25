@@ -7,6 +7,29 @@ import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/lib/push-config";
 import { savePushSubscription, removePushSubscription } from "@/lib/push-actions";
 
 type State = "loading" | "unsupported" | "off" | "on" | "denied" | "busy";
+type PushSubJSON = { endpoint: string; keys: { p256dh: string; auth: string } };
+
+/**
+ * Subscreve no PushManager. Se já existir uma subscrição com OUTRA chave VAPID
+ * (de um deploy anterior), o subscribe rebenta com "different applicationServerKey"
+ * → cancela a antiga e tenta de novo. Sem isto o botão ficava preso em "Ativar".
+ */
+async function subscribePush(reg: ServiceWorkerRegistration): Promise<PushSubscription> {
+  const opts: PushSubscriptionOptionsInit = {
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
+  };
+  try {
+    return await reg.pushManager.subscribe(opts);
+  } catch (e) {
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) {
+      await existing.unsubscribe();
+      return await reg.pushManager.subscribe(opts);
+    }
+    throw e;
+  }
+}
 
 export function PushOptIn() {
   const { T } = useI18n();
@@ -27,7 +50,17 @@ export function PushOptIn() {
       try {
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.getSubscription();
-        if (alive) setState(sub ? "on" : "off");
+        if (!alive) return;
+        if (sub) {
+          // O browser tem subscrição mas a BD pode tê-la perdido → re-guardar
+          // (idempotente). "on" só se o servidor confirmar que tem o registo —
+          // senão não receberia push (ex.: sessão expirada) → mostrar "off".
+          const res = await savePushSubscription(sub.toJSON() as PushSubJSON);
+          if (!alive) return;
+          setState(res.error ? "off" : "on");
+        } else {
+          setState("off");
+        }
       } catch {
         if (alive) setState("off");
       }
@@ -45,18 +78,16 @@ export function PushOptIn() {
         return;
       }
       const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
-      });
-      const res = await savePushSubscription(sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } });
+      const sub = await subscribePush(reg);
+      const res = await savePushSubscription(sub.toJSON() as PushSubJSON);
       if (res.error) {
         setMsg(res.error);
         setState("off");
         return;
       }
       setState("on");
-    } catch {
+    } catch (e) {
+      console.error("[push] ativar falhou:", e);
       setMsg(T("push.err") as string);
       setState("off");
     }

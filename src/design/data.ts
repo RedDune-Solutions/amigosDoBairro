@@ -186,14 +186,14 @@ const fromMin = (min: number): string =>
 
 /**
  * Horas de reserva possíveis num dado dia, dentro do horário do café.
- * Slots de 30 min; última hora = fecho − 60 min (não reservar à última meia-hora).
- * Para hoje, remove horas já passadas (exige 60 min de antecedência).
+ * Range: começa 30 min DEPOIS de abrir e vai até 30 min ANTES de fechar.
+ * Slots de 30 min. Para hoje, remove horas já passadas (60 min de antecedência).
  */
 export function reservationSlots(date: Date, now: Date): string[] {
   const hours = CAFE_HOURS[date.getDay()];
   if (!hours) return [];
-  const start = toMin(hours.open);
-  const lastStart = toMin(hours.close) - 60;
+  const start = toMin(hours.open) + 30;
+  const lastStart = toMin(hours.close) - 30;
   const sameDay = date.toDateString() === now.toDateString();
   const minAllowed = sameDay ? now.getHours() * 60 + now.getMinutes() + 60 : -1;
   const out: string[] = [];
@@ -203,12 +203,14 @@ export function reservationSlots(date: Date, now: Date): string[] {
   return out;
 }
 
-export type NextReservation = {
+export type Reservation = {
+  id: string;
   data: string;
   hora: string;
   n_pessoas: number;
   estado: string;
-} | null;
+};
+export type NextReservation = Reservation | null;
 
 // Tipos de dados da app (vindos do Supabase)
 export type AppData = {
@@ -235,7 +237,7 @@ export type AppData = {
   notifications: NotifRow[];
   unread: number;
   expiring: { pts: number; dias: number } | null;
-  nextReservation: NextReservation;
+  reservations: Reservation[];
 };
 
 export type NotifRow = {

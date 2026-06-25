@@ -75,7 +75,7 @@ export function AppShell({ data, menu, foodCategories = [] }: { data: AppData; m
   } else if (tab === "reservations") {
     screen = (
       <Reservations
-        next={data.nextReservation}
+        mine={data.reservations}
         onBooked={() => {
           flash(T("toast.bookingOk") as string);
           router.refresh();

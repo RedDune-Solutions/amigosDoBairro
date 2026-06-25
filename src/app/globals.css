@@ -52,6 +52,9 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* viewport-fit:cover está ativo → afastar o topo da status bar/notch.
+     O fundo (footer) é tratado em cada barra com env(safe-area-inset-bottom). */
+  padding-top: env(safe-area-inset-top);
 }
 @media (min-width: 480px) {
   .app-stage {

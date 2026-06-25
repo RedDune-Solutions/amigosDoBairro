@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/ui";
 import { EditProfile } from "@/design/screens/Profile";
+import { SignOutButton } from "@/design/screens/SignOutButton";
 import { EquipaSection, type MemberRow, type InviteRow } from "@/design/screens/admin/EquipaScreen";
 import { AdminLog, type LogRow } from "@/design/AdminPanel";
 import { PreferencesChart } from "@/design/screens/admin/PreferencesChart";
 import type { AppData, FoodCategory, FoodPrefStat } from "@/design/data";
-import { signOut } from "@/lib/auth-actions";
 import { addFoodCategory, patchFoodCategory, removeFoodCategory } from "@/lib/menu-actions";
 import { enviarCampanha } from "@/lib/push-actions";
 
@@ -262,9 +262,9 @@ export function ConfiguracoesAdmin({
           Ver app de cliente <Icon name="chevronRight" size={16} color="var(--c-primary)" />
         </button>
 
-        <form action={signOut} style={{ marginTop: 18 }}>
-          <Button full variant="soft" accent="var(--c-red)" icon="logout" type="submit">Terminar sessão</Button>
-        </form>
+        <div style={{ marginTop: 18 }}>
+          <SignOutButton label="Terminar sessão" />
+        </div>
         <p style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)", marginTop: 14 }}>Os Amigos do Bairro · v1.0</p>
       </Scroll>
     </>

@@ -15,20 +15,24 @@ const subSchema = z.object({
   keys: z.object({ p256dh: z.string(), auth: z.string() }),
 });
 
-/** Cliente guarda a subscription do seu dispositivo (upsert por endpoint). */
+/** Cliente guarda a subscription do seu dispositivo (upsert robusto via RPC). */
 export async function savePushSubscription(sub: z.input<typeof subSchema>): Promise<{ ok?: boolean; error?: string }> {
   const parsed = subSchema.safeParse(sub);
-  if (!parsed.success) return { error: "Subscription inválida." };
+  if (!parsed.success) return { error: "Subscrição inválida." };
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Sessão expirada." };
-  const { error } = await supabase
-    .from("push_subscriptions")
-    .upsert(
-      { user_id: user.id, endpoint: parsed.data.endpoint, p256dh: parsed.data.keys.p256dh, auth: parsed.data.keys.auth },
-      { onConflict: "endpoint" },
-    );
-  if (error) return { error: "Não foi possível ativar." };
+  if (!user) return { error: "Sessão expirada. Volta a entrar." };
+  // RPC SECURITY DEFINER (delete-by-endpoint + insert) — evita o buraco de RLS
+  // no UPDATE que fazia o upsert falhar na re-subscrição do mesmo dispositivo.
+  const { error } = await supabase.rpc("guardar_push_sub", {
+    p_endpoint: parsed.data.endpoint,
+    p_p256dh: parsed.data.keys.p256dh,
+    p_auth: parsed.data.keys.auth,
+  });
+  if (error) {
+    console.error("[push] guardar_push_sub:", error);
+    return { error: "Não foi possível ativar. Tenta novamente." };
+  }
   return { ok: true };
 }
 

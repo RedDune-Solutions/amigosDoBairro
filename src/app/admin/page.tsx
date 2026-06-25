@@ -45,7 +45,7 @@ export default async function AdminPage() {
     notifications: [],
     unread: 0,
     expiring: null,
-    nextReservation: null,
+    reservations: [],
   };
 
   const [

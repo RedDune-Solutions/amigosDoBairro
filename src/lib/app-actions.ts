@@ -90,8 +90,8 @@ export async function createReservation(input: {
   });
   if (error) {
     return {
-      error: (error.message ?? "").includes("Limite")
-        ? "Já tens 3 reservas ativas. Cancela uma para marcar outra."
+      error: (error.message ?? "").includes("esse dia")
+        ? "Já tens uma reserva para esse dia. Cancela-a para pedir outra."
         : "Não foi possível reservar.",
     };
   }

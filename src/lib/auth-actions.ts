@@ -180,8 +180,19 @@ export async function authenticate(
 }
 
 export async function signOut(): Promise<void> {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  (await cookies()).delete("ab_remember");
+  // `scope: "local"` só limpa a sessão local (sem chamada ao servidor de auth)
+  // → não pode pendurar. Mesmo que falhe, seguimos para o redirect para o
+  // loader (useFormStatus) nunca ficar preso.
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signOut({ scope: "local" });
+  } catch {
+    /* noop — segue para o redirect */
+  }
+  try {
+    (await cookies()).delete("ab_remember");
+  } catch {
+    /* noop */
+  }
   redirect("/");
 }

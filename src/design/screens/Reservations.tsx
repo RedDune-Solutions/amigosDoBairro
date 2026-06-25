@@ -4,10 +4,10 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
 import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/ui";
-import { reservationSlots, type NextReservation } from "@/design/data";
+import { reservationSlots, type Reservation } from "@/design/data";
 import { createReservation } from "@/lib/app-actions";
 
-/** Estado da reserva → etiqueta localizada + cor (para o card "próxima reserva"). */
+/** Estado da reserva → etiqueta localizada + cor. */
 function statusInfo(estado: string, T: (k: string) => string | string[]): { label: string; color: string } {
   if (estado === "confirmada") return { label: T("res.statusConfirmed") as string, color: "var(--c-green)" };
   if (estado === "cancelada") return { label: T("res.statusUnavailable") as string, color: "var(--c-red)" };
@@ -20,10 +20,10 @@ const MON_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "
 type Day = { key: number; wd: string; day: number; mon: string; full: string; iso: string };
 
 export function Reservations({
-  next,
+  mine,
   onBooked,
 }: {
-  next: NextReservation;
+  mine: Reservation[];
   onBooked: () => void;
 }) {
   const { T } = useI18n();
@@ -118,24 +118,38 @@ export function Reservations({
     <>
       <TopBar title={T("res.title") as string} />
       <Scroll>
-        {next && (() => {
-          const st = statusInfo(next.estado, T);
-          return (
-            <Card style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 14, background: `color-mix(in srgb, ${st.color} 9%, var(--c-surface))`, borderColor: `color-mix(in srgb, ${st.color} 22%, var(--c-line))` }}>
-              <IconTile icon="calendar" accent={st.color} size={48} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 11.5, letterSpacing: 0.5, color: st.color, textTransform: "uppercase" }}>{T("res.next") as string}</div>
-                <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15.5, color: "var(--c-ink)" }}>
-                  {new Date(next.data + "T00:00:00").toLocaleDateString("pt-PT", { weekday: "short", day: "numeric", month: "short" })} · {next.hora.slice(0, 5)}
-                </div>
-                <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>
-                  {next.n_pessoas} {T("res.personN") as string} · <span style={{ color: st.color, fontWeight: 700 }}>{st.label}</span>
-                </div>
-              </div>
-            </Card>
-          );
-        })()}
+        {mine.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <SectionLabel>{T("res.mine") as string}</SectionLabel>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 11 }}>
+              {mine.map((r) => {
+                const st = statusInfo(r.estado, T);
+                return (
+                  <Card key={r.id} style={{ display: "flex", alignItems: "center", gap: 13, background: `color-mix(in srgb, ${st.color} 8%, var(--c-surface))`, borderColor: `color-mix(in srgb, ${st.color} 22%, var(--c-line))` }}>
+                    <IconTile icon="calendar" accent={st.color} size={46} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15.5, color: "var(--c-ink)" }}>
+                        {new Date(r.data + "T00:00:00").toLocaleDateString("pt-PT", { weekday: "short", day: "numeric", month: "short" })} · {r.hora.slice(0, 5)}
+                      </div>
+                      <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>
+                        {r.n_pessoas} {T("res.personN") as string}
+                      </div>
+                    </div>
+                    <span style={{ flexShrink: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12, color: st.color, background: `color-mix(in srgb, ${st.color} 14%, var(--c-surface))`, padding: "5px 11px", borderRadius: 100 }}>
+                      {st.label}
+                    </span>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
+        {mine.length > 0 && (
+          <div style={{ marginBottom: 6 }}>
+            <h2 style={{ margin: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 18, color: "var(--c-ink)" }}>{T("res.newReq") as string}</h2>
+          </div>
+        )}
         <SectionLabel>{T("res.chooseDay") as string}</SectionLabel>
         <div style={{ display: "flex", gap: 9, overflowX: "auto", padding: "12px 0 4px" }} className="om-scroll">
           {days.map((d) => {

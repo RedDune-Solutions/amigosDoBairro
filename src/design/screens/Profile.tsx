@@ -7,9 +7,9 @@ import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/u
 import { TiersSheet } from "@/design/screens/AppScreens";
 import { PushOptIn } from "@/design/screens/PushOptIn";
 import { InstallApp } from "@/design/screens/InstallApp";
+import { SignOutButton } from "@/design/screens/SignOutButton";
 import { TIERS, tierIndexFor, type AppData, type FoodCategory } from "@/design/data";
 import { updateProfile } from "@/lib/app-actions";
-import { signOut } from "@/lib/auth-actions";
 import { createClient } from "@/lib/supabase/client";
 import type { Lang } from "@/design/strings";
 
@@ -118,9 +118,9 @@ export function Profile({
           ))}
         </Card>
 
-        <form action={signOut} style={{ marginTop: 16 }}>
-          <Button full variant="soft" accent="var(--c-red)" icon="logout" type="submit">{T("prof.logout") as string}</Button>
-        </form>
+        <div style={{ marginTop: 16 }}>
+          <SignOutButton label={T("prof.logout") as string} />
+        </div>
         <p style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)", marginTop: 14 }}>Os Amigos do Bairro · v1.0</p>
       </Scroll>
       {tiers && <TiersSheet earned={data.earned} onClose={() => setTiers(false)} />}
