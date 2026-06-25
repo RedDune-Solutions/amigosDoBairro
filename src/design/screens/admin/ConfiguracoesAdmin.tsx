@@ -7,9 +7,10 @@ import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/u
 import { EditProfile } from "@/design/screens/Profile";
 import { SignOutButton } from "@/design/screens/SignOutButton";
 import { EquipaSection, type MemberRow, type InviteRow } from "@/design/screens/admin/EquipaScreen";
+import { ClientesAdmin } from "@/design/screens/admin/ClientesAdmin";
 import { AdminLog, type LogRow } from "@/design/AdminPanel";
 import { PreferencesChart } from "@/design/screens/admin/PreferencesChart";
-import type { AppData, FoodCategory, FoodPrefStat } from "@/design/data";
+import type { AppData, FoodCategory, FoodPrefStat, ClienteRow } from "@/design/data";
 import { addFoodCategory, patchFoodCategory, removeFoodCategory } from "@/lib/menu-actions";
 import { enviarCampanha } from "@/lib/push-actions";
 
@@ -96,8 +97,8 @@ function CampanhaForm({ foodCategories }: { foodCategories: FoodCategory[] }) {
       <input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Título (ex.: Pastéis quentinhos! 🥐)" maxLength={80} style={inputStyle} />
       <textarea value={corpo} onChange={(e) => setCorpo(e.target.value)} placeholder="Mensagem (ex.: Hoje há pastéis acabados de fazer até às 12h.)" maxLength={300} rows={3} style={{ ...inputStyle, resize: "vertical", fontFamily: "var(--f-body)" }} />
       {res && <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: res.ok ? "var(--c-green)" : "var(--c-red)" }}>{res.text}</div>}
-      <Button full icon="bell" onClick={send} disabled={busy || titulo.trim().length < 2 || corpo.trim().length < 2}>
-        {busy ? "A enviar…" : "Enviar notificação"}
+      <Button full icon="bell" onClick={send} loading={busy} disabled={titulo.trim().length < 2 || corpo.trim().length < 2}>
+        Enviar notificação
       </Button>
     </Card>
   );
@@ -115,6 +116,7 @@ export function ConfiguracoesAdmin({
   log,
   foodCategories,
   prefStats,
+  clientes,
   onSaved,
 }: {
   me: AppData;
@@ -126,6 +128,7 @@ export function ConfiguracoesAdmin({
   log: LogRow[];
   foodCategories: FoodCategory[];
   prefStats: FoodPrefStat[];
+  clientes: ClienteRow[];
   onSaved: () => void;
 }) {
   const router = useRouter();
@@ -142,6 +145,10 @@ export function ConfiguracoesAdmin({
         <TopBar title="Equipa & ações" onBack={() => setView("home")} />
         <Scroll>
           <EquipaSection members={members} invites={invites} isOwner={isOwner} meId={meId} />
+          <div style={{ marginTop: 24 }}><SectionLabel>Clientes ({clientes.length})</SectionLabel></div>
+          <div style={{ marginTop: 11 }}>
+            <ClientesAdmin clientes={clientes} foodCategories={foodCategories} />
+          </div>
           <div style={{ marginTop: 24 }}><SectionLabel>Registo de ações</SectionLabel></div>
           <div style={{ marginTop: 11 }}>
             <AdminLog log={log} />
@@ -229,7 +236,7 @@ export function ConfiguracoesAdmin({
               <IconTile icon="users" accent="var(--c-primary)" size={42} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Equipa & ações</div>
-                <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>Convidar, gerir equipa e registo de ações</div>
+                <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>Equipa, clientes (suspender/avisar) e registo</div>
               </div>
               <Icon name="chevronRight" size={20} color="var(--c-muted)" />
             </Card>

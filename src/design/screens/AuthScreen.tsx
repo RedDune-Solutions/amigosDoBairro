@@ -14,10 +14,12 @@ export function AuthScreen({
   initialMode = "login",
   next,
   foodCategories = [],
+  suspended = false,
 }: {
   initialMode?: "login" | "register";
   next?: string;
   foodCategories?: FoodCategory[];
+  suspended?: boolean;
 }) {
   const router = useRouter();
   const { T, lang, setLang } = useI18n();
@@ -70,6 +72,11 @@ export function AuthScreen({
       </div>
 
       <Scroll style={{ paddingTop: 18 }}>
+        {suspended && (
+          <div style={{ marginBottom: 14, padding: "11px 13px", borderRadius: 12, background: "color-mix(in srgb, var(--c-red) 12%, var(--c-surface))", border: "1px solid color-mix(in srgb, var(--c-red) 30%, var(--c-line))", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-red)" }}>
+            {lang === "en" ? "Your account is suspended. Please contact the café." : "A tua conta está suspensa. Contacta o café."}
+          </div>
+        )}
         {state.sent && isReg ? (
           <div style={{ textAlign: "center", padding: "18px 8px", animation: "popIn .25s ease" }}>
             <div style={{ width: 72, height: 72, borderRadius: 22, margin: "8px auto 16px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-primary)", background: "color-mix(in srgb, var(--c-primary) 14%, var(--c-surface))" }}>

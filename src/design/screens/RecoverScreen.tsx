@@ -81,8 +81,8 @@ export function RecoverScreen() {
             {(setState as { ok?: boolean }).ok && (
               <p style={{ fontFamily: "var(--f-body)", fontSize: 13.5, fontWeight: 700, color: "var(--c-green)" }}>Palavra-passe atualizada ✓</p>
             )}
-            <Button full size="lg" type="submit" icon="check" disabled={setPending}>
-              {setPending ? "…" : "Guardar"}
+            <Button full size="lg" type="submit" icon="check" loading={setPending}>
+              Guardar
             </Button>
           </form>
         ) : (
@@ -102,8 +102,8 @@ export function RecoverScreen() {
                 Se o email existir, enviámos um link para repor a palavra-passe.
               </p>
             )}
-            <Button full size="lg" type="submit" icon="mail" disabled={reqPending}>
-              {reqPending ? "…" : "Enviar link"}
+            <Button full size="lg" type="submit" icon="mail" loading={reqPending}>
+              Enviar link
             </Button>
           </form>
         )}

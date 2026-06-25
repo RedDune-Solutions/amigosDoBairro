@@ -262,8 +262,12 @@ export function PrizesScreen({
   const { T, L } = useI18n();
   const [active, setActive] = useState<{ card: ScratchCardRow; prize: ScratchPrize | null } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [walletTab, setWalletTab] = useState<"ativos" | "arquivo">("ativos");
   const pending = data.scratchCards;
   const stampsLeft = data.stampGoal - data.stamps;
+  const walletAtivos = data.wallet.filter((w) => w.status !== "usado");
+  const walletUsados = data.wallet.filter((w) => w.status === "usado");
+  const walletList = walletTab === "ativos" ? walletAtivos : walletUsados;
 
   async function open(card: ScratchCardRow) {
     if (busy) return;
@@ -320,10 +324,22 @@ export function PrizesScreen({
 
         {/* Carteira */}
         <div style={{ marginTop: 20 }}>
-          <SectionLabel>{T("pz.myWallet") as string}</SectionLabel>
-          {data.wallet.length ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <SectionLabel>{T("pz.myWallet") as string}</SectionLabel>
+            <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 100, background: "var(--c-surface2)", border: "1px solid var(--c-line)" }}>
+              {([["ativos", T("pz.walletActive") as string], ["arquivo", T("pz.walletArchive") as string]] as const).map(([k, lab]) => {
+                const on = walletTab === k;
+                return (
+                  <button key={k} onClick={() => setWalletTab(k)} style={{ padding: "5px 12px", borderRadius: 100, border: "none", cursor: "pointer", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 11.5, background: on ? "var(--c-primary)" : "transparent", color: on ? "#fff" : "var(--c-muted)" }}>
+                    {lab}{k === "arquivo" && walletUsados.length > 0 ? ` ${walletUsados.length}` : ""}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {walletList.length ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 11 }}>
-              {data.wallet.map((w) => {
+              {walletList.map((w) => {
                 const used = w.status === "usado";
                 return (
                   <Card key={w.id} style={{ display: "flex", alignItems: "center", gap: 13, opacity: used ? 0.6 : 1 }}>
@@ -347,7 +363,9 @@ export function PrizesScreen({
               })}
             </div>
           ) : (
-            <Card style={{ marginTop: 11, textAlign: "center", padding: 18, color: "var(--c-muted)", fontFamily: "var(--f-body)", fontSize: 13.5 }}>{T("pz.walletEmpty") as string}</Card>
+            <Card style={{ marginTop: 11, textAlign: "center", padding: 18, color: "var(--c-muted)", fontFamily: "var(--f-body)", fontSize: 13.5 }}>
+              {(walletTab === "arquivo" ? T("pz.walletNoUsed") : T("pz.walletEmpty")) as string}
+            </Card>
           )}
         </div>
 

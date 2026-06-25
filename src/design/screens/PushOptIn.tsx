@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useI18n } from "@/design/i18n";
-import { Card, IconTile } from "@/design/ui";
+import { Card, IconTile, Spinner } from "@/design/ui";
 import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/lib/push-config";
 import { savePushSubscription, removePushSubscription } from "@/lib/push-actions";
 
@@ -144,7 +144,7 @@ export function PushOptIn() {
             color: on ? "var(--c-muted)" : "#fff",
           }}
         >
-          {busy ? "…" : on ? (T("push.disable") as string) : (T("push.enable") as string)}
+          {busy ? <Spinner size={14} /> : on ? (T("push.disable") as string) : (T("push.enable") as string)}
         </button>
       )}
     </Card>

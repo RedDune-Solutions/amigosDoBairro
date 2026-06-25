@@ -240,9 +240,18 @@ export type AppData = {
   reservations: Reservation[];
 };
 
+export type ClienteRow = {
+  id: string;
+  nome: string | null;
+  telefone: string | null;
+  food_pref: string | null;
+  created_at: string;
+  banned: boolean;
+};
+
 export type NotifRow = {
   id: string;
-  kind: "pontos" | "premio" | "reserva" | "novidade";
+  kind: "pontos" | "premio" | "reserva" | "novidade" | "aviso";
   title_pt: string;
   title_en: string | null;
   body_pt: string | null;

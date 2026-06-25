@@ -146,6 +146,25 @@ export function Scroll({
   );
 }
 
+// ── Spinner (loader a rodar) ─────────────────────────────────────────────────
+export function Spinner({ size = 16, color }: { size?: number; color?: string }) {
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: "inline-block",
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        border: "2.5px solid " + (color || "currentColor"),
+        borderTopColor: "transparent",
+        opacity: 0.9,
+        animation: "omSpin .6s linear infinite",
+      }}
+    />
+  );
+}
+
 // ── Button ───────────────────────────────────────────────────────────────────
 type BtnVariant = "primary" | "dark" | "soft" | "outline" | "ghost";
 export function Button({

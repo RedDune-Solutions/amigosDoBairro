@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
-import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/ui";
+import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Spinner } from "@/design/ui";
 import { TiersSheet } from "@/design/screens/AppScreens";
 import { PushOptIn } from "@/design/screens/PushOptIn";
 import { InstallApp } from "@/design/screens/InstallApp";
@@ -285,8 +285,8 @@ export function EditProfile({
             </div>
           </button>
           <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} style={{ display: "none" }} />
-          <div style={{ marginTop: 10, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-primary)" }}>
-            {uploading ? "A enviar…" : (T("edit.photo") as string)}
+          <div style={{ marginTop: 10, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-primary)", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, minHeight: 18 }}>
+            {uploading ? <Spinner size={14} /> : (T("edit.photo") as string)}
           </div>
         </div>
 

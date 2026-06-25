@@ -9,8 +9,8 @@ self.addEventListener("push", (event) => {
   const title = data.title || "Os Amigos do Bairro";
   const options = {
     body: data.body || "",
-    icon: "/logo.jpeg",
-    badge: "/logo.jpeg",
+    icon: "/logo-transp.png",
+    badge: "/logo-transp.png",
     data: { url: data.url || "/app" },
   };
   event.waitUntil(self.registration.showNotification(title, options));

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { Stage } from "@/design/ui";
 import { AppShell } from "@/design/AppShell";
 import { requireUser } from "@/lib/data";
@@ -36,7 +37,7 @@ export default async function AppPage() {
     { data: notifData },
     { data: lotsData },
   ] = await Promise.all([
-    supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at, food_pref").eq("id", user.id).single(),
+    supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at, food_pref, banned").eq("id", user.id).single(),
     supabase.rpc("meu_saldo_v2"),
     supabase.rpc("meus_pontos_ganhos_v2"),
     supabase.from("loyalty_config").select("euro_per_stamp, stamp_goal").eq("id", true).single(),
@@ -51,6 +52,12 @@ export default async function AppPage() {
     supabase.from("notifications").select("id, kind, title_pt, title_en, body_pt, body_en, icon, accent, read_at, created_at").is("archived_at", null).order("created_at", { ascending: false }).limit(40),
     supabase.from("points_lots").select("pontos_restantes, data_expiracao").eq("estado", "ATIVO").gt("data_expiracao", new Date().toISOString()).order("data_expiracao", { ascending: true }),
   ]);
+
+  // Conta suspensa pelo admin → terminar sessão e mostrar aviso no login.
+  if ((profile as { banned?: boolean } | null)?.banned) {
+    await supabase.auth.signOut({ scope: "local" });
+    redirect("/entrar?suspended=1");
+  }
 
   // Pontos a expirar nos próximos 30 dias (FIFO V2).
   // eslint-disable-next-line react-hooks/purity

@@ -90,6 +90,17 @@ export async function signIn(
     }
     return { error: "Não foi possível entrar. Tenta novamente." };
   }
+  // Conta suspensa pelo admin → não deixar entrar.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    const { data: prof } = await supabase.from("profiles").select("banned").eq("id", user.id).single();
+    if (prof?.banned) {
+      await supabase.auth.signOut({ scope: "local" });
+      return { error: "A tua conta está suspensa. Contacta o café." };
+    }
+  }
   await postAuthRedirect(supabase, formData);
   return {};
 }

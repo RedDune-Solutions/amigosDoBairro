@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { TopBar, Scroll, Card } from "@/design/ui";
 import { atualizarReserva } from "@/lib/admin-actions";
 
@@ -13,17 +14,34 @@ export type ReservaAdminRow = {
 };
 
 export function ReservasAdmin({ reservas }: { reservas: ReservaAdminRow[] }) {
+  const [tab, setTab] = useState<"novas" | "arquivo">("novas");
+  const novas = reservas.filter((r) => r.estado === "pendente");
+  const arquivo = reservas.filter((r) => r.estado !== "pendente");
+  const list = tab === "novas" ? novas : arquivo;
+
   return (
     <>
       <TopBar title="Reservas" />
       <Scroll>
-        {reservas.length === 0 ? (
+        <div style={{ display: "flex", gap: 6, padding: 5, borderRadius: 15, background: "var(--c-surface2)", border: "1px solid var(--c-line)", marginBottom: 14 }}>
+          {([["novas", "Novas", novas.length], ["arquivo", "Arquivo", arquivo.length]] as const).map(([k, lab, n]) => {
+            const on = tab === k;
+            return (
+              <button key={k} onClick={() => setTab(k)} style={{ flex: 1, padding: "10px 8px", borderRadius: 11, cursor: "pointer", border: "none", background: on ? "var(--c-ink)" : "transparent", color: on ? "#fff" : "var(--c-muted)", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+                {lab}
+                <span style={{ fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 11, minWidth: 18, padding: "1px 6px", borderRadius: 100, background: on ? "rgba(255,255,255,0.22)" : "var(--c-surface)", color: on ? "#fff" : "var(--c-muted)" }}>{n}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {list.length === 0 ? (
           <Card style={{ textAlign: "center", padding: "28px 18px", color: "var(--c-muted)", fontFamily: "var(--f-body)", fontSize: 13.5 }}>
-            Sem reservas próximas.
+            {tab === "novas" ? "Sem pedidos novos." : "Sem reservas no arquivo."}
           </Card>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-            {reservas.map((r) => (
+            {list.map((r) => (
               <Card key={r.id} style={{ display: "flex", flexDirection: "column", gap: 11 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                   <div>
@@ -65,7 +83,7 @@ export function ReservasAdmin({ reservas }: { reservas: ReservaAdminRow[] }) {
                     <form action={atualizarReserva} style={{ flex: 1 }}>
                       <input type="hidden" name="id" value={r.id} />
                       <input type="hidden" name="estado" value="cancelada" />
-                      <button style={btn("var(--c-red)")}>Recusar</button>
+                      <button style={btn("var(--c-red)")}>{r.estado === "confirmada" ? "Cancelar" : "Recusar"}</button>
                     </form>
                   )}
                 </div>

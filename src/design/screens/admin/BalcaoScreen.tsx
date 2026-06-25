@@ -138,8 +138,8 @@ export function BalcaoScreen() {
           {msg && (
             <p style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: msg.ok ? "var(--c-green)" : "var(--c-red)" }}>{msg.text}</p>
           )}
-          <Button full icon="check" onClick={submit} disabled={busy || !code || !euros}>
-            {busy ? "A registar…" : "Registar compra"}
+          <Button full icon="check" onClick={submit} loading={busy} disabled={!code || !euros}>
+            Registar compra
           </Button>
         </Card>
 

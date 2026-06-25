@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
-import { Card, IconTile, Button, SectionLabel } from "@/design/ui";
+import { Card, IconTile, Button, SectionLabel, Spinner } from "@/design/ui";
 import { patchPrize, addPrize, removePrize, validateVoucher, patchReward, addReward, removeReward } from "@/lib/admin-actions";
 
 export type RewardAdmin = {
@@ -112,6 +112,28 @@ function LangInput({ flag, value, onCommit }: { flag: string; value: string; onC
   );
 }
 
+/** Botão de apagar com confirmação (2 toques) — evita apagar sem se perceber. */
+function TrashConfirm({ onConfirm }: { onConfirm: () => void }) {
+  const [armed, setArmed] = useState(false);
+  if (armed) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+        <button onClick={() => { setArmed(false); onConfirm(); }} style={{ height: 34, padding: "0 12px", borderRadius: 10, border: "none", background: "var(--c-red)", color: "#fff", cursor: "pointer", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12.5 }}>
+          Apagar
+        </button>
+        <button onClick={() => setArmed(false)} style={{ height: 34, padding: "0 11px", borderRadius: 10, border: "1px solid var(--c-line)", background: "var(--c-surface)", color: "var(--c-muted)", cursor: "pointer", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12.5 }}>
+          Não
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button onClick={() => setArmed(true)} aria-label="Apagar" style={{ width: 34, height: 34, borderRadius: 10, border: "1px solid var(--c-line)", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-red)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <Icon name="trash" size={16} stroke={2} />
+    </button>
+  );
+}
+
 function PrizeRow({ prize, poolTotal, onPatch, onRemove }: { prize: PrizeAdmin; poolTotal: number; onPatch: (p: Partial<PrizeAdmin>) => void; onRemove: () => void }) {
   const canInc = poolTotal < 100;
   const [badgeOpen, setBadgeOpen] = useState(false);
@@ -128,9 +150,7 @@ function PrizeRow({ prize, poolTotal, onPatch, onRemove }: { prize: PrizeAdmin; 
           <LangInput flag="PT" value={prize.nome_pt} onCommit={(v) => onPatch({ nome_pt: v })} />
           <LangInput flag="EN" value={prize.nome_en || ""} onCommit={(v) => onPatch({ nome_en: v })} />
         </div>
-        <button onClick={onRemove} style={{ width: 34, height: 34, borderRadius: 10, border: "1px solid var(--c-line)", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-red)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Icon name="trash" size={16} stroke={2} />
-        </button>
+        <TrashConfirm onConfirm={onRemove} />
       </div>
 
       {badgeOpen && (
@@ -180,8 +200,8 @@ function PrizeRow({ prize, poolTotal, onPatch, onRemove }: { prize: PrizeAdmin; 
 }
 
 export function AdminPrizes({ prizes, setPrizes }: { prizes: PrizeAdmin[]; setPrizes: (p: PrizeAdmin[]) => void }) {
-  const router = useRouter();
   const [pool, setPool] = useState<"comum" | "especial">("especial");
+  const [adding, setAdding] = useState(false);
   const list = prizes.filter((p) => p.kind === pool);
   const total = list.reduce((s, p) => s + p.weight, 0);
 
@@ -194,8 +214,14 @@ export function AdminPrizes({ prizes, setPrizes }: { prizes: PrizeAdmin[]; setPr
     void removePrize(id);
   };
   const add = async () => {
-    await addPrize(pool);
-    router.refresh();
+    if (adding) return;
+    setAdding(true);
+    const res = await addPrize(pool);
+    if (res?.id) {
+      const weight = Math.max(1, Math.min(10, 100 - total));
+      setPrizes([...prizes, { id: res.id, kind: pool, nome_pt: "Novo prémio", nome_en: "New prize", desc_pt: null, desc_en: null, icon: "gift", accent: pool === "especial" ? "primary" : "green", weight }]);
+    }
+    setAdding(false);
   };
 
   return (
@@ -235,8 +261,8 @@ export function AdminPrizes({ prizes, setPrizes }: { prizes: PrizeAdmin[]; setPr
         ))}
       </div>
 
-      <button onClick={add} style={{ width: "100%", marginTop: 12, padding: "13px 0", borderRadius: 15, border: "1.5px dashed color-mix(in srgb, var(--c-ink) 25%, var(--c-line))", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-ink)", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-        <Icon name="plus" size={18} stroke={2.4} /> Adicionar prémio
+      <button onClick={add} disabled={adding} style={{ width: "100%", marginTop: 12, padding: "13px 0", borderRadius: 15, border: "1.5px dashed color-mix(in srgb, var(--c-ink) 25%, var(--c-line))", background: "var(--c-surface)", cursor: adding ? "default" : "pointer", opacity: adding ? 0.6 : 1, color: "var(--c-ink)", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        {adding ? <Spinner size={16} /> : <><Icon name="plus" size={18} stroke={2.4} /> Adicionar prémio</>}
       </button>
     </>
   );
@@ -258,9 +284,7 @@ function RewardRow({ reward, onPatch, onRemove }: { reward: RewardAdmin; onPatch
           <LangInput flag="PT" value={reward.titulo} onCommit={(v) => onPatch({ titulo: v })} />
           <LangInput flag="EN" value={reward.nome_en || ""} onCommit={(v) => onPatch({ nome_en: v })} />
         </div>
-        <button onClick={onRemove} style={{ width: 34, height: 34, borderRadius: 10, border: "1px solid var(--c-line)", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-red)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Icon name="trash" size={16} stroke={2} />
-        </button>
+        <TrashConfirm onConfirm={onRemove} />
       </div>
 
       {badgeOpen && (
@@ -305,7 +329,7 @@ function RewardRow({ reward, onPatch, onRemove }: { reward: RewardAdmin; onPatch
 }
 
 export function AdminRewards({ rewards, setRewards }: { rewards: RewardAdmin[]; setRewards: (r: RewardAdmin[]) => void }) {
-  const router = useRouter();
+  const [adding, setAdding] = useState(false);
   const patch = (id: string, fields: Partial<RewardAdmin>) => {
     setRewards(rewards.map((x) => (x.id === id ? { ...x, ...fields } : x)));
     void patchReward({ id, ...fields } as Parameters<typeof patchReward>[0]);
@@ -315,8 +339,13 @@ export function AdminRewards({ rewards, setRewards }: { rewards: RewardAdmin[]; 
     void removeReward(id);
   };
   const add = async () => {
-    await addReward();
-    router.refresh();
+    if (adding) return;
+    setAdding(true);
+    const res = await addReward();
+    if (res?.id) {
+      setRewards([...rewards, { id: res.id, titulo: "Nova recompensa", nome_en: "New reward", descricao: null, desc_en: null, custo_pontos: 100, icon: "gift", accent: "primary", ativo: true }]);
+    }
+    setAdding(false);
   };
   return (
     <>
@@ -328,8 +357,8 @@ export function AdminRewards({ rewards, setRewards }: { rewards: RewardAdmin[]; 
           <RewardRow key={r.id} reward={r} onPatch={(x) => patch(r.id, x)} onRemove={() => remove(r.id)} />
         ))}
       </div>
-      <button onClick={add} style={{ width: "100%", marginTop: 12, padding: "13px 0", borderRadius: 15, border: "1.5px dashed color-mix(in srgb, var(--c-ink) 25%, var(--c-line))", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-ink)", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-        <Icon name="plus" size={18} stroke={2.4} /> Adicionar recompensa
+      <button onClick={add} disabled={adding} style={{ width: "100%", marginTop: 12, padding: "13px 0", borderRadius: 15, border: "1.5px dashed color-mix(in srgb, var(--c-ink) 25%, var(--c-line))", background: "var(--c-surface)", cursor: adding ? "default" : "pointer", opacity: adding ? 0.6 : 1, color: "var(--c-ink)", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        {adding ? <Spinner size={16} /> : <><Icon name="plus" size={18} stroke={2.4} /> Adicionar recompensa</>}
       </button>
     </>
   );

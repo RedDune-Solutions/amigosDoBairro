@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
-import { TopBar, Scroll, Card } from "@/design/ui";
+import { TopBar, Scroll, Card, Spinner } from "@/design/ui";
 import { createClient } from "@/lib/supabase/client";
 import type { MenuCatRow, MenuItemRow } from "@/design/data";
 import {
@@ -48,7 +48,7 @@ function ItemPhoto({ item }: { item: MenuItemRow }) {
       </button>
       <div style={{ flex: 1, minWidth: 0 }}>
         <button onClick={() => fileRef.current?.click()} disabled={busy} style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-primary)" }}>
-          {busy ? "A enviar…" : item.image_url ? "Trocar foto" : "Adicionar foto"}
+          {busy ? <Spinner size={12} /> : item.image_url ? "Trocar foto" : "Adicionar foto"}
         </button>
         {item.image_url && (
           <button onClick={remove} style={{ marginLeft: 12, border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-red)" }}>Remover</button>

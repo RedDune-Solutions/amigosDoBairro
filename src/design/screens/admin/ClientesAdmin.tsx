@@ -1,0 +1,152 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Icon } from "@/design/icons";
+import { Card, Button } from "@/design/ui";
+import type { ClienteRow, FoodCategory } from "@/design/data";
+import { enviarAviso, definirSuspensao } from "@/lib/clientes-actions";
+
+const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+function membro(iso: string): string {
+  const d = new Date(iso);
+  return `${MESES[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [avisoOpen, setAvisoOpen] = useState(false);
+  const [titulo, setTitulo] = useState("");
+  const [corpo, setCorpo] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [confirming, setConfirming] = useState(false);
+
+  async function send() {
+    if (busy || titulo.trim().length < 2) return;
+    setBusy(true);
+    setMsg(null);
+    const r = await enviarAviso({ userId: c.id, titulo, corpo });
+    setBusy(false);
+    if (r.error) { setMsg({ ok: false, text: r.error }); return; }
+    setMsg({ ok: true, text: "Aviso enviado ✓" });
+    setTitulo("");
+    setCorpo("");
+    setAvisoOpen(false);
+  }
+
+  async function toggleBan() {
+    if (busy) return;
+    setBusy(true);
+    const r = await definirSuspensao({ userId: c.id, banned: !c.banned });
+    setBusy(false);
+    setConfirming(false);
+    if (r.error) { setMsg({ ok: false, text: r.error }); return; }
+    // Recolher o card — os dados mudam com o refresh do servidor.
+    setAvisoOpen(false);
+    setOpen(false);
+    router.refresh();
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", border: "1px solid var(--c-line)", background: "var(--c-surface)", borderRadius: 11,
+    padding: "10px 12px", fontFamily: "var(--f-body)", fontSize: 14, color: "var(--c-ink)", outline: "none",
+  };
+
+  return (
+    <Card style={{ display: "flex", flexDirection: "column", gap: open ? 12 : 0 }} pad={14}>
+      <button onClick={() => setOpen((o) => !o)} style={{ display: "flex", alignItems: "center", gap: 11, border: "none", background: "transparent", cursor: "pointer", padding: 0, textAlign: "left", width: "100%" }}>
+        <div style={{ width: 40, height: 40, borderRadius: "50%", flexShrink: 0, background: c.banned ? "color-mix(in srgb, var(--c-red) 16%, var(--c-surface))" : "color-mix(in srgb, var(--c-primary) 16%, var(--c-surface))", color: c.banned ? "var(--c-red)" : "var(--c-primary)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 15 }}>
+          {(c.nome || "?").slice(0, 1).toUpperCase()}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, color: "var(--c-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.nome || "—"}</div>
+          <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>{c.telefone || "Sem telefone"}</div>
+        </div>
+        {c.banned && (
+          <span style={{ flexShrink: 0, fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 10.5, padding: "4px 9px", borderRadius: 100, color: "var(--c-red)", background: "color-mix(in srgb, var(--c-red) 13%, var(--c-surface))" }}>Suspenso</span>
+        )}
+        <Icon name="chevronRight" size={18} color="var(--c-muted)" style={{ flexShrink: 0, transform: open ? "rotate(90deg)" : "none", transition: "transform .15s" }} />
+      </button>
+
+      {open && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 11, borderTop: "1px solid var(--c-line)", paddingTop: 12 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>
+            <span><Icon name="calendar" size={13} /> Membro desde <b style={{ color: "var(--c-ink)" }}>{membro(c.created_at)}</b></span>
+            {foodLabel && <span><Icon name="heart" size={13} /> Gosta de <b style={{ color: "var(--c-ink)" }}>{foodLabel}</b></span>}
+          </div>
+
+          {avisoOpen ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Título do aviso" maxLength={80} style={inputStyle} />
+              <textarea value={corpo} onChange={(e) => setCorpo(e.target.value)} placeholder="Mensagem (opcional)" maxLength={300} rows={2} style={{ ...inputStyle, resize: "vertical", fontFamily: "var(--f-body)" }} />
+              <div style={{ display: "flex", gap: 8 }}>
+                <Button icon="bell" onClick={send} loading={busy} disabled={titulo.trim().length < 2} style={{ flex: 1 }}>Enviar</Button>
+                <Button variant="outline" onClick={() => { setAvisoOpen(false); setMsg(null); }}>Cancelar</Button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <MiniBtn label="Enviar aviso" icon="bell" color="var(--c-primary)" onClick={() => { setAvisoOpen(true); setMsg(null); }} />
+              {c.banned ? (
+                <MiniBtn label="Reativar conta" icon="check" color="var(--c-green)" onClick={toggleBan} />
+              ) : confirming ? (
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <button onClick={toggleBan} disabled={busy} style={{ border: "none", background: "var(--c-red)", color: "#fff", borderRadius: 10, padding: "8px 12px", cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12.5 }}>Suspender</button>
+                  <button onClick={() => setConfirming(false)} style={{ border: "1px solid var(--c-line)", background: "var(--c-surface)", color: "var(--c-muted)", borderRadius: 10, padding: "8px 11px", cursor: "pointer", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12.5 }}>Não</button>
+                </span>
+              ) : (
+                <MiniBtn label="Suspender" icon="lock" color="var(--c-red)" onClick={() => setConfirming(true)} />
+              )}
+            </div>
+          )}
+          {msg && <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: msg.ok ? "var(--c-green)" : "var(--c-red)" }}>{msg.text}</div>}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function MiniBtn({ label, icon, color, onClick }: { label: string; icon: string; color: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 6, border: `1px solid color-mix(in srgb, ${color} 30%, var(--c-line))`, background: `color-mix(in srgb, ${color} 8%, var(--c-surface))`, color, borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5 }}>
+      <Icon name={icon} size={14} stroke={2.2} /> {label}
+    </button>
+  );
+}
+
+export function ClientesAdmin({ clientes, foodCategories }: { clientes: ClienteRow[]; foodCategories: FoodCategory[] }) {
+  const [q, setQ] = useState("");
+  const query = q.trim().toLowerCase();
+  const filtered = query
+    ? clientes.filter((c) => (c.nome || "").toLowerCase().includes(query) || (c.telefone || "").toLowerCase().includes(query))
+    : clientes;
+  const labelOf = (slug: string | null): string | null => {
+    if (!slug) return null;
+    return foodCategories.find((f) => f.slug === slug)?.label_pt ?? slug;
+  };
+
+  return (
+    <>
+      <p style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", margin: "0 2px 11px", lineHeight: 1.5 }}>
+        Todas as contas de cliente. Toca para ver detalhes, enviar um aviso ou suspender.
+      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "11px 13px", borderRadius: 14, background: "var(--c-surface)", border: "1px solid var(--c-line)", marginBottom: 12 }}>
+        <Icon name="search" size={18} color="var(--c-muted)" stroke={2.2} />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Procurar por nome ou telefone…" style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", fontFamily: "var(--f-body)", fontWeight: 600, fontSize: 13.5, color: "var(--c-ink)" }} />
+      </div>
+      {!filtered.length ? (
+        <Card style={{ textAlign: "center", padding: "26px 18px", color: "var(--c-muted)", fontFamily: "var(--f-body)", fontSize: 13 }}>
+          {clientes.length ? `Sem clientes para “${q}”.` : "Ainda sem clientes registados."}
+        </Card>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          {filtered.map((c) => (
+            <ClienteCard key={c.id} c={c} foodLabel={labelOf(c.food_pref)} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}

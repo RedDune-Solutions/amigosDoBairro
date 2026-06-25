@@ -6,7 +6,7 @@ import { getMenu, getFoodCategories, getFoodPrefStats } from "@/lib/menu-actions
 import type { PrizeAdmin, RewardAdmin, AdminStatsData, LogRow } from "@/design/AdminPanel";
 import type { ReservaAdminRow } from "@/design/screens/admin/ReservasAdmin";
 import type { MemberRow, InviteRow } from "@/design/screens/admin/EquipaScreen";
-import type { AppData, NewsRow } from "@/design/data";
+import type { AppData, NewsRow, ClienteRow } from "@/design/data";
 
 export const dynamic = "force-dynamic";
 export const metadata = { robots: { index: false, follow: false } };
@@ -61,6 +61,7 @@ export default async function AdminPage() {
     { count: activeClients },
     { data: newsData },
     { data: logData },
+    { data: clientesData },
   ] = await Promise.all([
     isAdmin
       ? supabase.from("prizes").select("id, kind, nome_pt, nome_en, desc_pt, desc_en, icon, accent, weight").order("kind").order("id")
@@ -80,6 +81,7 @@ export default async function AdminPage() {
     isAdmin ? supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "customer") : Promise.resolve({ count: 0 }),
     isAdmin ? supabase.from("news").select("id, titulo_pt, titulo_en, desc_pt, desc_en, icon, accent, ativo, created_at").order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
     isAdmin ? supabase.rpc("historico_acoes", { p_limit: 100 }) : Promise.resolve({ data: [] }),
+    isAdmin ? supabase.from("profiles").select("id, nome, telefone, food_pref, created_at, banned").eq("role", "customer").order("created_at", { ascending: false }).limit(500) : Promise.resolve({ data: [] }),
   ]);
 
   type Rel = { nome?: string } | { nome?: string }[] | null;
@@ -100,6 +102,8 @@ export default async function AdminPage() {
     redeemed: (walletUsed ?? 0) + (redLevantado ?? 0),
     activeClients: activeClients ?? 0,
   };
+
+  const clientes = (clientesData ?? []) as ClienteRow[];
 
   const [menu, foodCategories, prefStats] = await Promise.all([
     getMenu(),
@@ -126,6 +130,7 @@ export default async function AdminPage() {
         menu={menu}
         foodCategories={foodCategories}
         prefStats={prefStats}
+        clientes={clientes}
       />
     </Stage>
   );

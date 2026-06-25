@@ -57,8 +57,8 @@ export const STRINGS: Record<string, Entry> = {
   "auth.remember": { pt: "Manter sessão", en: "Stay signed in" },
   "auth.regBtn": { pt: "Criar conta", en: "Create account" },
   "auth.loginBtn": { pt: "Entrar na conta", en: "Sign in" },
-  "auth.regLoading": { pt: "A criar conta…", en: "Creating account…" },
-  "auth.loginLoading": { pt: "A entrar…", en: "Signing in…" },
+  "auth.regLoading": { pt: "A criar conta", en: "Creating account" },
+  "auth.loginLoading": { pt: "A entrar", en: "Signing in" },
   "auth.terms": { pt: "Ao registar aceitas os termos e a política de privacidade dos Amigos do Bairro.", en: "By registering you accept the Amigos do Bairro terms and privacy policy." },
   "auth.checkEmailTitle": { pt: "Conta criada! 🎉", en: "Account created! 🎉" },
   "auth.checkEmailSub": { pt: "Enviámos-te um email para confirmares a tua conta. Abre-o e clica no link antes de entrares.", en: "We've sent you an email to confirm your account. Open it and click the link before signing in." },
@@ -251,6 +251,9 @@ export const STRINGS: Record<string, Entry> = {
   "pz.used": { pt: "Usado", en: "Used" },
   "pz.toUse": { pt: "Por usar", en: "To use" },
   "pz.walletEmpty": { pt: "Os prémios que ganhares aparecem aqui.", en: "Prizes you win will appear here." },
+  "pz.walletActive": { pt: "Carteira", en: "Wallet" },
+  "pz.walletArchive": { pt: "Arquivo", en: "Archive" },
+  "pz.walletNoUsed": { pt: "Ainda não usaste nenhum prémio.", en: "You haven't used any prizes yet." },
   "pz.swapPoints": { pt: "Trocar pontos por mimos", en: "Swap points for treats" },
 
   // Celebração
