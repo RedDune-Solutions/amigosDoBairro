@@ -137,6 +137,8 @@ export const STRINGS: Record<string, Entry> = {
   "res.request": { pt: (wd: string, t: string) => `Pedir · ${wd} ${t}`, en: (wd: string, t: string) => `Request · ${wd} ${t}` },
   "res.noSlots": { pt: "Sem horários disponíveis neste dia.", en: "No times available on this day." },
   "res.hoursNote": { pt: "Horários dentro do funcionamento do café.", en: "Times within the café's opening hours." },
+  "res.between": { pt: (a: string, b: string) => `Entre ${a} e ${b}`, en: (a: string, b: string) => `Between ${a} and ${b}` },
+  "res.outOfRange": { pt: (a: string, b: string) => `Escolhe uma hora entre ${a} e ${b}.`, en: (a: string, b: string) => `Pick a time between ${a} and ${b}.` },
   "res.day": { pt: "Dia", en: "Day" },
   "res.hour": { pt: "Hora", en: "Time" },
   "res.people": { pt: "Pessoas", en: "People" },

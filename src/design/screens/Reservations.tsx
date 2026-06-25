@@ -58,7 +58,10 @@ export function Reservations({
     () => reservationSlots(new Date(day.iso + "T00:00:00"), new Date()),
     [day.iso],
   );
-  const ready = time != null && slots.includes(time) && !busy;
+  const minTime = slots[0] ?? "";
+  const maxTime = slots[slots.length - 1] ?? "";
+  const inRange = time != null && slots.length > 0 && time >= minTime && time <= maxTime;
+  const ready = inRange && !busy;
 
   function selectDay(key: number) {
     setDayKey(key);
@@ -68,6 +71,7 @@ export function Reservations({
 
   async function confirm() {
     if (!time) return;
+    if (!inRange) { setError(T("res.outOfRange", minTime, maxTime) as string); return; }
     setBusy(true);
     setError(null);
     const res = await createReservation({ data: day.iso, hora: time, n_pessoas: people });
@@ -173,16 +177,21 @@ export function Reservations({
             {T("res.noSlots") as string}
           </Card>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 9, marginTop: 12 }}>
-            {slots.map((t) => {
-              const on = t === time;
-              return (
-                <button key={t} onClick={() => setTime(t)} style={{ padding: "12px 0", borderRadius: 14, cursor: "pointer", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15, border: on ? "1px solid transparent" : "1px solid var(--c-line)", background: on ? "var(--c-green)" : "var(--c-surface)", color: on ? "#fff" : "var(--c-ink)" }}>
-                  {t}
-                </button>
-              );
-            })}
-          </div>
+          <Card style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 13 }}>
+            <IconTile icon="clock" accent="var(--c-green)" size={44} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <input
+                type="time"
+                value={time ?? ""}
+                min={minTime}
+                max={maxTime}
+                step={1800}
+                onChange={(e) => { setTime(e.target.value || null); setError(null); }}
+                style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 26, color: time ? "var(--c-ink)" : "var(--c-muted)", padding: 0, margin: 0 }}
+              />
+              <div style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)", marginTop: 2 }}>{T("res.between", minTime, maxTime) as string}</div>
+            </div>
+          </Card>
         )}
 
         <div style={{ marginTop: 18 }}>
