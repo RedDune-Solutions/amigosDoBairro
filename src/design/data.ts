@@ -162,6 +162,18 @@ export type FoodCategory = {
 // Agregado para o gráfico de preferências (admin).
 export type FoodPrefStat = { slug: string; label: string; count: number };
 
+// Foto da landing page (editável pela admin). 'espaco' = carrossel de ambiente
+// (sem legenda); 'comida' = "Da nossa casa" (label_pt/label_en como legenda).
+export type LandingPhoto = {
+  id: string;
+  section: "espaco" | "comida";
+  image_url: string;
+  label_pt: string | null;
+  label_en: string | null;
+  ordem: number;
+};
+export type LandingPhotos = { espaco: LandingPhoto[]; comida: LandingPhoto[] };
+
 export const RES_TIMES = ["09:00", "10:30", "12:00", "13:00", "13:30", "16:00", "17:30", "19:00"];
 
 // Horário real do café por dia da semana (0=Dom … 6=Sáb).

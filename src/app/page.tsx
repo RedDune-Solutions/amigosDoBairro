@@ -1,6 +1,9 @@
 import { Stage } from "@/design/ui";
 import { Landing } from "@/design/screens/Landing";
 import { SITE_URL, CAFE } from "@/lib/site";
+import { getLandingPhotos } from "@/lib/landing-actions";
+
+export const dynamic = "force-dynamic";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -38,14 +41,15 @@ const jsonLd = {
   ],
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const photos = await getLandingPhotos();
   return (
     <Stage>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Landing />
+      <Landing photos={photos} />
     </Stage>
   );
 }
