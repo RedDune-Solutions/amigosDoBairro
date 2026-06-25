@@ -10,7 +10,7 @@ self.addEventListener("push", (event) => {
   const options = {
     body: data.body || "",
     icon: "/logo-transp.png",
-    badge: "/logo-transp.png",
+    badge: "/badge.png",
     data: { url: data.url || "/app" },
   };
   event.waitUntil(self.registration.showNotification(title, options));
