@@ -93,40 +93,40 @@ export type MenuCat = {
   cat: Bi;
   accent: string;
   icon: string;
-  items: { name: Bi; desc: Bi; price: string }[];
+  items: { name: Bi; desc: Bi }[];
 };
 
 export const MENU: MenuCat[] = [
   {
     cat: { pt: "Cafés & Bebidas", en: "Coffees & Drinks" }, accent: "primary", icon: "coffee",
     items: [
-      { name: { pt: "Café (bica)", en: "Espresso" }, desc: { pt: "Torra clássica da casa", en: "House classic roast" }, price: "0,80" },
-      { name: { pt: "Galão", en: "Latte" }, desc: { pt: "Leite cremoso, café suave", en: "Creamy milk, mild coffee" }, price: "1,40" },
-      { name: { pt: "Cappuccino", en: "Cappuccino" }, desc: { pt: "Espuma de leite e canela", en: "Milk foam and cinnamon" }, price: "1,80" },
-      { name: { pt: "Chá da casa", en: "House tea" }, desc: { pt: "Selecção de infusões", en: "Selection of infusions" }, price: "1,30" },
+      { name: { pt: "Café (bica)", en: "Espresso" }, desc: { pt: "Torra clássica da casa", en: "House classic roast" } },
+      { name: { pt: "Galão", en: "Latte" }, desc: { pt: "Leite cremoso, café suave", en: "Creamy milk, mild coffee" } },
+      { name: { pt: "Cappuccino", en: "Cappuccino" }, desc: { pt: "Espuma de leite e canela", en: "Milk foam and cinnamon" } },
+      { name: { pt: "Chá da casa", en: "House tea" }, desc: { pt: "Selecção de infusões", en: "Selection of infusions" } },
     ],
   },
   {
     cat: { pt: "Sandes & Tostas", en: "Sandwiches & Toasties" }, accent: "blue", icon: "sandwich",
     items: [
-      { name: { pt: "Tosta mista", en: "Ham & cheese toastie" }, desc: { pt: "Fiambre e queijo no pão caseiro", en: "Ham and cheese on homemade bread" }, price: "2,50" },
-      { name: { pt: "Sandes de frango", en: "Chicken sandwich" }, desc: { pt: "Frango desfiado e maionese", en: "Pulled chicken and mayo" }, price: "3,20" },
-      { name: { pt: "Bifana no pão", en: "Pork cutlet roll" }, desc: { pt: "Lombo temperado à moda do bairro", en: "Seasoned pork, neighbourhood style" }, price: "2,80" },
+      { name: { pt: "Tosta mista", en: "Ham & cheese toastie" }, desc: { pt: "Fiambre e queijo no pão caseiro", en: "Ham and cheese on homemade bread" } },
+      { name: { pt: "Sandes de frango", en: "Chicken sandwich" }, desc: { pt: "Frango desfiado e maionese", en: "Pulled chicken and mayo" } },
+      { name: { pt: "Bifana no pão", en: "Pork cutlet roll" }, desc: { pt: "Lombo temperado à moda do bairro", en: "Seasoned pork, neighbourhood style" } },
     ],
   },
   {
     cat: { pt: "Doces & Pastelaria", en: "Sweets & Pastries" }, accent: "red", icon: "cake",
     items: [
-      { name: { pt: "Pastel de nata", en: "Custard tart" }, desc: { pt: "Acabado de sair do forno", en: "Fresh out of the oven" }, price: "1,20" },
-      { name: { pt: "Bolo do dia", en: "Cake of the day" }, desc: { pt: "Pergunte ao balcão", en: "Ask at the counter" }, price: "2,20" },
-      { name: { pt: "Croissant", en: "Croissant" }, desc: { pt: "Simples ou com doce", en: "Plain or with jam" }, price: "1,40" },
+      { name: { pt: "Pastel de nata", en: "Custard tart" }, desc: { pt: "Acabado de sair do forno", en: "Fresh out of the oven" } },
+      { name: { pt: "Bolo do dia", en: "Cake of the day" }, desc: { pt: "Pergunte ao balcão", en: "Ask at the counter" } },
+      { name: { pt: "Croissant", en: "Croissant" }, desc: { pt: "Simples ou com doce", en: "Plain or with jam" } },
     ],
   },
   {
     cat: { pt: "Pratos do Dia", en: "Dishes of the Day" }, accent: "green", icon: "plate",
     items: [
-      { name: { pt: "Sopa + Prato", en: "Soup + Main" }, desc: { pt: "Menu de almoço completo", en: "Full lunch menu" }, price: "7,50" },
-      { name: { pt: "Salada da horta", en: "Garden salad" }, desc: { pt: "Legumes frescos do mercado", en: "Fresh vegetables from the market" }, price: "5,90" },
+      { name: { pt: "Sopa + Prato", en: "Soup + Main" }, desc: { pt: "Menu de almoço completo", en: "Full lunch menu" } },
+      { name: { pt: "Salada da horta", en: "Garden salad" }, desc: { pt: "Legumes frescos do mercado", en: "Fresh vegetables from the market" } },
     ],
   },
 ];
@@ -138,7 +138,6 @@ export type MenuItemRow = {
   name_en: string | null;
   desc_pt: string | null;
   desc_en: string | null;
-  price: string;
   image_url: string | null;
 };
 export type MenuCatRow = {

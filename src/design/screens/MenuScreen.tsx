@@ -6,7 +6,7 @@ import { useI18n } from "@/design/i18n";
 import { TopBar, Scroll, Card, Chip, IconTile } from "@/design/ui";
 import { MENU, type Bi, type MenuCatRow } from "@/design/data";
 
-type NormItem = { name: Bi; desc: Bi; price: string; image: string | null };
+type NormItem = { name: Bi; desc: Bi; image: string | null };
 type Norm = { label: Bi; accent: string; icon: string; items: NormItem[] };
 
 function fromRows(rows: MenuCatRow[]): Norm[] {
@@ -17,7 +17,6 @@ function fromRows(rows: MenuCatRow[]): Norm[] {
     items: c.items.map((it) => ({
       name: { pt: it.name_pt, en: it.name_en || it.name_pt },
       desc: { pt: it.desc_pt || "", en: it.desc_en || it.desc_pt || "" },
-      price: it.price,
       image: it.image_url,
     })),
   }));
@@ -63,7 +62,6 @@ export function MenuScreen({ menu }: { menu?: MenuCatRow[] }) {
                 <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 16, color: "var(--c-ink)" }}>{L(it.name)}</div>
                 <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>{L(it.desc)}</div>
               </div>
-              <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 16, color: "var(--c-ink)", whiteSpace: "nowrap" }}>{it.price} €</div>
             </Card>
           ))}
         </div>

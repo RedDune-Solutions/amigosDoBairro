@@ -62,19 +62,6 @@ function ItemPhoto({ item }: { item: MenuItemRow }) {
 const ICONS = ["coffee", "sandwich", "cake", "plate", "star", "heart", "tag", "gift"];
 const ACCENTS = ["primary", "green", "blue", "red"];
 
-function TextInput({ value, onCommit, placeholder, bold }: { value: string; onCommit: (v: string) => void; placeholder?: string; bold?: boolean }) {
-  const [v, setV] = useState(value);
-  return (
-    <input
-      value={v}
-      placeholder={placeholder}
-      onChange={(e) => setV(e.target.value)}
-      onBlur={() => v !== value && onCommit(v)}
-      style={{ width: "100%", border: "1px solid var(--c-line)", background: "var(--c-surface2)", borderRadius: 10, padding: "8px 11px", fontFamily: "var(--f-body)", fontWeight: bold ? 700 : 600, fontSize: 13.5, color: "var(--c-ink)", outline: "none" }}
-    />
-  );
-}
-
 function Lang({ flag, value, onCommit, ph }: { flag: string; value: string; onCommit: (v: string) => void; ph?: string }) {
   const [v, setV] = useState(value);
   return (
@@ -94,7 +81,7 @@ export function MenuAdmin({ menu }: { menu: MenuCatRow[] }) {
       <TopBar title="Menu" />
       <Scroll>
         <p style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", margin: "0 2px 14px", lineHeight: 1.5 }}>
-          O menu que os clientes vêem na app. Edita nomes, descrições e preços em <b style={{ color: "var(--c-ink)" }}>PT e EN</b>. As alterações ficam guardadas automaticamente.
+          O menu que os clientes vêem na app. Edita nomes e descrições em <b style={{ color: "var(--c-ink)" }}>PT e EN</b>. As alterações ficam guardadas automaticamente.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -151,12 +138,6 @@ export function MenuAdmin({ menu }: { menu: MenuCatRow[] }) {
                     <Lang flag="PT" value={it.desc_pt || ""} ph="Descrição" onCommit={(v) => { void patchMenuItem({ id: it.id, desc_pt: v }); }} />
                     <Lang flag="EN" value={it.desc_en || ""} ph="Description" onCommit={(v) => { void patchMenuItem({ id: it.id, desc_en: v }); }} />
                     <ItemPhoto item={it} />
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 11.5, color: "var(--c-muted)", width: 50 }}>PREÇO €</span>
-                      <div style={{ width: 90 }}>
-                        <TextInput value={it.price} bold onCommit={(v) => { void patchMenuItem({ id: it.id, price: v }); }} />
-                      </div>
-                    </div>
                   </div>
                 ))}
               </div>

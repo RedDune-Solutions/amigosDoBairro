@@ -70,10 +70,10 @@ export function Landing() {
   ];
 
   const house = [
-    { n: { pt: "Pastel de nata", en: "Custard tart" }, p: "1,20", a: "var(--c-red)", i: "cake" },
-    { n: { pt: "Galão", en: "Latte" }, p: "1,40", a: "var(--c-primary)", i: "coffee" },
-    { n: { pt: "Tosta mista", en: "Ham & cheese toastie" }, p: "2,50", a: "var(--c-blue)", i: "sandwich" },
-    { n: { pt: "Prato do dia", en: "Dish of the day" }, p: "7,50", a: "var(--c-green)", i: "plate" },
+    { n: { pt: "Pastel de nata", en: "Custard tart" }, a: "var(--c-red)", i: "cake" },
+    { n: { pt: "Galão", en: "Latte" }, a: "var(--c-primary)", i: "coffee" },
+    { n: { pt: "Tosta mista", en: "Ham & cheese toastie" }, a: "var(--c-blue)", i: "sandwich" },
+    { n: { pt: "Prato do dia", en: "Dish of the day" }, a: "var(--c-green)", i: "plate" },
   ];
 
   return (
@@ -204,9 +204,6 @@ export function Landing() {
                 </div>
                 <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14, color: "var(--c-ink)", marginTop: 7 }}>
                   {L(it.n)}
-                </div>
-                <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-muted)" }}>
-                  {it.p} €
                 </div>
               </div>
             ))}
