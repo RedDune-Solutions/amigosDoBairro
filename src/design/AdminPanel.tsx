@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
-import { Card, IconTile, Button, SectionLabel, Spinner } from "@/design/ui";
+import { Card, IconTile, Button, SectionLabel, Spinner, TrashConfirm } from "@/design/ui";
 import { patchPrize, addPrize, removePrize, validateVoucher, patchReward, addReward, removeReward } from "@/lib/admin-actions";
 
 export type RewardAdmin = {
@@ -109,28 +109,6 @@ function LangInput({ flag, value, onCommit }: { flag: string; value: string; onC
       <span style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 10, letterSpacing: 0.4, color: "var(--c-muted)", flexShrink: 0, width: 20 }}>{flag}</span>
       <input value={v} onChange={(e) => setV(e.target.value)} onBlur={() => v !== value && onCommit(v)} style={{ flex: 1, minWidth: 0, fontFamily: "var(--f-body)", fontWeight: 600, fontSize: 13.5, color: "var(--c-ink)", border: "none", background: "transparent", outline: "none" }} />
     </div>
-  );
-}
-
-/** Botão de apagar com confirmação (2 toques) — evita apagar sem se perceber. */
-function TrashConfirm({ onConfirm }: { onConfirm: () => void }) {
-  const [armed, setArmed] = useState(false);
-  if (armed) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-        <button onClick={() => { setArmed(false); onConfirm(); }} style={{ height: 34, padding: "0 12px", borderRadius: 10, border: "none", background: "var(--c-red)", color: "#fff", cursor: "pointer", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12.5 }}>
-          Apagar
-        </button>
-        <button onClick={() => setArmed(false)} style={{ height: 34, padding: "0 11px", borderRadius: 10, border: "1px solid var(--c-line)", background: "var(--c-surface)", color: "var(--c-muted)", cursor: "pointer", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12.5 }}>
-          Não
-        </button>
-      </div>
-    );
-  }
-  return (
-    <button onClick={() => setArmed(true)} aria-label="Apagar" style={{ width: 34, height: 34, borderRadius: 10, border: "1px solid var(--c-line)", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-red)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-      <Icon name="trash" size={16} stroke={2} />
-    </button>
   );
 }
 

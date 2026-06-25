@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
-import { TopBar, Scroll, Card, Spinner } from "@/design/ui";
+import { TopBar, Scroll, Card, Spinner, TrashConfirm, DashedAddButton } from "@/design/ui";
 import { createClient } from "@/lib/supabase/client";
 import type { MenuCatRow, MenuItemRow } from "@/design/data";
 import {
@@ -95,9 +95,7 @@ export function MenuAdmin({ menu }: { menu: MenuCatRow[] }) {
                   <Lang flag="PT" value={cat.label_pt} onCommit={(v) => { void patchMenuCategory({ id: cat.id, label_pt: v }); }} />
                   <Lang flag="EN" value={cat.label_en || ""} onCommit={(v) => { void patchMenuCategory({ id: cat.id, label_en: v }); }} />
                 </div>
-                <button onClick={async () => { if (confirm("Apagar esta categoria e os seus itens?")) { await removeMenuCategory(cat.id); refresh(); } }} style={{ width: 32, height: 32, borderRadius: 9, border: "1px solid var(--c-line)", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-red)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Icon name="trash" size={15} stroke={2} />
-                </button>
+                <TrashConfirm size={32} onConfirm={async () => { await removeMenuCategory(cat.id); refresh(); }} />
               </div>
 
               {/* Ícone + cor */}
@@ -131,9 +129,7 @@ export function MenuAdmin({ menu }: { menu: MenuCatRow[] }) {
                         <Lang flag="PT" value={it.name_pt} ph="Nome" onCommit={(v) => { void patchMenuItem({ id: it.id, name_pt: v }); }} />
                         <Lang flag="EN" value={it.name_en || ""} ph="Name" onCommit={(v) => { void patchMenuItem({ id: it.id, name_en: v }); }} />
                       </div>
-                      <button onClick={async () => { await removeMenuItem(it.id); refresh(); }} style={{ width: 30, height: 30, borderRadius: 9, border: "1px solid var(--c-line)", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-red)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <Icon name="trash" size={14} stroke={2} />
-                      </button>
+                      <TrashConfirm size={30} onConfirm={async () => { await removeMenuItem(it.id); refresh(); }} />
                     </div>
                     <Lang flag="PT" value={it.desc_pt || ""} ph="Descrição" onCommit={(v) => { void patchMenuItem({ id: it.id, desc_pt: v }); }} />
                     <Lang flag="EN" value={it.desc_en || ""} ph="Description" onCommit={(v) => { void patchMenuItem({ id: it.id, desc_en: v }); }} />
@@ -142,16 +138,12 @@ export function MenuAdmin({ menu }: { menu: MenuCatRow[] }) {
                 ))}
               </div>
 
-              <button onClick={async () => { await addMenuItem(cat.id); refresh(); }} style={{ width: "100%", padding: "10px 0", borderRadius: 12, border: "1.5px dashed color-mix(in srgb, var(--c-ink) 22%, var(--c-line))", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-ink)", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 13.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-                <Icon name="plus" size={16} stroke={2.4} /> Adicionar item
-              </button>
+              <DashedAddButton label="Adicionar item" onClick={async () => { await addMenuItem(cat.id); refresh(); }} style={{ padding: "10px 0", borderRadius: 12, fontSize: 13.5 }} />
             </Card>
           ))}
         </div>
 
-        <button onClick={async () => { await addMenuCategory(); refresh(); }} style={{ width: "100%", marginTop: 14, padding: "13px 0", borderRadius: 15, border: "1.5px dashed color-mix(in srgb, var(--c-ink) 25%, var(--c-line))", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-ink)", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <Icon name="plus" size={18} stroke={2.4} /> Adicionar categoria
-        </button>
+        <DashedAddButton label="Adicionar categoria" onClick={async () => { await addMenuCategory(); refresh(); }} style={{ marginTop: 14 }} />
       </Scroll>
     </>
   );

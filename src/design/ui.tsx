@@ -1,6 +1,7 @@
 "use client";
 
-import { type CSSProperties, type ReactNode } from "react";
+import { useState, useTransition, type CSSProperties, type ReactNode } from "react";
+import { useFormStatus } from "react-dom";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
 
@@ -162,6 +163,61 @@ export function Spinner({ size = 16, color }: { size?: number; color?: string })
         animation: "omSpin .6s linear infinite",
       }}
     />
+  );
+}
+
+// ── Apagar com confirmação (2 toques) + loading ──────────────────────────────
+// Predefinição: qualquer ação destrutiva no painel usa isto.
+export function TrashConfirm({ onConfirm, size = 34 }: { onConfirm: () => void | Promise<void>; size?: number }) {
+  const [armed, setArmed] = useState(false);
+  const [pending, start] = useTransition();
+  function go() {
+    start(async () => { await onConfirm(); });
+    setArmed(false);
+  }
+  if (pending) {
+    return (
+      <div style={{ width: size, height: size, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-red)" }}>
+        <Spinner size={16} />
+      </div>
+    );
+  }
+  if (armed) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+        <button onClick={go} style={{ height: size, padding: "0 12px", borderRadius: 10, border: "none", background: "var(--c-red)", color: "#fff", cursor: "pointer", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12.5 }}>Apagar</button>
+        <button onClick={() => setArmed(false)} style={{ height: size, padding: "0 11px", borderRadius: 10, border: "1px solid var(--c-line)", background: "var(--c-surface)", color: "var(--c-muted)", cursor: "pointer", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12.5 }}>Não</button>
+      </div>
+    );
+  }
+  return (
+    <button onClick={() => setArmed(true)} aria-label="Apagar" style={{ width: size, height: size, borderRadius: 10, border: "1px solid var(--c-line)", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-red)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <Icon name="trash" size={16} stroke={2} />
+    </button>
+  );
+}
+
+// ── Botão de submit de form (server action) com spinner via useFormStatus ─────
+export function FormSubmitButton({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, opacity: pending ? 0.75 : 1, cursor: pending ? "default" : "pointer", ...style }}>
+      {pending ? <Spinner size={15} /> : children}
+    </button>
+  );
+}
+
+// ── Botão "adicionar" tracejado com loading (cobre a server action + refresh) ──
+export function DashedAddButton({ label, onClick, style }: { label: string; onClick: () => void | Promise<void>; style?: CSSProperties }) {
+  const [pending, start] = useTransition();
+  return (
+    <button
+      onClick={() => start(async () => { await onClick(); })}
+      disabled={pending}
+      style={{ width: "100%", padding: "13px 0", borderRadius: 15, border: "1.5px dashed color-mix(in srgb, var(--c-ink) 25%, var(--c-line))", background: "var(--c-surface)", cursor: pending ? "default" : "pointer", opacity: pending ? 0.6 : 1, color: "var(--c-ink)", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, ...style }}
+    >
+      {pending ? <Spinner size={16} /> : <><Icon name="plus" size={17} stroke={2.4} /> {label}</>}
+    </button>
   );
 }
 

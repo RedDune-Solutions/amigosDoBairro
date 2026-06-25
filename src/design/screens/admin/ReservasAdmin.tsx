@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TopBar, Scroll, Card } from "@/design/ui";
+import { TopBar, Scroll, Card, FormSubmitButton } from "@/design/ui";
 import { atualizarReserva } from "@/lib/admin-actions";
 
 export type ReservaAdminRow = {
@@ -76,14 +76,14 @@ export function ReservasAdmin({ reservas }: { reservas: ReservaAdminRow[] }) {
                     <form action={atualizarReserva} style={{ flex: 1 }}>
                       <input type="hidden" name="id" value={r.id} />
                       <input type="hidden" name="estado" value="confirmada" />
-                      <button style={btn("var(--c-green)")}>Aceitar</button>
+                      <FormSubmitButton style={btn("var(--c-green)")}>Aceitar</FormSubmitButton>
                     </form>
                   )}
                   {r.estado !== "cancelada" && (
                     <form action={atualizarReserva} style={{ flex: 1 }}>
                       <input type="hidden" name="id" value={r.id} />
                       <input type="hidden" name="estado" value="cancelada" />
-                      <button style={btn("var(--c-red)")}>{r.estado === "confirmada" ? "Cancelar" : "Recusar"}</button>
+                      <FormSubmitButton style={btn("var(--c-red)")}>{r.estado === "confirmada" ? "Cancelar" : "Recusar"}</FormSubmitButton>
                     </form>
                   )}
                 </div>
