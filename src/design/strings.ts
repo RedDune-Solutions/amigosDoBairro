@@ -128,6 +128,15 @@ export const STRINGS: Record<string, Entry> = {
   "res.titleShort": { pt: "Reserva", en: "Booking" },
   "res.booked": { pt: "Mesa reservada!", en: "Table booked!" },
   "res.bookedSub": { pt: "Esperamos por ti no bairro. Enviámos a confirmação por email.", en: "See you in the neighbourhood. We've emailed your confirmation." },
+  "res.requested": { pt: "Pedido enviado!", en: "Request sent!" },
+  "res.requestedSub": { pt: "A tua mesa fica em pedido. Avisamos-te aqui e no telemóvel assim que o café confirmar.", en: "Your table is pending. We'll let you know here and on your phone as soon as the café confirms." },
+  "res.status": { pt: "Estado", en: "Status" },
+  "res.statusPending": { pt: "À espera de confirmação", en: "Awaiting confirmation" },
+  "res.statusPendingShort": { pt: "Pendente", en: "Pending" },
+  "res.statusUnavailable": { pt: "Não disponível", en: "Unavailable" },
+  "res.request": { pt: (wd: string, t: string) => `Pedir · ${wd} ${t}`, en: (wd: string, t: string) => `Request · ${wd} ${t}` },
+  "res.noSlots": { pt: "Sem horários disponíveis neste dia.", en: "No times available on this day." },
+  "res.hoursNote": { pt: "Horários dentro do funcionamento do café.", en: "Times within the café's opening hours." },
   "res.day": { pt: "Dia", en: "Day" },
   "res.hour": { pt: "Hora", en: "Time" },
   "res.people": { pt: "Pessoas", en: "People" },
@@ -148,6 +157,25 @@ export const STRINGS: Record<string, Entry> = {
   // Splash / loading
   "splash.tag": { pt: "CAFÉ & SNACK-BAR DO BAIRRO", en: "NEIGHBOURHOOD CAFÉ & SNACK-BAR" },
   "splash.load": { pt: "A preparar o teu balcão…", en: "Warming up your counter…" },
+
+  // Notificações no telemóvel (card no perfil)
+  "push.title": { pt: "Notificações no telemóvel", en: "Phone notifications" },
+  "push.descOn": { pt: "Ativas — recebes novidades e ofertas.", en: "On — you'll get news and offers." },
+  "push.descOff": { pt: "Recebe novidades e ofertas do café.", en: "Get news and offers from the café." },
+  "push.descDenied": { pt: "Bloqueadas no browser. Ativa nas definições do site.", en: "Blocked in the browser. Enable them in the site settings." },
+  "push.enable": { pt: "Ativar", en: "Enable" },
+  "push.disable": { pt: "Desligar", en: "Turn off" },
+  "push.err": { pt: "Não foi possível ativar neste dispositivo.", en: "Couldn't enable on this device." },
+
+  // Instalar a app (PWA) — card no perfil
+  "install.title": { pt: "Instalar a app", en: "Install the app" },
+  "install.desc": { pt: "Adiciona ao ecrã principal para abrir num toque e receber notificações.", en: "Add it to your home screen for one-tap access and notifications." },
+  "install.btn": { pt: "Instalar", en: "Install" },
+  "install.installed": { pt: "App instalada ✓", en: "App installed ✓" },
+  "install.iosTitle": { pt: "Como instalar no iPhone", en: "How to install on iPhone" },
+  "install.iosStep1": { pt: ["Toca em ", "Partilhar", " na barra do Safari."], en: ["Tap ", "Share", " in the Safari bar."] },
+  "install.iosStep2": { pt: ["Escolhe ", "Adicionar ao ecrã principal", "."], en: ["Choose ", "Add to Home Screen", "."] },
+  "install.androidHint": { pt: "No menu do browser (⋮), escolhe \"Instalar app\" ou \"Adicionar ao ecrã principal\".", en: "In the browser menu (⋮), choose \"Install app\" or \"Add to Home Screen\"." },
 
   // Menu
   "menu.title": { pt: "Menu", en: "Menu" },
@@ -233,5 +261,5 @@ export const STRINGS: Record<string, Entry> = {
   "toast.spend": { pt: (a: number) => `+${a}€ registados`, en: (a: number) => `+€${a} recorded` },
   "toast.prizeSaved": { pt: "Prémio guardado na carteira ✓", en: "Prize saved to wallet ✓" },
   "toast.redeemOk": { pt: "Resgate validado ✓", en: "Redemption validated ✓" },
-  "toast.bookingOk": { pt: "Reserva confirmada ✓", en: "Booking confirmed ✓" },
+  "toast.bookingOk": { pt: "Pedido de reserva enviado ✓", en: "Booking request sent ✓" },
 };

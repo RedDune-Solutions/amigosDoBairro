@@ -165,6 +165,44 @@ export type FoodPrefStat = { slug: string; label: string; count: number };
 
 export const RES_TIMES = ["09:00", "10:30", "12:00", "13:00", "13:30", "16:00", "17:30", "19:00"];
 
+// Horário real do café por dia da semana (0=Dom … 6=Sáb).
+// Seg–Sex 06:30–17:00 · Sáb e Dom 07:00–15:00 (dados confirmados com a Daniela).
+export const CAFE_HOURS: Record<number, { open: string; close: string }> = {
+  0: { open: "07:00", close: "15:00" }, // Domingo
+  1: { open: "06:30", close: "17:00" },
+  2: { open: "06:30", close: "17:00" },
+  3: { open: "06:30", close: "17:00" },
+  4: { open: "06:30", close: "17:00" },
+  5: { open: "06:30", close: "17:00" },
+  6: { open: "07:00", close: "15:00" }, // Sábado
+};
+
+const toMin = (hhmm: string): number => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+};
+const fromMin = (min: number): string =>
+  `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+
+/**
+ * Horas de reserva possíveis num dado dia, dentro do horário do café.
+ * Slots de 30 min; última hora = fecho − 60 min (não reservar à última meia-hora).
+ * Para hoje, remove horas já passadas (exige 60 min de antecedência).
+ */
+export function reservationSlots(date: Date, now: Date): string[] {
+  const hours = CAFE_HOURS[date.getDay()];
+  if (!hours) return [];
+  const start = toMin(hours.open);
+  const lastStart = toMin(hours.close) - 60;
+  const sameDay = date.toDateString() === now.toDateString();
+  const minAllowed = sameDay ? now.getHours() * 60 + now.getMinutes() + 60 : -1;
+  const out: string[] = [];
+  for (let m = start; m <= lastStart; m += 30) {
+    if (m >= minAllowed) out.push(fromMin(m));
+  }
+  return out;
+}
+
 export type NextReservation = {
   data: string;
   hora: string;

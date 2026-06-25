@@ -41,7 +41,6 @@ export function ReservasAdmin({ reservas }: { reservas: ReservaAdminRow[] }) {
                       fontSize: 11,
                       padding: "5px 10px",
                       borderRadius: 100,
-                      textTransform: "capitalize",
                       color: r.estado === "confirmada" ? "var(--c-green)" : r.estado === "cancelada" ? "var(--c-red)" : "var(--c-primary)",
                       background:
                         r.estado === "confirmada"
@@ -51,7 +50,7 @@ export function ReservasAdmin({ reservas }: { reservas: ReservaAdminRow[] }) {
                             : "color-mix(in srgb, var(--c-primary) 14%, var(--c-surface))",
                     }}
                   >
-                    {r.estado}
+                    {r.estado === "confirmada" ? "Aceite" : r.estado === "cancelada" ? "Recusada" : "Pedido"}
                   </span>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -59,14 +58,14 @@ export function ReservasAdmin({ reservas }: { reservas: ReservaAdminRow[] }) {
                     <form action={atualizarReserva} style={{ flex: 1 }}>
                       <input type="hidden" name="id" value={r.id} />
                       <input type="hidden" name="estado" value="confirmada" />
-                      <button style={btn("var(--c-green)")}>Confirmar</button>
+                      <button style={btn("var(--c-green)")}>Aceitar</button>
                     </form>
                   )}
                   {r.estado !== "cancelada" && (
                     <form action={atualizarReserva} style={{ flex: 1 }}>
                       <input type="hidden" name="id" value={r.id} />
                       <input type="hidden" name="estado" value="cancelada" />
-                      <button style={btn("var(--c-red)")}>Cancelar</button>
+                      <button style={btn("var(--c-red)")}>Recusar</button>
                     </form>
                   )}
                 </div>

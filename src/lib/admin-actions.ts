@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
+import { sendPushToUser } from "@/lib/push-send";
 
 async function assertAdmin() {
   const { profile } = await getProfile();
@@ -141,15 +142,38 @@ export async function removeReward(id: string): Promise<{ ok?: boolean; error?: 
   return { ok: true };
 }
 
-/** Confirmar / cancelar reserva (staff ou admin). */
+/** Confirmar / cancelar reserva (staff ou admin). Notifica o cliente: a
+ *  notificação in-app é criada por trigger; aqui enviamos o push ao telemóvel. */
 export async function atualizarReserva(formData: FormData): Promise<void> {
   await assertStaff();
   const id = String(formData.get("id"));
   const estado = String(formData.get("estado"));
   if (!["pendente", "confirmada", "cancelada"].includes(estado)) return;
   const supabase = await createClient();
+  const { data: row } = await supabase
+    .from("reservations")
+    .select("user_id, data, hora, n_pessoas, estado")
+    .eq("id", id)
+    .single();
+  if (!row) return;
+  if (row.estado === estado) {
+    revalidatePath("/admin");
+    return;
+  }
   await supabase.from("reservations").update({ estado }).eq("id", id);
   revalidatePath("/admin");
+
+  // Push ao cliente quando o staff responde (confirmar/recusar).
+  if (estado === "confirmada" || estado === "cancelada") {
+    const dia = String(row.data).slice(8, 10) + "/" + String(row.data).slice(5, 7);
+    const hora = String(row.hora).slice(0, 5);
+    const detalhe = `${dia} · ${hora} · ${row.n_pessoas} pax`;
+    const payload =
+      estado === "confirmada"
+        ? { title: "Reserva confirmada ✓", body: `Mesa para ${detalhe}. Até já!`, url: "/app" }
+        : { title: "Reserva não disponível", body: `O café não pôde confirmar a tua reserva de ${dia} · ${hora}.`, url: "/app" };
+    await sendPushToUser(row.user_id as string, payload);
+  }
 }
 
 /** Valida um voucher por código: tenta carteira (raspadinha) e depois resgate de pontos. */

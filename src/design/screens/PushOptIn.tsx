@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Icon } from "@/design/icons";
+import { useI18n } from "@/design/i18n";
 import { Card, IconTile } from "@/design/ui";
 import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/lib/push-config";
 import { savePushSubscription, removePushSubscription } from "@/lib/push-actions";
@@ -9,6 +9,7 @@ import { savePushSubscription, removePushSubscription } from "@/lib/push-actions
 type State = "loading" | "unsupported" | "off" | "on" | "denied" | "busy";
 
 export function PushOptIn() {
+  const { T } = useI18n();
   const [state, setState] = useState<State>("loading");
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -56,7 +57,7 @@ export function PushOptIn() {
       }
       setState("on");
     } catch {
-      setMsg("Não foi possível ativar neste dispositivo.");
+      setMsg(T("push.err") as string);
       setState("off");
     }
   }
@@ -85,13 +86,13 @@ export function PushOptIn() {
     <Card style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 13, padding: "14px 16px" }}>
       <IconTile icon="bell" accent="var(--c-primary)" size={40} iconSize={19} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Notificações no telemóvel</div>
+        <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>{T("push.title") as string}</div>
         <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", lineHeight: 1.4 }}>
           {state === "denied"
-            ? "Bloqueadas no browser. Ativa nas definições do site."
+            ? (T("push.descDenied") as string)
             : on
-              ? "Ativas — recebes novidades e ofertas."
-              : "Recebe novidades e ofertas do café."}
+              ? (T("push.descOn") as string)
+              : (T("push.descOff") as string)}
         </div>
         {msg && <div style={{ fontFamily: "var(--f-body)", fontSize: 12, fontWeight: 700, color: "var(--c-red)", marginTop: 3 }}>{msg}</div>}
       </div>
@@ -112,7 +113,7 @@ export function PushOptIn() {
             color: on ? "var(--c-muted)" : "#fff",
           }}
         >
-          {busy ? "…" : on ? "Desligar" : "Ativar"}
+          {busy ? "…" : on ? (T("push.disable") as string) : (T("push.enable") as string)}
         </button>
       )}
     </Card>

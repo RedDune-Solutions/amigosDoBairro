@@ -1,23 +1,9 @@
 "use server";
 
-import webpush from "web-push";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
-import { VAPID_PUBLIC_KEY } from "@/lib/push-config";
-
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:reddunesolutions@gmail.com";
-
-let configured = false;
-function ensureVapid(): boolean {
-  if (!VAPID_PRIVATE_KEY) return false;
-  if (!configured) {
-    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-    configured = true;
-  }
-  return true;
-}
+import { vapidReady, sendToSubs, type PushSub } from "@/lib/push-send";
 
 async function assertAdmin() {
   const { profile } = await getProfile();
@@ -65,35 +51,24 @@ export async function enviarCampanha(input: z.input<typeof campSchema>): Promise
   await assertAdmin();
   const parsed = campSchema.safeParse(input);
   if (!parsed.success) return { error: "Preenche o título e a mensagem." };
-  if (!ensureVapid()) return { error: "Falta a chave VAPID_PRIVATE_KEY na Vercel." };
+  if (!vapidReady()) return { error: "Falta a chave VAPID_PRIVATE_KEY na Vercel." };
 
   const { titulo, corpo, segmento, url } = parsed.data;
   const supabase = await createClient();
 
   let q = supabase.from("push_subscriptions").select("endpoint, p256dh, auth, profiles!inner(food_pref)");
   if (segmento) q = q.eq("profiles.food_pref", segmento);
-  const { data: subs, error } = await q;
+  const { data: rows, error } = await q;
   if (error) return { error: "Não foi possível ler os subscritores." };
 
-  const payload = JSON.stringify({ title: titulo, body: corpo, url: url || "/app" });
-  let enviados = 0;
-  const stale: string[] = [];
+  const subs: PushSub[] = (rows ?? []).map((s) => ({
+    endpoint: s.endpoint as string,
+    p256dh: s.p256dh as string,
+    auth: s.auth as string,
+  }));
+  if (subs.length === 0) return { enviados: 0, alvo: 0, error: "Ninguém ativou as notificações neste segmento ainda." };
 
-  await Promise.all(
-    (subs ?? []).map(async (s) => {
-      const endpoint = s.endpoint as string;
-      try {
-        await webpush.sendNotification(
-          { endpoint, keys: { p256dh: s.p256dh as string, auth: s.auth as string } },
-          payload,
-        );
-        enviados++;
-      } catch (e) {
-        const code = (e as { statusCode?: number }).statusCode;
-        if (code === 404 || code === 410) stale.push(endpoint);
-      }
-    }),
-  );
+  const { enviados, stale } = await sendToSubs(subs, { title: titulo, body: corpo, url });
 
   if (stale.length) await supabase.from("push_subscriptions").delete().in("endpoint", stale);
 
@@ -102,5 +77,5 @@ export async function enviarCampanha(input: z.input<typeof campSchema>): Promise
     titulo, corpo, segmento: segmento || null, url: url || null, enviados, created_by: user?.id ?? null,
   });
 
-  return { enviados, alvo: (subs ?? []).length };
+  return { enviados, alvo: subs.length };
 }

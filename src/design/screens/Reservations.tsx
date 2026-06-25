@@ -4,8 +4,15 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
 import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/ui";
-import { RES_TIMES, type NextReservation } from "@/design/data";
+import { reservationSlots, type NextReservation } from "@/design/data";
 import { createReservation } from "@/lib/app-actions";
+
+/** Estado da reserva → etiqueta localizada + cor (para o card "próxima reserva"). */
+function statusInfo(estado: string, T: (k: string) => string | string[]): { label: string; color: string } {
+  if (estado === "confirmada") return { label: T("res.statusConfirmed") as string, color: "var(--c-green)" };
+  if (estado === "cancelada") return { label: T("res.statusUnavailable") as string, color: "var(--c-red)" };
+  return { label: T("res.statusPendingShort") as string, color: "var(--c-primary)" };
+}
 
 const WD_PT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const MON_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -47,7 +54,17 @@ export function Reservations({
   const [error, setError] = useState<string | null>(null);
 
   const day = days.find((d) => d.key === dayKey)!;
-  const ready = time != null && !busy;
+  const slots = useMemo(
+    () => reservationSlots(new Date(day.iso + "T00:00:00"), new Date()),
+    [day.iso],
+  );
+  const ready = time != null && slots.includes(time) && !busy;
+
+  function selectDay(key: number) {
+    setDayKey(key);
+    setTime(null); // horários mudam conforme o dia
+    setError(null);
+  }
 
   async function confirm() {
     if (!time) return;
@@ -69,16 +86,23 @@ export function Reservations({
         <TopBar title={T("res.titleShort") as string} />
         <Scroll>
           <div style={{ textAlign: "center", padding: "30px 10px" }}>
-            <div style={{ width: 88, height: 88, borderRadius: "50%", margin: "0 auto", background: "color-mix(in srgb, var(--c-green) 16%, var(--c-surface))", color: "var(--c-green)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Icon name="check" size={44} stroke={3} />
+            <div style={{ width: 88, height: 88, borderRadius: "50%", margin: "0 auto", background: "color-mix(in srgb, var(--c-primary) 16%, var(--c-surface))", color: "var(--c-primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon name="clock" size={44} stroke={2.4} />
             </div>
-            <h2 style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 24, color: "var(--c-ink)", margin: "18px 0 6px" }}>{T("res.booked") as string}</h2>
-            <p style={{ fontFamily: "var(--f-body)", fontSize: 14.5, color: "var(--c-muted)", margin: 0 }}>{T("res.bookedSub") as string}</p>
+            <h2 style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 24, color: "var(--c-ink)", margin: "18px 0 6px" }}>{T("res.requested") as string}</h2>
+            <p style={{ fontFamily: "var(--f-body)", fontSize: 14.5, color: "var(--c-muted)", margin: "0 auto", maxWidth: 320, lineHeight: 1.5 }}>{T("res.requestedSub") as string}</p>
           </div>
-          <Card style={{ background: "color-mix(in srgb, var(--c-green) 8%, var(--c-surface))", borderColor: "color-mix(in srgb, var(--c-green) 22%, var(--c-line))" }}>
+          <Card style={{ background: "color-mix(in srgb, var(--c-primary) 8%, var(--c-surface))", borderColor: "color-mix(in srgb, var(--c-primary) 22%, var(--c-line))" }}>
             <ResRow icon="calendar" label={T("res.day") as string} value={day.full} />
             <ResRow icon="clock" label={T("res.hour") as string} value={time as string} />
-            <ResRow icon="users" label={T("res.people") as string} value={`${people} ${people > 1 ? (T("res.personN") as string) : (T("res.person1") as string)}`} last />
+            <ResRow icon="users" label={T("res.people") as string} value={`${people} ${people > 1 ? (T("res.personN") as string) : (T("res.person1") as string)}`} />
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 0" }}>
+              <Icon name="bell" size={19} color="var(--c-primary)" />
+              <span style={{ flex: 1, fontFamily: "var(--f-body)", fontSize: 14, color: "var(--c-muted)" }}>{T("res.status") as string}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 13, color: "var(--c-primary)", background: "color-mix(in srgb, var(--c-primary) 14%, var(--c-surface))", padding: "5px 11px", borderRadius: 100 }}>
+                {T("res.statusPending") as string}
+              </span>
+            </div>
           </Card>
           <div style={{ marginTop: 16 }}>
             <Button full size="lg" variant="outline" onClick={() => { setDone(false); setTime(null); }}>
@@ -94,27 +118,30 @@ export function Reservations({
     <>
       <TopBar title={T("res.title") as string} />
       <Scroll>
-        {next && (
-          <Card style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 14, background: "color-mix(in srgb, var(--c-green) 9%, var(--c-surface))", borderColor: "color-mix(in srgb, var(--c-green) 22%, var(--c-line))" }}>
-            <IconTile icon="calendar" accent="var(--c-green)" size={48} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 11.5, letterSpacing: 0.5, color: "var(--c-green)", textTransform: "uppercase" }}>{T("res.next") as string}</div>
-              <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15.5, color: "var(--c-ink)" }}>
-                {new Date(next.data + "T00:00:00").toLocaleDateString("pt-PT", { weekday: "short", day: "numeric", month: "short" })} · {next.hora.slice(0, 5)}
+        {next && (() => {
+          const st = statusInfo(next.estado, T);
+          return (
+            <Card style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 14, background: `color-mix(in srgb, ${st.color} 9%, var(--c-surface))`, borderColor: `color-mix(in srgb, ${st.color} 22%, var(--c-line))` }}>
+              <IconTile icon="calendar" accent={st.color} size={48} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 11.5, letterSpacing: 0.5, color: st.color, textTransform: "uppercase" }}>{T("res.next") as string}</div>
+                <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15.5, color: "var(--c-ink)" }}>
+                  {new Date(next.data + "T00:00:00").toLocaleDateString("pt-PT", { weekday: "short", day: "numeric", month: "short" })} · {next.hora.slice(0, 5)}
+                </div>
+                <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>
+                  {next.n_pessoas} {T("res.personN") as string} · <span style={{ color: st.color, fontWeight: 700 }}>{st.label}</span>
+                </div>
               </div>
-              <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>
-                {next.n_pessoas} {T("res.personN") as string} · {next.estado === "confirmada" ? (T("res.statusConfirmed") as string) : next.estado}
-              </div>
-            </div>
-          </Card>
-        )}
+            </Card>
+          );
+        })()}
 
         <SectionLabel>{T("res.chooseDay") as string}</SectionLabel>
         <div style={{ display: "flex", gap: 9, overflowX: "auto", padding: "12px 0 4px" }} className="om-scroll">
           {days.map((d) => {
             const on = d.key === dayKey;
             return (
-              <button key={d.key} onClick={() => setDayKey(d.key)} style={{ flexShrink: 0, width: 62, padding: "11px 0", borderRadius: 16, cursor: "pointer", textAlign: "center", border: on ? "1px solid transparent" : "1px solid var(--c-line)", background: on ? "var(--c-green)" : "var(--c-surface)", color: on ? "#fff" : "var(--c-ink)" }}>
+              <button key={d.key} onClick={() => selectDay(d.key)} style={{ flexShrink: 0, width: 62, padding: "11px 0", borderRadius: 16, cursor: "pointer", textAlign: "center", border: on ? "1px solid transparent" : "1px solid var(--c-line)", background: on ? "var(--c-green)" : "var(--c-surface)", color: on ? "#fff" : "var(--c-ink)" }}>
                 <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 11.5, opacity: on ? 0.9 : 0.6 }}>{d.wd}</div>
                 <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 19, lineHeight: 1.2 }}>{d.day}</div>
                 <div style={{ fontFamily: "var(--f-body)", fontWeight: 600, fontSize: 10.5, opacity: on ? 0.9 : 0.5 }}>{d.mon}</div>
@@ -123,19 +150,26 @@ export function Reservations({
           })}
         </div>
 
-        <div style={{ marginTop: 18 }}>
+        <div style={{ marginTop: 18, display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
           <SectionLabel>{T("res.chooseTime") as string}</SectionLabel>
+          <span style={{ fontFamily: "var(--f-body)", fontSize: 11, color: "var(--c-muted)" }}>{T("res.hoursNote") as string}</span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 9, marginTop: 12 }}>
-          {RES_TIMES.map((t) => {
-            const on = t === time;
-            return (
-              <button key={t} onClick={() => setTime(t)} style={{ padding: "12px 0", borderRadius: 14, cursor: "pointer", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15, border: on ? "1px solid transparent" : "1px solid var(--c-line)", background: on ? "var(--c-green)" : "var(--c-surface)", color: on ? "#fff" : "var(--c-ink)" }}>
-                {t}
-              </button>
-            );
-          })}
-        </div>
+        {slots.length === 0 ? (
+          <Card style={{ marginTop: 12, textAlign: "center", padding: "18px 14px", color: "var(--c-muted)", fontFamily: "var(--f-body)", fontSize: 13.5 }}>
+            {T("res.noSlots") as string}
+          </Card>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 9, marginTop: 12 }}>
+            {slots.map((t) => {
+              const on = t === time;
+              return (
+                <button key={t} onClick={() => setTime(t)} style={{ padding: "12px 0", borderRadius: 14, cursor: "pointer", fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15, border: on ? "1px solid transparent" : "1px solid var(--c-line)", background: on ? "var(--c-green)" : "var(--c-surface)", color: on ? "#fff" : "var(--c-ink)" }}>
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <div style={{ marginTop: 18 }}>
           <SectionLabel>{T("res.chooseHowMany") as string}</SectionLabel>
@@ -157,8 +191,8 @@ export function Reservations({
         {error && <p style={{ marginTop: 14, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-red)", textAlign: "center" }}>{error}</p>}
 
         <div style={{ marginTop: 20 }}>
-          <Button full size="lg" accent="var(--c-green)" onClick={confirm} icon="check" style={{ opacity: ready ? 1 : 0.5, pointerEvents: ready ? "auto" : "none", boxShadow: "0 8px 20px -8px color-mix(in srgb, var(--c-green) 60%, transparent)" }}>
-            {ready || busy ? (T("res.confirm", day.wd, time || "") as string) : (T("res.pickHour") as string)}
+          <Button full size="lg" accent="var(--c-green)" onClick={confirm} icon="bell" style={{ opacity: ready ? 1 : 0.5, pointerEvents: ready ? "auto" : "none", boxShadow: "0 8px 20px -8px color-mix(in srgb, var(--c-green) 60%, transparent)" }}>
+            {time ? (T("res.request", day.wd, time) as string) : (T("res.pickHour") as string)}
           </Button>
         </div>
       </Scroll>

@@ -50,6 +50,7 @@ export const ICON_PATHS: Record<string, string> = {
   mail: "M3 6h18v12H3zM3 7l9 6 9-6",
   camera: "M3 8h3l2-2.5h8L18 8h3v12H3zM12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z",
   calendarCheck: "M4 6h16v15H4zM4 10h16M8 3v4M16 3v4M9.5 15.5l2 2 3.5-4",
+  share: "M12 15V4M8.5 7.5 12 4l3.5 3.5M6 11v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-8",
 };
 
 export function Icon({
