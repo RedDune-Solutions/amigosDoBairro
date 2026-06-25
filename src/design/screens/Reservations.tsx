@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
-import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/ui";
+import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Spinner } from "@/design/ui";
 import { reservationSlots, type Reservation } from "@/design/data";
-import { createReservation } from "@/lib/app-actions";
+import { createReservation, arquivarReserva } from "@/lib/app-actions";
+import { CAFE } from "@/lib/site";
 
 /** Estado da reserva → etiqueta localizada + cor. */
 function statusInfo(estado: string, T: (k: string) => string | string[]): { label: string; color: string } {
@@ -30,13 +32,14 @@ export function Reservations({
   const days = useMemo<Day[]>(() => {
     const base = new Date();
     base.setHours(0, 0, 0, 0);
+    base.setDate(base.getDate() + 1); // reservas só a partir de amanhã (não o próprio dia)
     const out: Day[] = [];
     for (let i = 0; i < 10; i++) {
       const d = new Date(base);
       d.setDate(base.getDate() + i);
       out.push({
         key: i,
-        wd: i === 0 ? (T("res.today") as string) : i === 1 ? (T("res.tomorrow") as string) : WD_PT[d.getDay()],
+        wd: i === 0 ? (T("res.tomorrow") as string) : WD_PT[d.getDay()],
         day: d.getDate(),
         mon: MON_PT[d.getMonth()],
         full: `${WD_PT[d.getDay()]}, ${d.getDate()} ${MON_PT[d.getMonth()]}`,
@@ -63,10 +66,15 @@ export function Reservations({
   const inRange = time != null && slots.length > 0 && time >= minTime && time <= maxTime;
   const ready = inRange && !busy;
 
+  // Pré-preencher a hora com o 1º horário disponível do dia (não fica em branco).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTime(slots.length ? slots[0] : null);
+  }, [slots]);
+
   function selectDay(key: number) {
     setDayKey(key);
-    setTime(null); // horários mudam conforme o dia
-    setError(null);
+    setError(null); // a hora é re-preenchida pelo efeito acima
   }
 
   async function confirm() {
@@ -126,25 +134,7 @@ export function Reservations({
           <div style={{ marginBottom: 18 }}>
             <SectionLabel>{T("res.mine") as string}</SectionLabel>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 11 }}>
-              {mine.map((r) => {
-                const st = statusInfo(r.estado, T);
-                return (
-                  <Card key={r.id} style={{ display: "flex", alignItems: "center", gap: 13, background: `color-mix(in srgb, ${st.color} 8%, var(--c-surface))`, borderColor: `color-mix(in srgb, ${st.color} 22%, var(--c-line))` }}>
-                    <IconTile icon="calendar" accent={st.color} size={46} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15.5, color: "var(--c-ink)" }}>
-                        {new Date(r.data + "T00:00:00").toLocaleDateString("pt-PT", { weekday: "short", day: "numeric", month: "short" })} · {r.hora.slice(0, 5)}
-                      </div>
-                      <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>
-                        {r.n_pessoas} {T("res.personN") as string}
-                      </div>
-                    </div>
-                    <span style={{ flexShrink: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12, color: st.color, background: `color-mix(in srgb, ${st.color} 14%, var(--c-surface))`, padding: "5px 11px", borderRadius: 100 }}>
-                      {st.label}
-                    </span>
-                  </Card>
-                );
-              })}
+              {mine.map((r) => <MyReservationCard key={r.id} r={r} />)}
             </div>
           </div>
         )}
@@ -220,6 +210,40 @@ export function Reservations({
         </div>
       </Scroll>
     </>
+  );
+}
+
+function MyReservationCard({ r }: { r: Reservation }) {
+  const { T } = useI18n();
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const st = statusInfo(r.estado, T);
+  const rejected = r.estado === "cancelada";
+  return (
+    <Card style={{ display: "flex", flexDirection: "column", gap: 11, background: `color-mix(in srgb, ${st.color} 8%, var(--c-surface))`, borderColor: `color-mix(in srgb, ${st.color} 22%, var(--c-line))` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
+        <IconTile icon="calendar" accent={st.color} size={46} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15.5, color: "var(--c-ink)" }}>
+            {new Date(r.data + "T00:00:00").toLocaleDateString("pt-PT", { weekday: "short", day: "numeric", month: "short" })} · {r.hora.slice(0, 5)}
+          </div>
+          <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>{r.n_pessoas} {T("res.personN") as string}</div>
+        </div>
+        <span style={{ flexShrink: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12, color: st.color, background: `color-mix(in srgb, ${st.color} 14%, var(--c-surface))`, padding: "5px 11px", borderRadius: 100 }}>
+          {st.label}
+        </span>
+      </div>
+      {rejected ? (
+        <button onClick={() => start(async () => { await arquivarReserva(r.id); router.refresh(); })} disabled={pending} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6, border: "1px solid var(--c-line)", background: "var(--c-surface)", color: "var(--c-muted)", borderRadius: 10, padding: "7px 12px", cursor: pending ? "default" : "pointer", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5 }}>
+          {pending ? <Spinner size={13} /> : <><Icon name="archive" size={14} stroke={2} /> {T("res.archive") as string}</>}
+        </button>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)", lineHeight: 1.4 }}>
+          <Icon name="phone" size={13} color="var(--c-muted)" /> {T("res.cancelNote") as string}{" "}
+          <a href={`tel:${CAFE.phone}`} style={{ color: st.color, fontWeight: 800, textDecoration: "none", whiteSpace: "nowrap" }}>{CAFE.phoneDisplay}</a>
+        </div>
+      )}
+    </Card>
   );
 }
 

@@ -139,6 +139,8 @@ export const STRINGS: Record<string, Entry> = {
   "res.hoursNote": { pt: "Horários dentro do funcionamento do café.", en: "Times within the café's opening hours." },
   "res.between": { pt: (a: string, b: string) => `Entre ${a} e ${b}`, en: (a: string, b: string) => `Between ${a} and ${b}` },
   "res.outOfRange": { pt: (a: string, b: string) => `Escolhe uma hora entre ${a} e ${b}.`, en: (a: string, b: string) => `Pick a time between ${a} and ${b}.` },
+  "res.archive": { pt: "Arquivar", en: "Archive" },
+  "res.cancelNote": { pt: "Para cancelar, liga ao café:", en: "To cancel, call the café:" },
   "res.day": { pt: "Dia", en: "Day" },
   "res.hour": { pt: "Hora", en: "Time" },
   "res.people": { pt: "Pessoas", en: "People" },

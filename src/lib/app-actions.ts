@@ -69,6 +69,18 @@ export async function updateProfile(input: {
   return { ok: true };
 }
 
+/** Cliente arquiva uma reserva (ex.: recusada) — só mexe em `arquivada` (guard trigger). */
+export async function arquivarReserva(id: string): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada." };
+  const { error } = await supabase.from("reservations").update({ arquivada: true }).eq("id", id).eq("user_id", user.id);
+  if (error) return { error: "Não foi possível arquivar." };
+  return { ok: true };
+}
+
 export async function createReservation(input: {
   data: string;
   hora: string;

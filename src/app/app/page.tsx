@@ -47,7 +47,7 @@ export default async function AppPage() {
     supabase.from("scratch_cards").select("id, kind").eq("status", "por-abrir").order("created_at", { ascending: true }),
     supabase.from("wallet_items").select("id, kind, nome_pt, nome_en, desc_pt, desc_en, icon, accent, codigo, status, created_at").order("created_at", { ascending: false }).limit(30),
     supabase.from("redemptions").select("id, codigo, estado, created_at, rewards(titulo, nome_en, descricao, desc_en, icon, accent)").neq("estado", "cancelado").order("created_at", { ascending: false }).limit(30),
-    supabase.from("reservations").select("id, data, hora, n_pessoas, estado").gte("data", new Date().toISOString().slice(0, 10)).order("data", { ascending: true }).order("hora", { ascending: true }).limit(20),
+    supabase.from("reservations").select("id, data, hora, n_pessoas, estado").eq("arquivada", false).gte("data", new Date().toISOString().slice(0, 10)).order("data", { ascending: true }).order("hora", { ascending: true }).limit(20),
     supabase.from("news").select("id, titulo_pt, titulo_en, desc_pt, desc_en, icon, accent, ativo, created_at").eq("ativo", true).order("created_at", { ascending: false }).limit(10),
     supabase.from("notifications").select("id, kind, title_pt, title_en, body_pt, body_en, icon, accent, read_at, created_at").is("archived_at", null).order("created_at", { ascending: false }).limit(40),
     supabase.from("points_lots").select("pontos_restantes, data_expiracao").eq("estado", "ATIVO").gt("data_expiracao", new Date().toISOString()).order("data_expiracao", { ascending: true }),
