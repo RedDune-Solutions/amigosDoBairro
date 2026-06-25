@@ -5,9 +5,9 @@ import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { Scroll, Card, IconTile, Button, LogoBadge, SectionLabel } from "@/design/ui";
 
-// Marquee = fotos do ESPAÇO / ambiente do café. Vazio por agora (faltam fotos do
-// espaço). Para ativar, basta pôr os caminhos aqui (ex.: "/galeria/espaco/sala.jpg").
-const ESPACO: string[] = [];
+// Marquee = fotos do ESPAÇO / ambiente do café. A do batido já mostra o ambiente
+// (interior + mesa). Juntar aqui mais fotos do espaço para o marquee ganhar variedade.
+const ESPACO: string[] = ["/galeria/burger-sumos.jpg"];
 
 function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) {
   const loop = [...tiles, ...tiles];
@@ -44,10 +44,13 @@ function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) 
 
 function PhotoCarousel() {
   if (ESPACO.length === 0) return null; // sem fotos do espaço → não mostra o marquee
+  // Preenche a fila para o marquee ficar cheio mesmo com poucas fotos (repete).
+  const row: string[] = [];
+  while (row.length < 5) row.push(...ESPACO);
   return (
     <div style={{ marginTop: 22, marginLeft: -24, marginRight: -24, display: "flex", flexDirection: "column", gap: 8 }}>
-      <MarqueeRow tiles={ESPACO} dir="left" />
-      {ESPACO.length > 1 && <MarqueeRow tiles={[...ESPACO].reverse()} dir="right" />}
+      <MarqueeRow tiles={row} dir="left" />
+      <MarqueeRow tiles={[...row].reverse()} dir="right" />
     </div>
   );
 }
@@ -74,7 +77,6 @@ export function Landing() {
   const comida = [
     { src: "/galeria/brunch.jpg", n: { pt: "Brunch", en: "Brunch" } },
     { src: "/galeria/bagel.jpg", n: { pt: "Bagel", en: "Bagel" } },
-    { src: "/galeria/burger-sumos.jpg", n: { pt: "Hambúrguer & sumos", en: "Burger & juices" } },
     { src: "/galeria/panquecas.jpg", n: { pt: "Panquecas", en: "Pancakes" } },
     { src: "/galeria/sandes.jpg", n: { pt: "Sandes caseira", en: "Homemade sandwich" } },
   ];
