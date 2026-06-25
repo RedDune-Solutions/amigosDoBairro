@@ -36,6 +36,27 @@ export async function savePushSubscription(sub: z.input<typeof subSchema>): Prom
   return { ok: true };
 }
 
+/** Push de boas-vindas ao próprio utilizador, ao ativar — mostra logo o que é. */
+export async function pushBoasVindas(lang?: string): Promise<void> {
+  if (!vapidReady()) return;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { data: rows } = await supabase
+    .from("push_subscriptions")
+    .select("endpoint, p256dh, auth")
+    .eq("user_id", user.id);
+  const subs: PushSub[] = (rows ?? []).map((s) => ({ endpoint: s.endpoint as string, p256dh: s.p256dh as string, auth: s.auth as string }));
+  if (!subs.length) return;
+  const en = lang === "en";
+  const { stale } = await sendToSubs(subs, {
+    title: en ? "Notifications on ✓" : "Notificações ativadas ✓",
+    body: en ? "You'll now get the café's news and offers right here." : "A partir de agora recebes aqui as novidades e ofertas do café.",
+    url: "/app",
+  });
+  if (stale.length) await supabase.from("push_subscriptions").delete().in("endpoint", stale);
+}
+
 /** Cliente remove a subscription do dispositivo. */
 export async function removePushSubscription(endpoint: string): Promise<{ ok?: boolean }> {
   const supabase = await createClient();

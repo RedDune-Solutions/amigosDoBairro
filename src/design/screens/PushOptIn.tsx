@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/design/i18n";
 import { Card, IconTile, Spinner } from "@/design/ui";
 import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/lib/push-config";
-import { savePushSubscription, removePushSubscription } from "@/lib/push-actions";
+import { savePushSubscription, removePushSubscription, pushBoasVindas } from "@/lib/push-actions";
 
 type State = "loading" | "unsupported" | "off" | "on" | "denied" | "busy";
 type PushSubJSON = { endpoint: string; keys: { p256dh: string; auth: string } };
@@ -32,7 +32,7 @@ async function subscribePush(reg: ServiceWorkerRegistration): Promise<PushSubscr
 }
 
 export function PushOptIn() {
-  const { T } = useI18n();
+  const { T, lang } = useI18n();
   const [state, setState] = useState<State>("loading");
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -86,6 +86,7 @@ export function PushOptIn() {
         return;
       }
       setState("on");
+      void pushBoasVindas(lang); // push imediato a confirmar que ligou
     } catch (e) {
       console.error("[push] ativar falhou:", e);
       setMsg(T("push.err") as string);
