@@ -11,7 +11,7 @@ import { type MemberRow, type InviteRow } from "@/design/screens/admin/EquipaScr
 import { MenuAdmin } from "@/design/screens/admin/MenuAdmin";
 import { ConfiguracoesAdmin } from "@/design/screens/admin/ConfiguracoesAdmin";
 import { NovidadesAdmin } from "@/design/screens/admin/NovidadesAdmin";
-import type { AppData, NewsRow, MenuCatRow, FoodCategory, FoodPrefStat, ClienteRow } from "@/design/data";
+import type { AppData, NewsRow, MenuCatRow, FoodCategory, FoodPrefStat, ClienteRow, LandingPhotos } from "@/design/data";
 
 type Tab = "inicio" | "balcao" | "premios" | "reservas" | "menu" | "config";
 
@@ -49,6 +49,7 @@ export function AdminShell({
   foodCategories,
   prefStats,
   clientes,
+  landingPhotos,
 }: {
   role: "staff" | "admin";
   nome: string;
@@ -67,6 +68,7 @@ export function AdminShell({
   foodCategories: FoodCategory[];
   prefStats: FoodPrefStat[];
   clientes: ClienteRow[];
+  landingPhotos: LandingPhotos;
 }) {
   const router = useRouter();
   const isAdmin = role === "admin";
@@ -147,6 +149,7 @@ export function AdminShell({
         foodCategories={foodCategories}
         prefStats={prefStats}
         clientes={clientes}
+        landingPhotos={landingPhotos}
         initialView={configView}
         onSaved={() => router.refresh()}
       />

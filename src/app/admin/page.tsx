@@ -3,6 +3,7 @@ import { Stage } from "@/design/ui";
 import { AdminShell } from "@/design/AdminShell";
 import { getProfile } from "@/lib/data";
 import { getMenu, getFoodCategories, getFoodPrefStats } from "@/lib/menu-actions";
+import { getLandingPhotos } from "@/lib/landing-actions";
 import type { PrizeAdmin, RewardAdmin, AdminStatsData, LogRow } from "@/design/AdminPanel";
 import type { ReservaAdminRow } from "@/design/screens/admin/ReservasAdmin";
 import type { MemberRow, InviteRow } from "@/design/screens/admin/EquipaScreen";
@@ -106,10 +107,11 @@ export default async function AdminPage() {
 
   const clientes = (clientesData ?? []) as ClienteRow[];
 
-  const [menu, foodCategories, prefStats] = await Promise.all([
+  const [menu, foodCategories, prefStats, landingPhotos] = await Promise.all([
     getMenu(),
     isAdmin ? getFoodCategories(false) : Promise.resolve([]),
     isAdmin ? getFoodPrefStats() : Promise.resolve([]),
+    isAdmin ? getLandingPhotos() : Promise.resolve({ espaco: [], comida: [] }),
   ]);
 
   return (
@@ -132,6 +134,7 @@ export default async function AdminPage() {
         foodCategories={foodCategories}
         prefStats={prefStats}
         clientes={clientes}
+        landingPhotos={landingPhotos}
       />
     </Stage>
   );

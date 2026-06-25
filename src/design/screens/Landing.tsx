@@ -4,15 +4,27 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { Scroll, Card, IconTile, Button, LogoBadge, SectionLabel } from "@/design/ui";
+import type { Bi, LandingPhotos } from "@/design/data";
 
-// Marquee = fotos do ESPAÇO / ambiente do café (@osamigosdobairro): interior,
-// pessoas no salão e bebidas servidas à mesa. Comida (pratos) vai p/ "Da nossa casa".
-const ESPACO: string[] = [
+// Defaults usados quando a BD ainda não tem fotos (1.ª arranque / fallback). Espelham
+// o seed da migração landing_fotos. Marquee = fotos do ESPAÇO / ambiente do café.
+const ESPACO_DEFAULT: string[] = [
   "/galeria/foto-10.jpg",       // interior — mesas, cadeiras azuis, quadro do batido
   "/galeria/foto-06.jpg",       // cliente a beber o batido no salão
   "/galeria/burger-sumos.jpg",  // interior + pessoa + sumo
   "/galeria/foto-05.jpg",       // batido morango servido à mesa (interior atrás)
   "/galeria/foto-14.jpg",       // três batidos à mesa (salão atrás)
+];
+
+const COMIDA_DEFAULT: { src: string; n: Bi }[] = [
+  { src: "/galeria/foto-19.jpg", n: { pt: "Panquecas", en: "Pancakes" } },
+  { src: "/galeria/foto-08.jpg", n: { pt: "Brunch", en: "Brunch" } },
+  { src: "/galeria/foto-18.jpg", n: { pt: "Bagel com ovo", en: "Egg bagel" } },
+  { src: "/galeria/foto-11.jpg", n: { pt: "Bowl saudável", en: "Healthy bowl" } },
+  { src: "/galeria/foto-15.jpg", n: { pt: "Sandes", en: "Sandwich" } },
+  { src: "/galeria/foto-13.jpg", n: { pt: "Muffin com ovo", en: "Egg muffin" } },
+  { src: "/galeria/foto-02.jpg", n: { pt: "Brownie", en: "Brownie" } },
+  { src: "/galeria/foto-03.jpg", n: { pt: "Taça de iogurte", en: "Yogurt bowl" } },
 ];
 
 function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) {
@@ -48,11 +60,11 @@ function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) 
   );
 }
 
-function PhotoCarousel() {
-  if (ESPACO.length === 0) return null; // sem fotos do espaço → não mostra o marquee
+function PhotoCarousel({ espaco }: { espaco: string[] }) {
+  if (espaco.length === 0) return null; // sem fotos do espaço → não mostra o marquee
   // Garante fila cheia mesmo com poucas fotos (repete até ≥5).
   const row: string[] = [];
-  while (row.length < 5) row.push(...ESPACO);
+  while (row.length < 5) row.push(...espaco);
   return (
     <div style={{ marginTop: 22, marginLeft: -24, marginRight: -24, display: "flex", flexDirection: "column", gap: 8 }}>
       <MarqueeRow tiles={row} dir="left" />
@@ -61,9 +73,15 @@ function PhotoCarousel() {
   );
 }
 
-export function Landing() {
+export function Landing({ photos }: { photos?: LandingPhotos }) {
   const router = useRouter();
   const { T, L, lang, setLang } = useI18n();
+
+  // Fotos editáveis pela admin (com fallback para os defaults).
+  const espaco = photos && photos.espaco.length > 0 ? photos.espaco.map((p) => p.image_url) : ESPACO_DEFAULT;
+  const comida = photos && photos.comida.length > 0
+    ? photos.comida.map((p) => ({ src: p.image_url, n: { pt: p.label_pt || "", en: p.label_en || p.label_pt || "" } as Bi }))
+    : COMIDA_DEFAULT;
   const title = T("land.title") as string[];
   const hoursVal = T("land.hoursVal") as string[];
   const whereVal = T("land.whereVal") as string[];
@@ -77,18 +95,6 @@ export function Landing() {
     { icon: "star", accent: "var(--c-primary)", title: T("land.f1.t") as string, desc: T("land.f1.d") as string },
     { icon: "gift", accent: "var(--c-red)", title: T("land.f2.t") as string, desc: T("land.f2.d") as string },
     { icon: "calendar", accent: "var(--c-green)", title: T("land.f3.t") as string, desc: T("land.f3.d") as string },
-  ];
-
-  // Fotos reais da comida (@osamigosdobairro) — apresentação de comida.
-  const comida = [
-    { src: "/galeria/foto-19.jpg", n: { pt: "Panquecas", en: "Pancakes" } },
-    { src: "/galeria/foto-08.jpg", n: { pt: "Brunch", en: "Brunch" } },
-    { src: "/galeria/foto-18.jpg", n: { pt: "Bagel com ovo", en: "Egg bagel" } },
-    { src: "/galeria/foto-11.jpg", n: { pt: "Bowl saudável", en: "Healthy bowl" } },
-    { src: "/galeria/foto-15.jpg", n: { pt: "Sandes", en: "Sandwich" } },
-    { src: "/galeria/foto-13.jpg", n: { pt: "Muffin com ovo", en: "Egg muffin" } },
-    { src: "/galeria/foto-02.jpg", n: { pt: "Brownie", en: "Brownie" } },
-    { src: "/galeria/foto-03.jpg", n: { pt: "Taça de iogurte", en: "Yogurt bowl" } },
   ];
 
   return (
@@ -171,7 +177,7 @@ export function Landing() {
             >
               {T("land.sub") as string}
             </p>
-            <PhotoCarousel />
+            <PhotoCarousel espaco={espaco} />
           </div>
         </div>
 

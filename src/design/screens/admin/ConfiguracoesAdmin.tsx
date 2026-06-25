@@ -10,7 +10,8 @@ import { EquipaSection, type MemberRow, type InviteRow } from "@/design/screens/
 import { ClientesAdmin } from "@/design/screens/admin/ClientesAdmin";
 import { AdminLog, type LogRow } from "@/design/AdminPanel";
 import { PreferencesChart } from "@/design/screens/admin/PreferencesChart";
-import type { AppData, FoodCategory, FoodPrefStat, ClienteRow } from "@/design/data";
+import { LandingAdmin } from "@/design/screens/admin/LandingAdmin";
+import type { AppData, FoodCategory, FoodPrefStat, ClienteRow, LandingPhotos } from "@/design/data";
 import { addFoodCategory, patchFoodCategory, removeFoodCategory } from "@/lib/menu-actions";
 import { enviarCampanha } from "@/lib/push-actions";
 
@@ -104,7 +105,7 @@ function CampanhaForm({ foodCategories }: { foodCategories: FoodCategory[] }) {
   );
 }
 
-type View = "home" | "perfil" | "equipa" | "comida" | "campanhas";
+type View = "home" | "perfil" | "equipa" | "comida" | "campanhas" | "landing";
 
 export function ConfiguracoesAdmin({
   me,
@@ -117,6 +118,7 @@ export function ConfiguracoesAdmin({
   foodCategories,
   prefStats,
   clientes,
+  landingPhotos,
   initialView,
   onSaved,
 }: {
@@ -130,6 +132,7 @@ export function ConfiguracoesAdmin({
   foodCategories: FoodCategory[];
   prefStats: FoodPrefStat[];
   clientes: ClienteRow[];
+  landingPhotos: LandingPhotos;
   initialView?: "home" | "equipa";
   onSaved: () => void;
 }) {
@@ -186,6 +189,11 @@ export function ConfiguracoesAdmin({
         </Scroll>
       </>
     );
+  }
+
+  // Sub-página: Página inicial (fotos da landing)
+  if (view === "landing") {
+    return <LandingAdmin photos={landingPhotos} onBack={() => setView("home")} />;
   }
 
   // Sub-página: Campanhas push
@@ -248,6 +256,15 @@ export function ConfiguracoesAdmin({
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Comida & preferências</div>
                 <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>Opções de comida e gráfico de preferências</div>
+              </div>
+              <Icon name="chevronRight" size={20} color="var(--c-muted)" />
+            </Card>
+
+            <Card onClick={() => setView("landing")} style={{ marginTop: 11, display: "flex", alignItems: "center", gap: 13 }}>
+              <IconTile icon="camera" accent="var(--c-blue)" size={42} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Página inicial</div>
+                <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>Fotos do carrossel e da comida na entrada</div>
               </div>
               <Icon name="chevronRight" size={20} color="var(--c-muted)" />
             </Card>
