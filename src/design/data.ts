@@ -11,7 +11,7 @@ export type Tier = {
 };
 
 // Níveis (badges) por pontos GANHOS ao longo do tempo (lifetime, nunca descem).
-// Subida exponencial agressiva: 0 · 100 · 300 · 800 · 2000 · 5000.
+// Subida exponencial agressiva, escala 1€=10pts: 0 · 1000 · 3000 · 8000 · 20000 · 50000.
 export const TIERS: Tier[] = [
   {
     id: "novo",
@@ -26,7 +26,7 @@ export const TIERS: Tier[] = [
   },
   {
     id: "cliente",
-    min: 100,
+    min: 1000,
     icon: "coffee",
     accent: "green",
     name: { pt: "Cliente da Casa", en: "House Regular" },
@@ -37,7 +37,7 @@ export const TIERS: Tier[] = [
   },
   {
     id: "amigo",
-    min: 300,
+    min: 3000,
     icon: "sandwich",
     accent: "primary",
     name: { pt: "Amigo do Bairro", en: "Neighbourhood Friend" },
@@ -48,7 +48,7 @@ export const TIERS: Tier[] = [
   },
   {
     id: "habitue",
-    min: 800,
+    min: 8000,
     icon: "cake",
     accent: "red",
     name: { pt: "Habitué do Café", en: "Café Regular" },
@@ -59,7 +59,7 @@ export const TIERS: Tier[] = [
   },
   {
     id: "dourado",
-    min: 2000,
+    min: 20000,
     icon: "gift",
     accent: "primary",
     name: { pt: "Amigo do Peito", en: "Close Friend" },
@@ -70,7 +70,7 @@ export const TIERS: Tier[] = [
   },
   {
     id: "lenda",
-    min: 5000,
+    min: 50000,
     icon: "trophy",
     accent: "red",
     name: { pt: "Lenda do Bairro", en: "Neighbourhood Legend" },
