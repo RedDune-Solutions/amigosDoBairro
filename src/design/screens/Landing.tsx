@@ -5,9 +5,9 @@ import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { Scroll, Card, IconTile, Button, LogoBadge, SectionLabel } from "@/design/ui";
 
-// Fotos reais do café (@osamigosdobairro).
-const MARQUEE_TOP = ["/galeria/bagel.jpg", "/galeria/burger-sumos.jpg", "/galeria/brunch.jpg"];
-const MARQUEE_BOTTOM = ["/galeria/panquecas.jpg", "/galeria/sandes.jpg", "/galeria/brunch.jpg"];
+// Marquee = fotos do ESPAÇO / ambiente do café. Vazio por agora (faltam fotos do
+// espaço). Para ativar, basta pôr os caminhos aqui (ex.: "/galeria/espaco/sala.jpg").
+const ESPACO: string[] = [];
 
 function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) {
   const loop = [...tiles, ...tiles];
@@ -43,10 +43,11 @@ function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) 
 }
 
 function PhotoCarousel() {
+  if (ESPACO.length === 0) return null; // sem fotos do espaço → não mostra o marquee
   return (
     <div style={{ marginTop: 22, marginLeft: -24, marginRight: -24, display: "flex", flexDirection: "column", gap: 8 }}>
-      <MarqueeRow tiles={MARQUEE_TOP} dir="left" />
-      <MarqueeRow tiles={MARQUEE_BOTTOM} dir="right" />
+      <MarqueeRow tiles={ESPACO} dir="left" />
+      {ESPACO.length > 1 && <MarqueeRow tiles={[...ESPACO].reverse()} dir="right" />}
     </div>
   );
 }
@@ -69,11 +70,13 @@ export function Landing() {
     { icon: "calendar", accent: "var(--c-green)", title: T("land.f3.t") as string, desc: T("land.f3.d") as string },
   ];
 
-  const house = [
-    { n: { pt: "Pastel de nata", en: "Custard tart" }, a: "var(--c-red)", i: "cake" },
-    { n: { pt: "Galão", en: "Latte" }, a: "var(--c-primary)", i: "coffee" },
-    { n: { pt: "Tosta mista", en: "Ham & cheese toastie" }, a: "var(--c-blue)", i: "sandwich" },
-    { n: { pt: "Prato do dia", en: "Dish of the day" }, a: "var(--c-green)", i: "plate" },
+  // Fotos reais da comida (@osamigosdobairro) — apresentação de comida.
+  const comida = [
+    { src: "/galeria/brunch.jpg", n: { pt: "Brunch", en: "Brunch" } },
+    { src: "/galeria/bagel.jpg", n: { pt: "Bagel", en: "Bagel" } },
+    { src: "/galeria/burger-sumos.jpg", n: { pt: "Hambúrguer & sumos", en: "Burger & juices" } },
+    { src: "/galeria/panquecas.jpg", n: { pt: "Panquecas", en: "Pancakes" } },
+    { src: "/galeria/sandes.jpg", n: { pt: "Sandes caseira", en: "Homemade sandwich" } },
   ];
 
   return (
@@ -186,21 +189,11 @@ export function Landing() {
             <SectionLabel>{T("land.house") as string}</SectionLabel>
           </div>
           <div style={{ display: "flex", gap: 12, overflowX: "auto", padding: "12px 18px 4px" }} className="om-scroll">
-            {house.map((it) => (
-              <div key={it.i} style={{ width: 116, flexShrink: 0 }}>
-                <div
-                  style={{
-                    height: 96,
-                    borderRadius: 18,
-                    background: `color-mix(in srgb, ${it.a} 16%, var(--c-surface))`,
-                    border: "1px solid var(--c-line)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: it.a,
-                  }}
-                >
-                  <Icon name={it.i} size={42} stroke={1.9} />
+            {comida.map((it) => (
+              <div key={it.src} style={{ width: 150, flexShrink: 0 }}>
+                <div style={{ height: 110, borderRadius: 18, overflow: "hidden", border: "1px solid var(--c-line)", background: "var(--c-surface2)" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={it.src} alt={L(it.n)} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 </div>
                 <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14, color: "var(--c-ink)", marginTop: 7 }}>
                   {L(it.n)}
