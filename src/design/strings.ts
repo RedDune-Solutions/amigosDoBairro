@@ -15,9 +15,9 @@ export const STRINGS: Record<string, Entry> = {
   "tab.profile": { pt: "Perfil", en: "Profile" },
 
   // Landing
-  "land.badge": { pt: "CAFÉ & SNACK-BAR DO BAIRRO", en: "NEIGHBOURHOOD CAFÉ & SNACK-BAR" },
+  "land.badge": { pt: "CAFÉ & SNACK-BAR", en: "CAFÉ & SNACK-BAR" },
   "land.title": { pt: ["O teu cantinho", "no bairro"], en: ["Your little corner", "of the neighbourhood"] },
-  "land.sub": { pt: "Junta-te ao clube dos Amigos do Bairro. Cada café conta — acumula pontos, troca recompensas e reserva a tua mesa.", en: "Join the Amigos do Bairro club. Every coffee counts — earn points, redeem rewards and book your table." },
+  "land.sub": { pt: "Bons cafés, melhores conversas e aquele sabor de casa.", en: "Good coffee, better conversations and that taste of home." },
   "land.register": { pt: "Criar conta grátis", en: "Create free account" },
   "land.member": { pt: "Já sou membro", en: "I'm already a member" },
   "land.memberQ": { pt: "Já tens conta?", en: "Already have an account?" },
@@ -164,7 +164,7 @@ export const STRINGS: Record<string, Entry> = {
   "res.tomorrow": { pt: "Amanhã", en: "Tomorrow" },
 
   // Splash / loading
-  "splash.tag": { pt: "CAFÉ & SNACK-BAR DO BAIRRO", en: "NEIGHBOURHOOD CAFÉ & SNACK-BAR" },
+  "splash.tag": { pt: "CAFÉ & SNACK-BAR", en: "CAFÉ & SNACK-BAR" },
   "splash.load": { pt: "A preparar o teu balcão…", en: "Warming up your counter…" },
 
   // Notificações no telemóvel (card no perfil)
