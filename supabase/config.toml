@@ -259,6 +259,10 @@ content_path = "./supabase/templates/confirmation.html"
 subject = "Repor palavra-passe · Os Amigos do Bairro"
 content_path = "./supabase/templates/recovery.html"
 
+[auth.email.template.magic_link]
+subject = "Entrar · Os Amigos do Bairro"
+content_path = "./supabase/templates/magic_link.html"
+
 [auth.email.template.invite]
 subject = "Convite para a equipa · Os Amigos do Bairro"
 content_path = "./supabase/templates/invite.html"
