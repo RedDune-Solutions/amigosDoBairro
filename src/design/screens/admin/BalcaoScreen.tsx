@@ -20,6 +20,7 @@ export function BalcaoScreen() {
 
   const [codigo, setCodigo] = useState("");
   const [vMsg, setVMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [vBusy, setVBusy] = useState(false);
 
   async function startCamera() {
     setCamError(null);
@@ -100,7 +101,11 @@ export function BalcaoScreen() {
   }
 
   async function validate() {
+    if (vBusy) return;
+    setVBusy(true);
+    setVMsg(null);
     const res = await validarVoucher(codigo);
+    setVBusy(false);
     setVMsg(res.error ? { ok: false, text: res.error } : { ok: true, text: "Voucher validado ✓" });
     if (!res.error) setCodigo("");
   }
@@ -145,15 +150,23 @@ export function BalcaoScreen() {
 
         <Card style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 14 }}>
           <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 16, color: "var(--c-ink)" }}>Validar voucher</div>
-          <input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Código (ex.: AB-1A2B)" style={{ ...inputStyle, textTransform: "uppercase", letterSpacing: 1 }} />
+          <input value={codigo} onChange={(e) => setCodigo(fmtVoucher(e.target.value))} inputMode="text" autoCapitalize="characters" maxLength={7} placeholder="Código (ex.: AB-1A2B)" style={{ ...inputStyle, textTransform: "uppercase", letterSpacing: 1 }} />
           {vMsg && (
             <p style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: vMsg.ok ? "var(--c-green)" : "var(--c-red)" }}>{vMsg.text}</p>
           )}
-          <Button variant="dark" icon="check" onClick={validate} disabled={!codigo}>Marcar como entregue</Button>
+          <Button variant="dark" icon="check" onClick={validate} loading={vBusy} disabled={!codigo || vBusy}>Marcar como entregue</Button>
         </Card>
       </Scroll>
     </>
   );
+}
+
+// Auto-formato do voucher: MAIÚSCULAS, só alfanumérico, traço automático a
+// seguir ao prefixo "AB" da raspadinha (ex.: "ab1a2b" → "AB-1A2B"). O resgate
+// (6 chars sem prefixo) fica sem traço. O servidor é tolerante na mesma.
+function fmtVoucher(raw: string): string {
+  const s = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  return s.startsWith("AB") && s.length > 2 ? `AB-${s.slice(2)}` : s;
 }
 
 const inputStyle: React.CSSProperties = {

@@ -70,14 +70,32 @@ export async function estadoCheckin(code: string): Promise<{ valid: boolean; alr
   return { valid: Boolean(res?.valid), already: Boolean(res?.already) };
 }
 
-/** Valida um voucher por código (raspadinha ou resgate de pontos). */
+/** Valida um voucher por código (raspadinha ou resgate de pontos).
+ *  Tolerante ao formato: ignora traços/espaços e maiúsculas, e tenta as formas
+ *  canónicas — raspadinha `AB-XXXX` e resgate `XXXXXX` (sem traço). Assim o staff
+ *  pode escrever com ou sem o traço. Só o código certo é que é consumido
+ *  (os outros candidatos só dão erro, sem efeito). */
 export async function validarVoucher(codigo: string): Promise<{ ok?: boolean; error?: string }> {
-  const code = codigo.trim().toUpperCase();
-  if (code.length < 4) return { error: "Código inválido." };
+  const raw = codigo.trim().toUpperCase().replace(/\s+/g, "");
+  const alnum = raw.replace(/-/g, "");
+  if (alnum.length < 4) return { error: "Código inválido." };
+  const candidates = Array.from(
+    new Set(
+      [
+        raw, // como foi escrito
+        alnum, // sem traço (resgate)
+        /^[A-Z]{2}[0-9A-Z]{4,}$/.test(alnum) ? `${alnum.slice(0, 2)}-${alnum.slice(2)}` : null, // raspadinha AB-XXXX
+      ].filter(Boolean) as string[],
+    ),
+  );
   const supabase = await createClient();
-  const wallet = await supabase.rpc("usar_carteira", { p_codigo: code });
-  if (!wallet.error) return { ok: true };
-  const red = await supabase.rpc("marcar_levantado", { p_codigo: code });
-  if (!red.error) return { ok: true };
+  for (const c of candidates) {
+    const wallet = await supabase.rpc("usar_carteira", { p_codigo: c });
+    if (!wallet.error) return { ok: true };
+  }
+  for (const c of candidates) {
+    const red = await supabase.rpc("marcar_levantado", { p_codigo: c });
+    if (!red.error) return { ok: true };
+  }
   return { error: "Código inválido ou já usado." };
 }
