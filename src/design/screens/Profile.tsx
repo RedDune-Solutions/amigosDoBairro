@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
-import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Spinner, BottomSheet } from "@/design/ui";
+import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Spinner, BottomSheet, Select } from "@/design/ui";
 import { TiersSheet } from "@/design/screens/AppScreens";
 import { PushOptIn } from "@/design/screens/PushOptIn";
 import { InstallApp } from "@/design/screens/InstallApp";
@@ -227,6 +227,7 @@ export function EditProfile({
   const [foodPref, setFoodPref] = useState<string>(data.foodPref ?? "");
   const [avatar, setAvatar] = useState<string | null>(data.avatarUrl);
   const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState(false);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const initials = initialsFrom(name);
@@ -236,6 +237,7 @@ export function EditProfile({
   async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploadErr(false);
     setUploading(true);
     const supabase = createClient();
     const {
@@ -246,17 +248,22 @@ export function EditProfile({
       return;
     }
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const path = `${user.id}/avatar.${ext}`;
+    // Caminho único (na pasta do user) + upsert:false → não depende do select de
+    // existência do upsert; o upload fica robusto.
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from("avatars")
-      .upload(path, file, { upsert: true, contentType: file.type });
-    if (!upErr) {
-      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-      const url = `${pub.publicUrl}?t=${Date.now()}`;
-      await updateProfile({ nome: name, telefone: phone, avatar_url: url });
-      setAvatar(url);
-      onSaved();
+      .upload(path, file, { upsert: false, contentType: file.type });
+    if (upErr) {
+      setUploadErr(true);
+      setUploading(false);
+      return;
     }
+    const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+    const url = `${pub.publicUrl}?t=${Date.now()}`;
+    await updateProfile({ nome: name, telefone: phone, avatar_url: url });
+    setAvatar(url);
+    onSaved();
     setUploading(false);
   }
 
@@ -282,8 +289,8 @@ export function EditProfile({
             </div>
           </button>
           <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} style={{ display: "none" }} />
-          <div style={{ marginTop: 10, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-primary)", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, minHeight: 18 }}>
-            {uploading ? <Spinner size={14} /> : (T("edit.photo") as string)}
+          <div style={{ marginTop: 10, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: uploadErr ? "var(--c-red)" : "var(--c-primary)", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, minHeight: 18 }}>
+            {uploading ? <Spinner size={14} /> : uploadErr ? (lang === "en" ? "Couldn't upload. Try again." : "Não deu para carregar. Tenta outra vez.") : (T("edit.photo") as string)}
           </div>
         </div>
 
@@ -303,18 +310,18 @@ export function EditProfile({
               <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 11.5, letterSpacing: 0.4, textTransform: "uppercase", color: "var(--c-muted)" }}>
                 {lang === "en" ? "Favourite food" : "Comida preferida"}
               </div>
-              <div style={{ position: "relative", marginTop: 2 }}>
-                <select
+              <div style={{ marginTop: 6 }}>
+                <Select
                   value={foodPref}
-                  onChange={(e) => setFoodPref(e.target.value)}
-                  style={{ width: "100%", appearance: "none", WebkitAppearance: "none", border: "none", outline: "none", background: "transparent", fontFamily: "var(--f-body)", fontWeight: 600, fontSize: 15.5, color: foodPref ? "var(--c-ink)" : "var(--c-muted)", padding: "3px 22px 0 0", cursor: "pointer" }}
-                >
-                  <option value="">{lang === "en" ? "Not set" : "Sem escolha"}</option>
-                  {foodCategories.map((f) => (
-                    <option key={f.id} value={f.slug}>{lang === "en" && f.label_en ? f.label_en : f.label_pt}</option>
-                  ))}
-                </select>
-                <Icon name="chevronRight" size={16} color="var(--c-muted)" style={{ position: "absolute", right: 2, top: "50%", transform: "translateY(-50%) rotate(90deg)", pointerEvents: "none" }} />
+                  onChange={setFoodPref}
+                  title={lang === "en" ? "Favourite food" : "Comida preferida"}
+                  placeholder={lang === "en" ? "Not set" : "Sem escolha"}
+                  ariaLabel={lang === "en" ? "Favourite food" : "Comida preferida"}
+                  options={[
+                    { value: "", label: lang === "en" ? "Not set" : "Sem escolha" },
+                    ...foodCategories.map((f) => ({ value: f.slug, label: lang === "en" && f.label_en ? f.label_en : f.label_pt })),
+                  ]}
+                />
               </div>
             </div>
           </Card>

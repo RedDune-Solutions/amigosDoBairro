@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
-import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/ui";
+import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Spinner } from "@/design/ui";
 import type { AppData, ScratchCardRow, ScratchPrize, RewardRow } from "@/design/data";
 import { openScratch } from "@/lib/app-actions";
 
+// Especial = dourado (chamativo). Comum = prata/cinza (discreto, bem menos chamativo).
 const GOLD = {
   especial: { foil: ["#F8DE7E", "#E7B53A", "#B07D17"], deep: "#7A560E", glow: "rgba(231,181,58,0.55)" },
-  comum: { foil: ["#FBEBBE", "#E9CD7C", "#C9A648"], deep: "#8A6B22", glow: "rgba(233,205,124,0.5)" },
+  comum: { foil: ["#EDEFF2", "#D2D7DF", "#AEB6C2"], deep: "#566070", glow: "rgba(150,160,178,0.42)" },
 };
+
+// Ícone distinto por tipo (o comum NÃO pode ser a estrela/sparkle da especial).
+const KIND_ICON: Record<"comum" | "especial", string> = { especial: "sparkle", comum: "coffee" };
 
 // ── Canvas de raspar ─────────────────────────────────────────────────────────
 function ScratchCanvas({ kind, onReveal }: { kind: "comum" | "especial"; onReveal: () => void }) {
@@ -22,8 +26,9 @@ function ScratchCanvas({ kind, onReveal }: { kind: "comum" | "especial"; onRevea
   const last = useRef<{ x: number; y: number } | null>(null);
   const g = GOLD[kind];
 
-  useEffect(() => {
-    const canvas = ref.current!;
+  function init() {
+    const canvas = ref.current;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
     ctxRef.current = ctx;
     const w = canvas.width;
@@ -41,23 +46,22 @@ function ScratchCanvas({ kind, onReveal }: { kind: "comum" | "especial"; onRevea
       ctx.arc(x, y, rr, 0, 7);
       ctx.fill();
     }
-    ctx.fillStyle = "rgba(122,86,14,0.9)";
+    ctx.fillStyle = g.deep;
     ctx.font = "800 19px Baloo 2, system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(T("sc.scratchHere") as string, w / 2, h / 2);
     ctx.font = "700 12px Nunito, system-ui, sans-serif";
-    ctx.fillStyle = "rgba(122,86,14,0.7)";
+    ctx.globalAlpha = 0.7;
     ctx.fillText(T("sc.dragReveal") as string, w / 2, h / 2 + 24);
+    ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "destination-out";
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }
 
-  const at = (e: React.PointerEvent | React.TouchEvent) => {
+  const at = (e: React.PointerEvent) => {
     const canvas = ref.current!;
     const rect = canvas.getBoundingClientRect();
-    const t = "touches" in e ? e.touches[0] : (e as React.PointerEvent);
-    return { x: (t.clientX - rect.left) * (canvas.width / rect.width), y: (t.clientY - rect.top) * (canvas.height / rect.height) };
+    return { x: (e.clientX - rect.left) * (canvas.width / rect.width), y: (e.clientY - rect.top) * (canvas.height / rect.height) };
   };
   const stroke = (p: { x: number; y: number }) => {
     const ctx = ctxRef.current;
@@ -95,7 +99,7 @@ function ScratchCanvas({ kind, onReveal }: { kind: "comum" | "especial"; onRevea
 
   return (
     <canvas
-      ref={ref}
+      ref={(el) => { ref.current = el; if (el && !ctxRef.current) init(); }}
       width={320}
       height={190}
       onPointerDown={down}
@@ -171,26 +175,59 @@ function NoPrizeFace() {
   );
 }
 
-function ScratchReveal({
-  card,
-  prize,
-  onClose,
-  onClaim,
-}: {
-  card: ScratchCardRow;
-  prize: ScratchPrize | null;
-  onClose: () => void;
-  onClaim: () => void;
-}) {
+// Face neutra por baixo do verniz (antes de revelar) — NÃO mostra o prémio.
+function MysteryFace({ kind }: { kind: "comum" | "especial" }) {
+  const g = GOLD[kind];
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        borderRadius: 20,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: `radial-gradient(circle at 50% 30%, color-mix(in srgb, ${g.deep} 9%, #fff), #fff 74%)`,
+      }}
+    >
+      <div style={{ width: 66, height: 66, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", color: g.deep, background: `color-mix(in srgb, ${g.deep} 12%, #fff)`, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 30 }}>
+        ?
+      </div>
+    </div>
+  );
+}
+
+function ScratchReveal({ card, onClose }: { card: ScratchCardRow; onClose: () => void }) {
   const { T } = useI18n();
+  // prize: undefined = ainda não sorteado; null = sem prémio; objeto = ganhou.
+  const [prize, setPrize] = useState<ScratchPrize | null | undefined>(undefined);
   const [revealed, setRevealed] = useState(false);
+  const [revealing, setRevealing] = useState(false);
+  const [error, setError] = useState(false);
   const g = GOLD[card.kind];
+
+  // O SORTEIO só acontece aqui (ao raspar >50%), nunca ao abrir.
+  async function handleReveal() {
+    if (revealing || revealed) return;
+    setRevealing(true);
+    const res = await openScratch(card.id);
+    if (res.error || !res.prize) {
+      setError(true);
+      setRevealing(false);
+      return;
+    }
+    const p = res.prize as { none?: boolean };
+    setPrize(p.none ? null : (res.prize as unknown as ScratchPrize));
+    setRevealed(true);
+    setRevealing(false);
+  }
+
   return (
     <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 85, display: "flex", alignItems: "center", justifyContent: "center", padding: 22, background: "rgba(24,16,4,0.6)", backdropFilter: "blur(5px)", animation: "fadeIn .2s ease" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", background: "var(--c-surface)", borderRadius: 26, padding: 20, animation: "popIn .25s ease", boxShadow: `0 24px 60px -16px ${g.glow}` }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 12px", borderRadius: 100, background: `linear-gradient(135deg, ${g.foil[0]}, ${g.foil[2]})`, color: g.deep, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12, letterSpacing: 0.5 }}>
-            <Icon name="sparkle" size={14} stroke={2.4} /> {T("sc.cardLabel") as string} {(card.kind === "especial" ? T("sc.special") : T("sc.common")) as string}
+            <Icon name={KIND_ICON[card.kind]} size={14} stroke={2.4} /> {T("sc.cardLabel") as string} {(card.kind === "especial" ? T("sc.special") : T("sc.common")) as string}
           </div>
           <button onClick={onClose} style={{ width: 34, height: 34, borderRadius: 11, border: "1px solid var(--c-line)", background: "var(--c-surface)", cursor: "pointer", color: "var(--c-muted)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Icon name="plus" size={18} style={{ transform: "rotate(45deg)" }} />
@@ -198,17 +235,27 @@ function ScratchReveal({
         </div>
 
         <div style={{ position: "relative", width: 320, maxWidth: "100%", height: 190, margin: "0 auto" }}>
-          {prize ? <PrizeFace prize={prize} /> : <NoPrizeFace />}
-          {!revealed && <ScratchCanvas kind={card.kind} onReveal={() => setRevealed(true)} />}
+          {revealed ? (prize ? <PrizeFace prize={prize} /> : <NoPrizeFace />) : <MysteryFace kind={card.kind} />}
+          {!revealed && !error && <ScratchCanvas kind={card.kind} onReveal={handleReveal} />}
+          {revealing && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.55)", borderRadius: 20 }}>
+              <Spinner size={26} color={g.deep} />
+            </div>
+          )}
         </div>
 
         <div style={{ marginTop: 16, minHeight: 4 }}>
-          {revealed ? (
+          {error ? (
+            <div style={{ animation: "popIn .3s ease" }}>
+              <div style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-red)", fontWeight: 700, marginBottom: 12 }}>{T("sc.openError") as string}</div>
+              <Button full size="lg" onClick={onClose} icon="check">{T("common.close") as string}</Button>
+            </div>
+          ) : revealed ? (
             prize ? (
               <div style={{ animation: "popIn .3s ease" }}>
                 <div style={{ textAlign: "center", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 18, color: "var(--c-ink)", marginBottom: 3 }}>{T("sc.won") as string}</div>
                 <div style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)", marginBottom: 14 }}>{T("sc.wonSub") as string}</div>
-                <Button full size="lg" onClick={onClaim} icon="wallet">{T("sc.saveWallet") as string}</Button>
+                <Button full size="lg" onClick={onClose} icon="wallet">{T("sc.saveWallet") as string}</Button>
               </div>
             ) : (
               <div style={{ animation: "popIn .3s ease" }}>
@@ -218,7 +265,7 @@ function ScratchReveal({
               </div>
             )
           ) : (
-            <div style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>{T("sc.hintRaspar") as string}</div>
+            <div style={{ textAlign: "center", fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>{(revealing ? T("sc.revealing") : T("sc.hintRaspar")) as string}</div>
           )}
         </div>
       </div>
@@ -234,12 +281,12 @@ function PendingCard({ card, onOpen }: { card: ScratchCardRow; onOpen: () => voi
     <button onClick={onOpen} style={{ position: "relative", overflow: "hidden", borderRadius: 20, padding: 16, cursor: "pointer", textAlign: "left", border: "none", color: g.deep, background: `linear-gradient(135deg, ${g.foil[0]}, ${g.foil[1]} 55%, ${g.foil[2]})`, boxShadow: `0 14px 28px -12px ${g.glow}` }}>
       <div style={{ position: "absolute", top: -24, right: -18, width: 90, height: 90, borderRadius: "50%", background: "rgba(255,255,255,0.22)" }} />
       <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 7, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 12, letterSpacing: 0.6 }}>
-        <Icon name="sparkle" size={15} stroke={2.4} /> {(esp ? T("sc.special") : T("sc.common")) as string}
+        <Icon name={KIND_ICON[card.kind]} size={15} stroke={2.4} /> {(esp ? T("sc.special") : T("sc.common")) as string}
       </div>
       <div style={{ position: "relative", marginTop: 18, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 17, lineHeight: 1.1 }}>
         {(esp ? T("pz.bigPrize") : T("pz.houseTreat")) as string}
       </div>
-      <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, padding: "8px 13px", borderRadius: 12, background: "rgba(255,255,255,0.9)", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 13.5 }}>
+      <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, padding: "8px 13px", borderRadius: 12, background: "rgba(255,255,255,0.9)", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 13.5, color: g.deep }}>
         <Icon name="gift" size={16} stroke={2.2} /> {T("pz.scratch") as string}
       </div>
     </button>
@@ -260,8 +307,7 @@ export function PrizesScreen({
   onPrizeWon: () => void;
 }) {
   const { T, L } = useI18n();
-  const [active, setActive] = useState<{ card: ScratchCardRow; prize: ScratchPrize | null } | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [active, setActive] = useState<ScratchCardRow | null>(null);
   const [walletTab, setWalletTab] = useState<"ativos" | "arquivo">("ativos");
   const pending = data.scratchCards;
   const stampsLeft = data.stampGoal - data.stamps;
@@ -269,14 +315,11 @@ export function PrizesScreen({
   const walletUsados = data.wallet.filter((w) => w.status === "usado");
   const walletList = walletTab === "ativos" ? walletAtivos : walletUsados;
 
-  async function open(card: ScratchCardRow) {
-    if (busy) return;
-    setBusy(true);
-    const res = await openScratch(card.id);
-    setBusy(false);
-    if (res.error || !res.prize) return;
-    const p = res.prize as { none?: boolean };
-    setActive({ card, prize: p.none ? null : (res.prize as unknown as ScratchPrize) });
+  // Abrir = instantâneo (sem rede). O sorteio só acontece ao raspar (ScratchReveal).
+  // Guard: nunca abre 2 ao mesmo tempo.
+  function open(card: ScratchCardRow) {
+    if (active) return;
+    setActive(card);
   }
 
   return (
@@ -397,10 +440,8 @@ export function PrizesScreen({
 
       {active && (
         <ScratchReveal
-          card={active.card}
-          prize={active.prize}
+          card={active}
           onClose={() => { setActive(null); onPrizeWon(); }}
-          onClaim={() => { setActive(null); onPrizeWon(); }}
         />
       )}
     </>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
-import { TopBar, Scroll, Card, IconTile, Button, SectionLabel } from "@/design/ui";
+import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Select } from "@/design/ui";
 import { EditProfile } from "@/design/screens/Profile";
 import { SignOutButton } from "@/design/screens/SignOutButton";
 import { EquipaSection, type MemberRow, type InviteRow } from "@/design/screens/admin/EquipaScreen";
@@ -88,12 +88,15 @@ function CampanhaForm({ foodCategories }: { foodCategories: FoodCategory[] }) {
     <Card style={{ display: "flex", flexDirection: "column", gap: 11 }}>
       <div>
         <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12, color: "var(--c-muted)", marginBottom: 5 }}>SEGMENTO</div>
-        <select value={segmento} onChange={(e) => setSegmento(e.target.value)} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
-          <option value="">Todos os clientes</option>
-          {foodCategories.map((f) => (
-            <option key={f.id} value={f.slug}>Gostam de {f.label_pt}</option>
-          ))}
-        </select>
+        <Select
+          value={segmento}
+          onChange={setSegmento}
+          title="Segmento"
+          options={[
+            { value: "", label: "Todos os clientes" },
+            ...foodCategories.map((f) => ({ value: f.slug, label: `Gostam de ${f.label_pt}` })),
+          ]}
+        />
       </div>
       <input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Título (ex.: Pastéis quentinhos! 🥐)" maxLength={80} style={inputStyle} />
       <textarea value={corpo} onChange={(e) => setCorpo(e.target.value)} placeholder="Mensagem (ex.: Hoje há pastéis acabados de fazer até às 12h.)" maxLength={300} rows={3} style={{ ...inputStyle, resize: "vertical", fontFamily: "var(--f-body)" }} />

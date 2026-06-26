@@ -51,6 +51,13 @@ export function AppShell({ data, menu, foodCategories = [] }: { data: AppData; m
     setTab(t);
   }
 
+  // Abrir notificações = marcá-las como lidas já (o sinal vermelho limpa na hora),
+  // depois revalida para o servidor refletir o estado.
+  function openNotif() {
+    setNotif(true);
+    if (data.unread > 0) void marcarNotificacoesLidas().then(() => router.refresh());
+  }
+
   async function onRedeem(r: RewardRow) {
     if (points < r.custo_pontos) return;
     const res = await redeemReward(r.id);
@@ -67,7 +74,7 @@ export function AppShell({ data, menu, foodCategories = [] }: { data: AppData; m
 
   let screen: React.ReactNode = null;
   if (tab === "home") {
-    screen = <Home data={data} points={points} go={goTab} onQR={() => setQr(true)} onBell={() => setNotif(true)} />;
+    screen = <Home data={data} points={points} go={goTab} onQR={() => setQr(true)} onBell={openNotif} />;
   } else if (tab === "card") {
     screen = <LoyaltyCard data={data} points={points} history={data.history} onQR={() => setQr(true)} go={goTab} />;
   } else if (tab === "rewards") {
@@ -113,13 +120,7 @@ export function AppShell({ data, menu, foodCategories = [] }: { data: AppData; m
       {showTabBar && <TabBar active={tab} onChange={goTab} />}
       {qr && <QrModal onClose={() => setQr(false)} />}
       {notif && (
-        <NotificationsSheet
-          data={data}
-          onClose={() => {
-            setNotif(false);
-            if (data.unread > 0) void marcarNotificacoesLidas().then(() => router.refresh());
-          }}
-        />
+        <NotificationsSheet data={data} onClose={() => setNotif(false)} />
       )}
       {toast && (
         <div

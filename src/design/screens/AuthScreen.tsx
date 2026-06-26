@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
-import { Scroll, Button, Field, LogoBadge } from "@/design/ui";
+import { Scroll, Button, Field, LogoBadge, Select } from "@/design/ui";
 import { authenticate, type AuthState } from "@/lib/auth-actions";
 import type { FoodCategory } from "@/design/data";
 
@@ -25,6 +25,7 @@ export function AuthScreen({
   const { T, lang, setLang } = useI18n();
   const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [remember, setRemember] = useState(true);
+  const [foodPref, setFoodPref] = useState("");
   const isReg = mode === "register";
   const [state, formAction, pending] = useActionState(authenticate, initial);
 
@@ -136,23 +137,16 @@ export function AuthScreen({
                 <label style={{ display: "block", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-ink)", marginBottom: 6 }}>
                   {lang === "en" ? "Favourite food" : "Comida preferida"}
                 </label>
-                <div style={{ position: "relative" }}>
-                  <Icon name="heart" size={18} color="var(--c-muted)" style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                  <select
-                    name="food_pref"
-                    required
-                    defaultValue=""
-                    style={{ width: "100%", appearance: "none", WebkitAppearance: "none", borderRadius: 14, border: "1px solid var(--c-line)", background: "var(--c-surface)", padding: "13px 38px 13px 40px", fontFamily: "var(--f-body)", fontSize: 15, color: "var(--c-ink)", outline: "none", cursor: "pointer" }}
-                  >
-                    <option value="">{lang === "en" ? "Choose…" : "Escolhe…"}</option>
-                    {foodCategories.map((f) => (
-                      <option key={f.id} value={f.slug}>
-                        {lang === "en" && f.label_en ? f.label_en : f.label_pt}
-                      </option>
-                    ))}
-                  </select>
-                  <Icon name="chevronRight" size={16} color="var(--c-muted)" style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%) rotate(90deg)", pointerEvents: "none" }} />
-                </div>
+                <Select
+                  name="food_pref"
+                  value={foodPref}
+                  onChange={setFoodPref}
+                  icon="heart"
+                  title={lang === "en" ? "Favourite food" : "Comida preferida"}
+                  placeholder={lang === "en" ? "Choose…" : "Escolhe…"}
+                  ariaLabel={lang === "en" ? "Favourite food" : "Comida preferida"}
+                  options={foodCategories.map((f) => ({ value: f.slug, label: lang === "en" && f.label_en ? f.label_en : f.label_pt }))}
+                />
               </div>
             )}
           </div>

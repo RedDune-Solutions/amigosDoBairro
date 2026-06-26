@@ -14,7 +14,7 @@ async function uploadFile(file: File): Promise<string | null> {
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   // Caminho único — não dá para usar Date.now()/random no servidor, mas aqui (browser) podemos.
   const path = `${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("landing").upload(path, file, { upsert: true, contentType: file.type });
+  const { error } = await supabase.storage.from("landing").upload(path, file, { upsert: false, contentType: file.type });
   if (error) return null;
   const { data: pub } = supabase.storage.from("landing").getPublicUrl(path);
   return `${pub.publicUrl}?t=${Date.now()}`;

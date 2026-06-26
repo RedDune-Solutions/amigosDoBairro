@@ -599,3 +599,101 @@ export function Field({
     </label>
   );
 }
+
+// ── Select (dropdown estilizado = bottom-sheet, no estilo da app) ─────────────
+// Substitui os <select> nativos (cujos "balões" são do SO e não combinam).
+// Controlado: `value` + `onChange`. Em forms, passar `name` (gera input hidden).
+export function Select({
+  value,
+  onChange,
+  options,
+  placeholder = "Escolhe…",
+  name,
+  icon,
+  title,
+  ariaLabel,
+}: {
+  value: string;
+  onChange?: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  name?: string;
+  icon?: string;
+  title?: string;
+  ariaLabel?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find((o) => o.value === value);
+  return (
+    <>
+      {name && <input type="hidden" name={name} value={value} />}
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        onClick={() => setOpen(true)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          minHeight: 50,
+          padding: "0 14px",
+          background: "var(--c-surface)",
+          border: "1px solid " + (open ? "var(--c-primary)" : "var(--c-line)"),
+          borderRadius: 15,
+          cursor: "pointer",
+          fontFamily: "var(--f-body)",
+          fontSize: 15,
+          color: selected ? "var(--c-ink)" : "var(--c-muted)",
+          textAlign: "left",
+        }}
+      >
+        {icon && <Icon name={icon} size={18} color="var(--c-muted)" />}
+        <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {selected ? selected.label : placeholder}
+        </span>
+        <Icon name="chevronRight" size={16} color="var(--c-muted)" style={{ transform: "rotate(90deg)" }} />
+      </button>
+      {open && (
+        <BottomSheet onClose={() => setOpen(false)} maxHeight="70%">
+          {title && (
+            <h3 style={{ margin: "0 0 12px", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 18, color: "var(--c-ink)", textAlign: "center" }}>
+              {title}
+            </h3>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {options.map((o) => {
+              const on = o.value === value;
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => { onChange?.(o.value); setOpen(false); }}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "13px 14px",
+                    borderRadius: 13,
+                    border: "1px solid " + (on ? "transparent" : "var(--c-line)"),
+                    cursor: "pointer",
+                    textAlign: "left",
+                    fontFamily: "var(--f-body)",
+                    fontWeight: on ? 800 : 600,
+                    fontSize: 15,
+                    background: on ? "color-mix(in srgb, var(--c-primary) 13%, var(--c-surface))" : "var(--c-surface)",
+                    color: on ? "var(--c-primary)" : "var(--c-ink)",
+                  }}
+                >
+                  <span style={{ flex: 1, minWidth: 0 }}>{o.label}</span>
+                  {on && <Icon name="check" size={16} stroke={2.6} />}
+                </button>
+              );
+            })}
+          </div>
+        </BottomSheet>
+      )}
+    </>
+  );
+}
