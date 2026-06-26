@@ -19,6 +19,14 @@ function statusInfo(estado: string, T: (k: string) => string | string[]): { labe
 const WD_PT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const MON_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
+// Data LOCAL em YYYY-MM-DD (não usar toISOString → converte p/ UTC e troca o dia
+// à meia-noite, o que fazia "amanhã" cair em "hoje" no fuso de Portugal).
+function isoLocal(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
 type Day = { key: number; wd: string; day: number; mon: string; full: string; iso: string };
 
 export function Reservations({
@@ -45,7 +53,7 @@ export function Reservations({
         day: d.getDate(),
         mon: MON_PT[d.getMonth()],
         full: `${WD_PT[d.getDay()]}, ${d.getDate()} ${MON_PT[d.getMonth()]}`,
-        iso: d.toISOString().slice(0, 10),
+        iso: isoLocal(d),
       });
     }
     return out;

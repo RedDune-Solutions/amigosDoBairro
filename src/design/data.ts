@@ -197,14 +197,14 @@ const fromMin = (min: number): string =>
 
 /**
  * Horas de reserva possíveis num dado dia, dentro do horário do café.
- * Range: começa 30 min DEPOIS de abrir e vai até 30 min ANTES de fechar.
+ * Range: começa 15 min DEPOIS de abrir e vai até 15 min ANTES de fechar.
  * Slots de 30 min. Para hoje, remove horas já passadas (60 min de antecedência).
  */
 export function reservationSlots(date: Date, now: Date): string[] {
   const hours = CAFE_HOURS[date.getDay()];
   if (!hours) return [];
-  const start = toMin(hours.open) + 30;
-  const lastStart = toMin(hours.close) - 30;
+  const start = toMin(hours.open) + 15;
+  const lastStart = toMin(hours.close) - 15;
   const sameDay = date.toDateString() === now.toDateString();
   const minAllowed = sameDay ? now.getHours() * 60 + now.getMinutes() + 60 : -1;
   const out: string[] = [];
