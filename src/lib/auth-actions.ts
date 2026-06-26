@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
@@ -144,7 +144,9 @@ export async function signUp(
   return {};
 }
 
-/** Pede email de recuperação de palavra-passe. */
+/** Pede email de recuperação de palavra-passe.
+ *  Decisão de produto: feedback explícito (o email tem conta?). A enumeração é
+ *  mitigada por rate-limit por IP no RPC `pw_reset_request` (5 / 15 min). */
 export async function requestPasswordReset(
   _prev: AuthState,
   formData: FormData,
@@ -153,10 +155,27 @@ export async function requestPasswordReset(
   if (!/^\S+@\S+\.\S+$/.test(email)) return { error: "Email inválido." };
   const origin = String(formData.get("origin") ?? "");
   const supabase = await createClient();
-  await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/recuperar`,
-  });
-  // resposta neutra (não revelar se o email existe)
+
+  // IP do pedido (Vercel) para o rate-limit do RPC.
+  const h = await headers();
+  const ip = (h.get("x-forwarded-for")?.split(",")[0] ?? h.get("x-real-ip") ?? "").trim();
+
+  const { data, error } = await supabase.rpc("pw_reset_request", { p_email: email, p_ip: ip });
+  if (error) {
+    // Falha do RPC não deve trancar a recuperação: cai no comportamento neutro.
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${origin}/recuperar` });
+    return { sent: true };
+  }
+
+  const res = (data ?? {}) as { rate_limited?: boolean; exists?: boolean };
+  if (res.rate_limited) {
+    return { error: "Demasiadas tentativas. Tenta novamente daqui a uns minutos." };
+  }
+  if (!res.exists) {
+    return { error: "Não encontrámos nenhuma conta com este email." };
+  }
+
+  await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${origin}/recuperar` });
   return { sent: true };
 }
 

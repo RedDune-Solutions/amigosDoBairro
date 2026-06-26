@@ -99,7 +99,7 @@ export function RecoverScreen() {
             )}
             {(reqState as { sent?: boolean }).sent && (
               <p style={{ fontFamily: "var(--f-body)", fontSize: 13.5, fontWeight: 700, color: "var(--c-green)" }}>
-                Se o email existir, enviámos um link para repor a palavra-passe.
+                Enviámos um link para repor a palavra-passe. Vê o teu email.
               </p>
             )}
             <Button full size="lg" type="submit" icon="mail" loading={reqPending}>
