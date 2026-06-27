@@ -46,7 +46,7 @@ export async function registarCompra(
   return { pontos: res?.pontos, carimbo: res?.carimbo, cartola: res?.cartola, checkin: res?.checkin, checkinAlready: res?.checkin_already };
 }
 
-/** Staff lê o código do cliente → check-in do dia (+20 pts, 1/dia). */
+/** Staff lê o código do cliente → check-in do dia (+10 pts, 1/dia). */
 export async function registarCheckin(code: string): Promise<{ pontos?: number; error?: string }> {
   const c = z.string().trim().regex(/^[0-9]{4,8}$/);
   const parsed = c.safeParse(code);

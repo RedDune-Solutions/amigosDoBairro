@@ -50,6 +50,18 @@ export default async function AdminPage() {
     reservasBloqueadas: false,
   };
 
+  // "Agora" em Lisboa (data + hora). Reservas cuja data+hora já passou saem da
+  // lista — não faz sentido aceitar uma reserva de um horário que já passou.
+  const _np = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Lisbon", hourCycle: "h23",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+  }).formatToParts(new Date());
+  const _nv = (t: string) => _np.find((x) => x.type === t)?.value ?? "00";
+  const hojeLisboa = `${_nv("year")}-${_nv("month")}-${_nv("day")}`;
+  const horaLisboa = `${_nv("hour")}:${_nv("minute")}:${_nv("second")}`;
+  const reservaFutura = `data.gt.${hojeLisboa},and(data.eq.${hojeLisboa},hora.gte.${horaLisboa})`;
+
   const [
     { data: prizesData },
     { data: rewardsAdminData },
@@ -69,9 +81,9 @@ export default async function AdminPage() {
       ? supabase.from("prizes").select("id, kind, nome_pt, nome_en, desc_pt, desc_en, icon, accent, weight").order("kind").order("id")
       : Promise.resolve({ data: [] }),
     isAdmin
-      ? supabase.from("rewards").select("id, titulo, nome_en, descricao, desc_en, custo_pontos, icon, accent, ativo").order("ordem", { ascending: true })
+      ? supabase.from("rewards").select("id, titulo, nome_en, descricao, desc_en, custo_pontos, icon, accent, ativo").order("custo_pontos", { ascending: true })
       : Promise.resolve({ data: [] }),
-    supabase.from("reservations").select("id, data, hora, n_pessoas, estado, profiles(nome)").gte("data", new Date().toISOString().slice(0, 10)).order("data", { ascending: true }).order("hora", { ascending: true }).limit(60),
+    supabase.from("reservations").select("id, data, hora, n_pessoas, estado, profiles(nome)").or(reservaFutura).order("data", { ascending: true }).order("hora", { ascending: true }).limit(60),
     isAdmin
       ? supabase.from("profiles").select("id, nome, role, is_owner").in("role", ["staff", "admin"]).order("role")
       : Promise.resolve({ data: [] }),

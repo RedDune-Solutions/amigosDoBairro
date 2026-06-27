@@ -416,7 +416,7 @@ export function PrizesScreen({
         <div style={{ marginTop: 20 }}>
           <SectionLabel>{T("pz.swapPoints") as string}</SectionLabel>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 11 }}>
-            {data.rewards.slice(0, 4).map((r) => {
+            {data.rewards.map((r) => {
               const can = points >= r.custo_pontos;
               const accent = `var(--c-${r.accent || "primary"})`;
               return (

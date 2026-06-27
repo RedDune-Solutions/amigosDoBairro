@@ -32,12 +32,12 @@ export function AppShell({ data, menu, foodCategories = [] }: { data: AppData; m
     toastTimer.current = setTimeout(() => setToast(null), 2400);
   }
 
-  // Bónus de login diário (+10) e, na 1ª vez, bónus de registo (+150).
+  // Bónus de registo (+150, 1ª vez). O login diário já NÃO dá pontos.
   useEffect(() => {
     let alive = true;
     reclamarLoginDiario().then((r) => {
-      if (!alive || (!r.login && !r.signup)) return;
-      flash(r.signup ? "Bem-vindo! +150 pontos 🎉" : "+10 pontos de login diário ✓");
+      if (!alive || !r.signup) return;
+      flash("Bem-vindo! +150 pontos 🎉");
       router.refresh();
     });
     return () => {

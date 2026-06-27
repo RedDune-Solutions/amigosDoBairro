@@ -90,7 +90,7 @@ export function BalcaoScreen() {
       setMsg({ ok: false, text: res.error });
       return;
     }
-    const ciTxt = res.checkin ? " · check-in +20 ✓" : res.checkinAlready ? " · check-in já feito hoje" : "";
+    const ciTxt = res.checkin ? " · check-in +10 ✓" : res.checkinAlready ? " · check-in já feito hoje" : "";
     setMsg({
       ok: true,
       text: `+${res.pontos} pontos${res.carimbo ? " · +1 carimbo" : ""}${res.cartola ? " · cartola completa! 2 raspadinhas 🎉" : ""}${ciTxt}`,
@@ -137,7 +137,7 @@ export function BalcaoScreen() {
               {checkin && !alreadyToday && <Icon name="check" size={14} stroke={3} color="#fff" />}
             </span>
             <span style={{ flex: 1, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-ink)" }}>
-              {alreadyToday ? "Check-in já feito hoje" : <>Fazer check-in do cliente <span style={{ color: "var(--c-muted)", fontWeight: 600 }}>(+20 pts · 1×/dia)</span></>}
+              {alreadyToday ? "Check-in já feito hoje" : <>Fazer check-in do cliente <span style={{ color: "var(--c-muted)", fontWeight: 600 }}>(+10 pts · 1×/dia)</span></>}
             </span>
           </button>
           {msg && (

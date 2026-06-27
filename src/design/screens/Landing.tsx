@@ -36,7 +36,7 @@ function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) 
           display: "flex",
           gap: 8,
           width: "max-content",
-          animation: `${dir === "left" ? "omMarqueeL" : "omMarqueeR"} 28s linear infinite`,
+          animation: `${dir === "left" ? "omMarqueeL" : "omMarqueeR"} 56s linear infinite`,
         }}
       >
         {loop.map((src, i) => (

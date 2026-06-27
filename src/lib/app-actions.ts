@@ -22,7 +22,7 @@ export async function redeemReward(
   return { codigo: String(data) };
 }
 
-/** Reclama o bónus de login diário (+10) e, na 1ª vez, o bónus de registo (+150). */
+/** Reclama, na 1ª vez, o bónus de registo (+150). O login diário já não dá pontos. */
 export async function reclamarLoginDiario(): Promise<{ login?: boolean; signup?: boolean }> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("reclamar_login_diario_v2");

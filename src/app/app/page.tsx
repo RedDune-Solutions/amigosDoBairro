@@ -21,6 +21,17 @@ function sourceLabel(s: string, reason: string | null): string {
 export default async function AppPage() {
   const { supabase, user } = await requireUser();
 
+  // "Agora" em Lisboa (data + hora): reservas cuja data+hora já passou saem da lista.
+  const _np = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Lisbon", hourCycle: "h23",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+  }).formatToParts(new Date());
+  const _nv = (t: string) => _np.find((x) => x.type === t)?.value ?? "00";
+  const hojeLisboa = `${_nv("year")}-${_nv("month")}-${_nv("day")}`;
+  const horaLisboa = `${_nv("hour")}:${_nv("minute")}:${_nv("second")}`;
+  const reservaFutura = `data.gt.${hojeLisboa},and(data.eq.${hojeLisboa},hora.gte.${horaLisboa})`;
+
   const [
     { data: profile },
     { data: saldo },
@@ -41,13 +52,13 @@ export default async function AppPage() {
     supabase.rpc("meu_saldo_v2"),
     supabase.rpc("meus_pontos_ganhos_v2"),
     supabase.from("loyalty_config").select("euro_per_stamp, stamp_goal").eq("id", true).single(),
-    supabase.from("rewards").select("id, titulo, nome_en, descricao, desc_en, custo_pontos, icon, accent").eq("ativo", true).order("ordem", { ascending: true }),
+    supabase.from("rewards").select("id, titulo, nome_en, descricao, desc_en, custo_pontos, icon, accent").eq("ativo", true).order("custo_pontos", { ascending: true }),
     supabase.from("points_ledger").select("id, delta, reason, source, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
     supabase.from("scratch_cards").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "por-abrir"),
     supabase.from("scratch_cards").select("id, kind").eq("user_id", user.id).eq("status", "por-abrir").order("created_at", { ascending: true }),
     supabase.from("wallet_items").select("id, kind, nome_pt, nome_en, desc_pt, desc_en, icon, accent, codigo, status, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(30),
     supabase.from("redemptions").select("id, codigo, estado, created_at, rewards(titulo, nome_en, descricao, desc_en, icon, accent)").eq("user_id", user.id).neq("estado", "cancelado").order("created_at", { ascending: false }).limit(30),
-    supabase.from("reservations").select("id, data, hora, n_pessoas, estado").eq("user_id", user.id).eq("arquivada", false).gte("data", new Date().toISOString().slice(0, 10)).order("data", { ascending: true }).order("hora", { ascending: true }).limit(20),
+    supabase.from("reservations").select("id, data, hora, n_pessoas, estado").eq("user_id", user.id).eq("arquivada", false).or(reservaFutura).order("data", { ascending: true }).order("hora", { ascending: true }).limit(20),
     supabase.from("news").select("id, titulo_pt, titulo_en, desc_pt, desc_en, icon, accent, ativo, created_at").eq("ativo", true).order("created_at", { ascending: false }).limit(10),
     supabase.from("notifications").select("id, kind, title_pt, title_en, body_pt, body_en, icon, accent, read_at, created_at").eq("user_id", user.id).is("archived_at", null).order("created_at", { ascending: false }).limit(40),
     supabase.from("points_lots").select("pontos_restantes, data_expiracao").eq("user_id", user.id).eq("estado", "ATIVO").gt("data_expiracao", new Date().toISOString()).order("data_expiracao", { ascending: true }),
