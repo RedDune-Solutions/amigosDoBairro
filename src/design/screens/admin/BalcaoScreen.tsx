@@ -84,7 +84,7 @@ export function BalcaoScreen() {
     if (busy) return;
     setBusy(true);
     setMsg(null);
-    const res = await registarCompra(code, Number(euros), checkin);
+    const res = await registarCompra(code, Number(euros.replace(",", ".")), checkin);
     setBusy(false);
     if (res.error) {
       setMsg({ ok: false, text: res.error });
@@ -130,7 +130,7 @@ export function BalcaoScreen() {
           </label>
           <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
             <span style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)" }}>Valor gasto (€)</span>
-            <input value={euros} onChange={(e) => setEuros(e.target.value)} type="number" min={1} placeholder="15" style={inputStyle} />
+            <input value={euros} onChange={(e) => setEuros(e.target.value.replace(/[^\d.,]/g, ""))} type="text" inputMode="decimal" placeholder="8,30" style={inputStyle} />
           </label>
           <button type="button" onClick={() => !alreadyToday && setCheckin((v) => !v)} disabled={busy || alreadyToday} style={{ display: "flex", alignItems: "center", gap: 10, cursor: busy || alreadyToday ? "default" : "pointer", border: "1px solid var(--c-line)", borderRadius: 12, background: alreadyToday ? "var(--c-surface2)" : "var(--c-surface)", padding: "11px 13px", textAlign: "left", opacity: alreadyToday ? 0.6 : 1 }}>
             <span style={{ width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: checkin && !alreadyToday ? "none" : "1.5px solid var(--c-line)", background: checkin && !alreadyToday ? "var(--c-primary)" : "var(--c-surface)", color: "#fff" }}>

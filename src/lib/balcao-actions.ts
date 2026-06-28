@@ -8,7 +8,8 @@ const compraSchema = z.object({
     .string()
     .trim()
     .pipe(z.string().regex(/^[0-9]{4,8}$/, "Código inválido.")),
-  euros: z.coerce.number().int().min(1, "Mínimo 1€.").max(1000, "Máximo 1000€."),
+  // Aceita cêntimos (ex.: 8.30). Vírgula é normalizada para ponto no componente.
+  euros: z.coerce.number().gt(0, "Valor inválido.").max(1000, "Máximo 1000€."),
 });
 
 function mapNonceError(m: string): string {

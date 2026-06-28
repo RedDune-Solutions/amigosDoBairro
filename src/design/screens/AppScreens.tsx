@@ -162,9 +162,16 @@ export function Home({
   onQR: () => void;
   onBell: () => void;
 }) {
-  const { T, lang } = useI18n();
-  const toNext = 50 - (points % 50);
-  const near = toNext <= 15;
+  const { T, L, lang } = useI18n();
+  // Sugestão real: aponta sempre à PRÓXIMA recompensa que o saldo ainda não dá
+  // para resgatar (data.rewards já vem ordenada asc por custo_pontos). Avança
+  // sozinho à medida que ganha pontos. Sem fake de "múltiplos de 50".
+  const hasRewards = data.rewards.length > 0;
+  const canRedeemAny = hasRewards && points >= data.rewards[0].custo_pontos; // já dá p/ a mais barata
+  const nextReward = data.rewards.find((r) => r.custo_pontos > points) ?? null; // próximo alvo (ou null = dá p/ tudo)
+  const rewardName = nextReward ? L({ pt: nextReward.titulo, en: nextReward.nome_en || nextReward.titulo }) : "";
+  const toNext = nextReward ? nextReward.custo_pontos - points : 0;
+  const near = canRedeemAny || (nextReward != null && toNext <= 100);
   const news = data.news.map((n) => ({
     t: lang === "en" && n.titulo_en ? n.titulo_en : n.titulo_pt,
     d: lang === "en" && n.desc_en ? n.desc_en : n.desc_pt ?? "",
@@ -210,8 +217,12 @@ export function Home({
         <Card onClick={() => go("rewards")} style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 14, background: near ? "color-mix(in srgb, var(--c-green) 9%, var(--c-surface))" : "var(--c-surface)", borderColor: near ? "color-mix(in srgb, var(--c-green) 22%, var(--c-line))" : "var(--c-line)" }}>
           <IconTile icon="gift" accent={near ? "var(--c-green)" : "var(--c-primary)"} size={48} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>{(near ? T("home.almost") : T("home.prizes")) as string}</div>
-            <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>{(near ? T("home.almostSub", toNext) : T("home.prizesSub")) as string}</div>
+            <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>{(canRedeemAny ? T("home.canRedeem") : near ? T("home.almost") : T("home.prizes")) as string}</div>
+            <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>{(!hasRewards
+              ? T("home.prizesSub")
+              : canRedeemAny
+                ? (nextReward ? T("home.redeemAndNext", toNext, rewardName) : T("home.allUnlockedSub"))
+                : T("home.toReward", toNext, rewardName)) as string}</div>
           </div>
           <Icon name="chevronRight" size={20} color="var(--c-muted)" />
         </Card>
