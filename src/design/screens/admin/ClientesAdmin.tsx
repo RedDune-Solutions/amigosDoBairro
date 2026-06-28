@@ -153,7 +153,8 @@ export function ClientesAdmin({ clientes, foodCategories }: { clientes: ClienteR
           {clientes.length ? `Sem clientes para “${q}”.` : "Ainda sem clientes registados."}
         </Card>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        // lista com scroll próprio (não empurra os logs)
+        <div style={{ display: "flex", flexDirection: "column", gap: 9, maxHeight: 360, overflowY: "auto", overflowX: "hidden", paddingRight: 2, WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
           {filtered.map((c) => (
             <ClienteCard key={c.id} c={c} foodLabel={labelOf(c.food_pref)} />
           ))}
