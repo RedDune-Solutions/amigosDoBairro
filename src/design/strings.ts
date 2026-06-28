@@ -120,9 +120,7 @@ export const STRINGS: Record<string, Entry> = {
   "sheet.register": { pt: "Registar compra", en: "Log a purchase" },
   "sheet.registerSub": { pt: (e: number) => `O balcão regista o valor gasto. A cada ${e}€ soma 1 carimbo.`, en: (e: number) => `The counter logs the amount spent. Every €${e} adds 1 stamp.` },
 
-  // Rewards
-  "rew.title": { pt: "Recompensas", en: "Rewards" },
-  "rew.intro": { pt: "Troca os teus pontos por mimos da casa. Apresenta o código ao balcão para resgatar.", en: "Swap your points for house treats. Show the code at the counter to redeem." },
+  // Rewards (rew.swap/rew.need usados no PrizesScreen)
   "rew.swap": { pt: "Trocar", en: "Redeem" },
   "rew.need": { pt: "Faltam", en: "Not yet" },
 

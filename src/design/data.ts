@@ -7,78 +7,17 @@ export type Tier = {
   icon: string;
   accent: string;
   name: Bi;
-  perks: { pt: string[]; en: string[] };
 };
 
 // Níveis (badges) por pontos GANHOS ao longo do tempo (lifetime, nunca descem).
-// Subida exponencial agressiva, escala 1€=10pts: 0 · 1000 · 3000 · 8000 · 20000 · 50000.
+// Escala 1€=10pts; topo aos 10000 pts = 1000€ gastos. Curva: 0 · 1000 · 2500 · 4500 · 7000 · 10000.
 export const TIERS: Tier[] = [
-  {
-    id: "novo",
-    min: 0,
-    icon: "star",
-    accent: "blue",
-    name: { pt: "Vizinho Novo", en: "New Neighbour" },
-    perks: {
-      pt: ["Acumula 10 pontos por cada euro", "Cartão de carimbos digital"],
-      en: ["Earn 10 points per euro spent", "Digital stamp card"],
-    },
-  },
-  {
-    id: "cliente",
-    min: 1000,
-    icon: "coffee",
-    accent: "green",
-    name: { pt: "Cliente da Casa", en: "House Regular" },
-    perks: {
-      pt: ["Tudo do nível anterior", "Ofertas só para membros"],
-      en: ["Everything from the previous tier", "Member-only offers"],
-    },
-  },
-  {
-    id: "amigo",
-    min: 3000,
-    icon: "sandwich",
-    accent: "primary",
-    name: { pt: "Amigo do Bairro", en: "Neighbourhood Friend" },
-    perks: {
-      pt: ["Tudo do nível anterior", "Raspadinha extra no aniversário"],
-      en: ["Everything from the previous tier", "Extra scratch card on your birthday"],
-    },
-  },
-  {
-    id: "habitue",
-    min: 8000,
-    icon: "cake",
-    accent: "red",
-    name: { pt: "Habitué do Café", en: "Café Regular" },
-    perks: {
-      pt: ["Tudo do nível anterior", "Reservas com prioridade"],
-      en: ["Everything from the previous tier", "Priority bookings"],
-    },
-  },
-  {
-    id: "dourado",
-    min: 20000,
-    icon: "gift",
-    accent: "primary",
-    name: { pt: "Amigo do Peito", en: "Close Friend" },
-    perks: {
-      pt: ["Tudo do nível anterior", "Café grátis todos os meses"],
-      en: ["Everything from the previous tier", "Free coffee every month"],
-    },
-  },
-  {
-    id: "lenda",
-    min: 50000,
-    icon: "trophy",
-    accent: "red",
-    name: { pt: "Lenda do Bairro", en: "Neighbourhood Legend" },
-    perks: {
-      pt: ["Tudo do nível anterior", "Brunch grátis por trimestre", "Convites para eventos da casa"],
-      en: ["Everything from the previous tier", "Free brunch every quarter", "Invites to house events"],
-    },
-  },
+  { id: "novo", min: 0, icon: "star", accent: "blue", name: { pt: "Vizinho Novo", en: "New Neighbour" } },
+  { id: "cliente", min: 1000, icon: "coffee", accent: "green", name: { pt: "Cliente da Casa", en: "House Regular" } },
+  { id: "amigo", min: 2500, icon: "sandwich", accent: "primary", name: { pt: "Amigo do Bairro", en: "Neighbourhood Friend" } },
+  { id: "habitue", min: 4500, icon: "cake", accent: "red", name: { pt: "Habitué do Café", en: "Café Regular" } },
+  { id: "dourado", min: 7000, icon: "gift", accent: "primary", name: { pt: "Amigo do Peito", en: "Close Friend" } },
+  { id: "lenda", min: 10000, icon: "trophy", accent: "red", name: { pt: "Lenda do Bairro", en: "Neighbourhood Legend" } },
 ];
 
 // Recebe os pontos GANHOS (lifetime), não o saldo atual.

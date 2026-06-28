@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
 import { Scroll, Card, IconTile, Button, LogoBadge, Stamp, SectionLabel, TopBar, BottomSheet } from "@/design/ui";
-import { TIERS, tierIndexFor, type AppData, type RewardRow, type HistoryRow } from "@/design/data";
+import { TIERS, tierIndexFor, type AppData, type HistoryRow } from "@/design/data";
 
 // ── Regra dos carimbos (V2: compra ≥15€ = 1 carimbo, máx 2/semana) ───────────
 function StampRule() {
@@ -347,54 +347,3 @@ export function LoyaltyCard({
   );
 }
 
-// ── Recompensas (troca de pontos) ────────────────────────────────────────────
-export function Rewards({
-  points,
-  rewards,
-  onRedeem,
-}: {
-  points: number;
-  rewards: RewardRow[];
-  onRedeem: (r: RewardRow) => void;
-}) {
-  const { T, L } = useI18n();
-  return (
-    <>
-      <TopBar
-        title={T("rew.title") as string}
-        right={
-          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 13px", borderRadius: 13, background: "color-mix(in srgb, var(--c-primary) 14%, var(--c-surface))", color: "var(--c-primary)" }}>
-            <Icon name="star" size={16} fill="currentColor" />
-            <span style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 15 }}>{points}</span>
-          </div>
-        }
-      />
-      <Scroll>
-        <p style={{ fontFamily: "var(--f-body)", fontSize: 14, color: "var(--c-muted)", margin: "0 0 14px", lineHeight: 1.5 }}>{T("rew.intro") as string}</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {rewards.map((r) => {
-            const can = points >= r.custo_pontos;
-            const accent = `var(--c-${r.accent || "primary"})`;
-            const nome = L({ pt: r.titulo, en: r.nome_en || r.titulo });
-            const desc = L({ pt: r.descricao || "", en: r.desc_en || r.descricao || "" });
-            return (
-              <Card key={r.id} style={{ display: "flex", alignItems: "center", gap: 14, opacity: can ? 1 : 0.62 }}>
-                <IconTile icon={r.icon || "gift"} accent={accent} size={54} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 16, color: "var(--c-ink)" }}>{nome}</div>
-                  <div style={{ fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)" }}>{desc}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 13.5, color: accent }}>
-                    <Icon name="star" size={14} fill="currentColor" /> {r.custo_pontos} pts
-                  </div>
-                </div>
-                <Button size="sm" variant={can ? "primary" : "outline"} accent={accent} onClick={() => can && onRedeem(r)} style={{ pointerEvents: can ? "auto" : "none" }}>
-                  {(can ? T("rew.swap") : T("rew.need")) as string}
-                </Button>
-              </Card>
-            );
-          })}
-        </div>
-      </Scroll>
-    </>
-  );
-}
