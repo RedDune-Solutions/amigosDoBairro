@@ -292,10 +292,6 @@ function RewardRow({ reward, onPatch, onRemove }: { reward: RewardAdmin; onPatch
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 9 }}>
-        <LangInput flag="PT" value={reward.descricao || ""} onCommit={(v) => onPatch({ descricao: v })} />
-        <LangInput flag="EN" value={reward.desc_en || ""} onCommit={(v) => onPatch({ desc_en: v })} />
-      </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 11, color: "var(--c-muted)" }}>
           <Icon name="star" size={12} fill="currentColor" /> CUSTO EM PONTOS
@@ -328,7 +324,7 @@ export function AdminRewards({ rewards, setRewards }: { rewards: RewardAdmin[]; 
   return (
     <>
       <p style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", margin: "12px 2px 12px", lineHeight: 1.5 }}>
-        O catálogo que os clientes trocam por <b style={{ color: "var(--c-ink)" }}>pontos</b>. Define nome, descrição, ícone e o <b style={{ color: "var(--c-ink)" }}>custo em pontos</b>.
+        O catálogo que os clientes trocam por <b style={{ color: "var(--c-ink)" }}>pontos</b>. Define nome, ícone e o <b style={{ color: "var(--c-ink)" }}>custo em pontos</b>.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {rewards.map((r) => (
