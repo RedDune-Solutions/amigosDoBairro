@@ -31,7 +31,17 @@ const signUpSchema = credentials.extend({
   food_pref: z.string().trim().max(40).optional().or(z.literal("")),
 });
 
-export type AuthState = { error?: string; sent?: boolean };
+export type AuthState = {
+  error?: string;
+  /** Email novo → conta criada, confirmação enviada. */
+  sent?: boolean;
+  /** Email já existia por confirmar → reenviámos o link de confirmação. */
+  resent?: boolean;
+  /** Email já existe e está confirmado → mandar o utilizador para o login. */
+  exists?: boolean;
+  /** Email do precheck, para pré-preencher o campo de login. */
+  email?: string;
+};
 
 function safeNext(next: FormDataEntryValue | null): string {
   const value = typeof next === "string" ? next : "";
@@ -121,8 +131,45 @@ export async function signUp(
   }
 
   const supabase = await createClient();
+  const email = parsed.data.email;
+
+  // O Supabase obfusca o signUp (defesa contra enumeração): re-registar um email
+  // já confirmado devolve "sucesso" sem mandar email. O precheck deixa a mensagem
+  // dizer a verdade. IP (Vercel) para o rate-limit do RPC.
+  const h = await headers();
+  const ip = (h.get("x-forwarded-for")?.split(",")[0] ?? h.get("x-real-ip") ?? "").trim();
+  const { data: pre, error: preErr } = await supabase.rpc("signup_precheck", { p_email: email, p_ip: ip });
+  const check = (pre ?? {}) as { rate_limited?: boolean; exists?: boolean; active?: boolean };
+  if (!preErr) {
+    if (check.rate_limited) {
+      return { error: "Demasiadas tentativas. Tenta novamente daqui a uns minutos." };
+    }
+    if (check.exists && check.active) {
+      // Já tem conta confirmada → não criar; mandar para o login com o email.
+      return { exists: true, email };
+    }
+    if (check.exists && !check.active) {
+      // Conta por confirmar → reenviar o link de confirmação (não recriar).
+      const { error: resendErr } = await supabase.auth.resend({ type: "signup", email });
+      if (resendErr) {
+        const code = (resendErr as { code?: string }).code ?? "";
+        const status = (resendErr as { status?: number }).status;
+        // 429 / rate-limit de email = já enviámos há pouco; o link anterior ainda
+        // serve → sucesso suave. Outras falhas (SMTP) → erro honesto, não mentir.
+        if (status === 429 || code === "over_email_send_rate_limit") {
+          return { resent: true };
+        }
+        return { error: "Não foi possível reenviar o email. Tenta novamente daqui a pouco." };
+      }
+      return { resent: true };
+    }
+  }
+  // Email novo (ou precheck indisponível) → criar conta normalmente. Se o
+  // precheck falhar e o email afinal existir, o Supabase volta a obfuscar e
+  // caímos no comportamento neutro (sent) — degradação aceitável.
+
   const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
+    email,
     password: parsed.data.password,
     options: {
       data: {

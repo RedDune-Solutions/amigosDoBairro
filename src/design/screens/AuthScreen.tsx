@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { Scroll, Button, Field, LogoBadge, Select } from "@/design/ui";
+import { PhoneInput } from "@/design/PhoneInput";
 import { authenticate, type AuthState } from "@/lib/auth-actions";
 import type { FoodCategory } from "@/design/data";
 
@@ -27,7 +28,30 @@ export function AuthScreen({
   const [remember, setRemember] = useState(true);
   const [foodPref, setFoodPref] = useState("");
   const isReg = mode === "register";
+  const [emailPrefill, setEmailPrefill] = useState("");
   const [state, formAction, pending] = useActionState(authenticate, initial);
+
+  // `state` (useActionState) é persistente entre renders e NÃO reseta ao trocar de
+  // tab. Reagimos a um resultado NOVO durante o render (padrão React, sem efeito):
+  // `seenState` guarda a última `state` já tratada; `dismissedState` marca a `state`
+  // cujo ecrã de sucesso o utilizador fechou (ao trocar de tab) — sem isto o ecrã
+  // "Conta criada" ficava preso e bloqueava registar outro email.
+  const [seenState, setSeenState] = useState<AuthState>(initial);
+  const [dismissedState, setDismissedState] = useState<AuthState | null>(null);
+  if (state !== seenState) {
+    setSeenState(state);
+    // Email já confirmado → ir para o login com o email preenchido (sem mentir).
+    if (state.exists && state.email) {
+      setEmailPrefill(state.email);
+      setMode("login");
+    }
+  }
+
+  // Troca de tab iniciada pelo utilizador: esconde o ecrã de sucesso preso.
+  const switchMode = (m: "login" | "register") => {
+    setDismissedState(state);
+    setMode(m);
+  };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -78,29 +102,34 @@ export function AuthScreen({
             {lang === "en" ? "Your account is suspended. Please contact the café." : "A tua conta está suspensa. Contacta o café."}
           </div>
         )}
-        {state.sent && isReg ? (
-          <div style={{ textAlign: "center", padding: "18px 8px", animation: "popIn .25s ease" }}>
+        {(state.sent || state.resent) && isReg && state !== dismissedState ? (
+          <div role="status" aria-live="polite" style={{ textAlign: "center", padding: "18px 8px", animation: "popIn .25s ease" }}>
             <div style={{ width: 72, height: 72, borderRadius: 22, margin: "8px auto 16px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-primary)", background: "color-mix(in srgb, var(--c-primary) 14%, var(--c-surface))" }}>
               <Icon name="mail" size={34} stroke={2} />
             </div>
             <h2 style={{ margin: "0 0 8px", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 21, color: "var(--c-ink)" }}>
-              {T("auth.checkEmailTitle") as string}
+              {(state.resent ? T("auth.resentTitle") : T("auth.checkEmailTitle")) as string}
             </h2>
             <p style={{ margin: "0 auto 22px", maxWidth: 320, fontFamily: "var(--f-body)", fontSize: 14, lineHeight: 1.6, color: "var(--c-muted)" }}>
-              {T("auth.checkEmailSub") as string}
+              {(state.resent ? T("auth.resentSub") : T("auth.checkEmailSub")) as string}
             </p>
-            <Button full size="lg" icon="arrowRight" onClick={() => setMode("login")}>
+            <Button full size="lg" icon="arrowRight" onClick={() => switchMode("login")}>
               {T("auth.backToLogin") as string}
             </Button>
           </div>
         ) : (
         <>
+        {!isReg && state.exists && (
+          <div role="status" aria-live="polite" style={{ marginBottom: 14, padding: "11px 13px", borderRadius: 12, background: "color-mix(in srgb, var(--c-primary) 12%, var(--c-surface))", border: "1px solid color-mix(in srgb, var(--c-primary) 30%, var(--c-line))", fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-ink)" }}>
+            {T("auth.alreadyExists") as string}
+          </div>
+        )}
         {/* Toggle login / registo */}
         <div style={{ display: "flex", gap: 6, padding: 5, background: "var(--c-surface2)", borderRadius: 16, border: "1px solid var(--c-line)" }}>
           {([["login", T("auth.tabLogin") as string], ["register", T("auth.tabReg") as string]] as const).map(([m, l]) => (
             <button
               key={m}
-              onClick={() => setMode(m as "login" | "register")}
+              onClick={() => switchMode(m as "login" | "register")}
               style={{
                 flex: 1,
                 padding: "11px 0",
@@ -127,10 +156,10 @@ export function AuthScreen({
             {isReg && (
               <Field label={T("auth.name") as string} placeholder={T("auth.namePh") as string} icon="user" name="nome" required autoComplete="name" />
             )}
-            <Field label={T("auth.email") as string} placeholder="email@exemplo.pt" icon="mail" name="email" type="email" required autoComplete="email" />
+            <Field key={`email-${emailPrefill}`} label={T("auth.email") as string} placeholder="email@exemplo.pt" icon="mail" name="email" type="email" defaultValue={emailPrefill} required autoComplete="email" />
             <Field label={T("auth.pass") as string} placeholder="••••••••" icon="lock" name="password" type="password" required autoComplete={isReg ? "new-password" : "current-password"} />
             {isReg && (
-              <Field label={T("auth.phone") as string} placeholder="+351 ..." icon="phone" name="telefone" type="tel" autoComplete="tel" />
+              <PhoneInput variant="field" name="telefone" label={T("auth.phone") as string} />
             )}
             {isReg && foodCategories.length > 0 && (
               <div>

@@ -8,6 +8,7 @@ import { TiersSheet } from "@/design/screens/AppScreens";
 import { PushOptIn } from "@/design/screens/PushOptIn";
 import { InstallApp } from "@/design/screens/InstallApp";
 import { SignOutButton } from "@/design/screens/SignOutButton";
+import { PhoneInput } from "@/design/PhoneInput";
 import { TIERS, tierIndexFor, type AppData, type FoodCategory } from "@/design/data";
 import { updateProfile } from "@/lib/app-actions";
 import { createClient } from "@/lib/supabase/client";
@@ -300,7 +301,7 @@ export function EditProfile({
         <Card style={{ marginTop: 12, padding: "4px 16px" }}>
           <EditField icon="user" accent="var(--c-blue)" label={T("edit.name") as string} value={name} onChange={setName} placeholder={T("edit.namePh") as string} />
           <EditField icon="mail" accent="var(--c-primary)" label={T("edit.email") as string} value={data.email} readOnly />
-          <EditField icon="phone" accent="var(--c-green)" label={T("edit.phone") as string} value={phone} onChange={setPhone} placeholder="+351 ..." inputType="tel" last />
+          <PhoneInput variant="row" icon="phone" accent="var(--c-green)" label={T("edit.phone") as string} value={phone} onChange={setPhone} last />
         </Card>
 
         {foodCategories.length > 0 && (

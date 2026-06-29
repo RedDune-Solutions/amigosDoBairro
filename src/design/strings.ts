@@ -63,6 +63,9 @@ export const STRINGS: Record<string, Entry> = {
   "auth.checkEmailTitle": { pt: "Conta criada! 🎉", en: "Account created! 🎉" },
   "auth.checkEmailSub": { pt: "Enviámos-te um email para confirmares a tua conta. Abre-o e clica no link antes de entrares.", en: "We've sent you an email to confirm your account. Open it and click the link before signing in." },
   "auth.backToLogin": { pt: "Voltar a entrar", en: "Back to sign in" },
+  "auth.resentTitle": { pt: "Confirma o teu email ✉️", en: "Confirm your email ✉️" },
+  "auth.resentSub": { pt: "Já tinhas começado o registo com este email mas ainda não o confirmaste. Reenviámos-te o link — abre o email e clica para ativares a conta.", en: "You'd already started signing up with this email but hadn't confirmed it yet. We've resent the link — open the email and click it to activate your account." },
+  "auth.alreadyExists": { pt: "Já existe uma conta com este email. Entra com a tua palavra-passe.", en: "An account with this email already exists. Sign in with your password." },
 
   // Comum / QR
   "common.lang": { pt: "Idioma", en: "Language" },
