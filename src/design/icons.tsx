@@ -7,7 +7,7 @@ import {
   ChevronLeft, Bell, Settings, LogOut, QrCode, Heart, Sparkles, MapPin, Phone,
   ArrowRight, ArrowLeft, Pencil, Leaf, Shield, Trophy, Percent, Box, Trash2,
   Archive, Ticket, Wallet, Lock, Dice5, BarChart3, SlidersHorizontal, Search,
-  X, Mail, Camera, CalendarCheck, Share2, Circle, type LucideIcon,
+  X, Mail, Camera, CalendarCheck, Share2, Circle, Eye, EyeOff, type LucideIcon,
 } from "lucide-react";
 
 // Mapeia os nomes usados na app → componente lucide. Fallback: Circle.
@@ -61,6 +61,8 @@ const MAP: Record<string, LucideIcon> = {
   mail: Mail,
   camera: Camera,
   share: Share2,
+  eye: Eye,
+  eyeOff: EyeOff,
 };
 
 export function Icon({

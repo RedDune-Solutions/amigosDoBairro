@@ -559,6 +559,9 @@ export function Field({
   required?: boolean;
   autoComplete?: string;
 }) {
+  const isPassword = type === "password";
+  const [reveal, setReveal] = useState(false);
+  const inputType = isPassword ? (reveal ? "text" : "password") : type || "text";
   return (
     <label style={{ display: "block" }}>
       <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13, color: "var(--c-ink)", marginBottom: 6 }}>
@@ -579,7 +582,7 @@ export function Field({
         <Icon name={icon} size={18} color="var(--c-muted)" />
         <input
           name={name}
-          type={type || "text"}
+          type={inputType}
           placeholder={placeholder}
           defaultValue={defaultValue}
           required={required}
@@ -595,6 +598,28 @@ export function Field({
             minWidth: 0,
           }}
         />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setReveal((v) => !v)}
+            aria-label={reveal ? "Ocultar palavra-passe" : "Mostrar palavra-passe"}
+            aria-pressed={reveal}
+            title={reveal ? "Ocultar palavra-passe" : "Mostrar palavra-passe"}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "none",
+              background: "transparent",
+              padding: 4,
+              margin: "0 -4px 0 0",
+              cursor: "pointer",
+              color: "var(--c-muted)",
+            }}
+          >
+            <Icon name={reveal ? "eyeOff" : "eye"} size={18} color="var(--c-muted)" />
+          </button>
+        )}
       </div>
     </label>
   );
