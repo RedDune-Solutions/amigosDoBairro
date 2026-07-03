@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Select } from "@/design/ui";
@@ -225,8 +226,7 @@ export function ConfiguracoesAdmin({
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "4px 0 8px" }}>
           {me.avatarUrl ? (
             <div style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", background: "var(--c-surface2)" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={me.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <Image src={me.avatarUrl} alt="" width={80} height={80} sizes="80px" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
             </div>
           ) : (
             <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, var(--c-primary), var(--c-red))", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 30 }}>

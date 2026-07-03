@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { TopBar, Scroll, Card, Spinner, TrashConfirm, DashedAddButton } from "@/design/ui";
@@ -23,7 +24,7 @@ function ItemPhoto({ item }: { item: MenuItemRow }) {
     const supabase = createClient();
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const path = `${item.id}.${ext}`;
-    const { error } = await supabase.storage.from("menu").upload(path, file, { upsert: true, contentType: file.type });
+    const { error } = await supabase.storage.from("menu").upload(path, file, { upsert: true, contentType: file.type, cacheControl: "31536000" });
     if (!error) {
       const { data: pub } = supabase.storage.from("menu").getPublicUrl(path);
       await patchMenuItem({ id: item.id, image_url: `${pub.publicUrl}?t=${Date.now()}` });
@@ -40,8 +41,7 @@ function ItemPhoto({ item }: { item: MenuItemRow }) {
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
       <button onClick={() => fileRef.current?.click()} disabled={busy} style={{ width: 52, height: 52, borderRadius: 12, flexShrink: 0, overflow: "hidden", border: "1px solid var(--c-line)", background: "var(--c-surface2)", cursor: busy ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-muted)", padding: 0 }}>
         {item.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <Image src={item.image_url} alt="" width={52} height={52} sizes="52px" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         ) : (
           <Icon name="camera" size={20} stroke={2} />
         )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Spinner, BottomSheet, Select } from "@/design/ui";
@@ -26,8 +27,7 @@ function Avatar({ url, initials, size }: { url: string | null; initials: string;
   if (url) {
     return (
       <div style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", background: "var(--c-surface2)", flexShrink: 0 }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        <Image src={url} alt="" width={size} height={size} sizes={`${size}px`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       </div>
     );
   }
@@ -254,7 +254,7 @@ export function EditProfile({
     const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from("avatars")
-      .upload(path, file, { upsert: false, contentType: file.type });
+      .upload(path, file, { upsert: false, contentType: file.type, cacheControl: "31536000" });
     if (upErr) {
       setUploadErr(true);
       setUploading(false);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
 import { TopBar, Scroll, Card, Chip, IconTile } from "@/design/ui";
@@ -52,8 +53,7 @@ export function MenuScreen({ menu }: { menu?: MenuCatRow[] }) {
             <Card key={i} style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ width: 58, height: 58, borderRadius: 16, flexShrink: 0, overflow: "hidden", background: `color-mix(in srgb, var(--c-${active.accent}) 15%, var(--c-surface))`, color: `var(--c-${active.accent})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {it.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={it.image} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  <Image src={it.image} alt="" width={58} height={58} sizes="58px" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 ) : (
                   <Icon name={active.icon} size={28} stroke={1.9} />
                 )}

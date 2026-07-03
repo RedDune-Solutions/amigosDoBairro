@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Icon } from "@/design/icons";
 import { useI18n, LangToggle } from "@/design/i18n";
 import { Scroll, Card, IconTile, Button, LogoBadge, SectionLabel } from "@/design/ui";
@@ -51,8 +52,7 @@ function MarqueeRow({ tiles, dir }: { tiles: string[]; dir: "left" | "right" }) 
               background: "var(--c-surface2)",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt="" loading="eager" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            <Image src={src} alt="" width={128} height={88} sizes="128px" loading="eager" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           </div>
         ))}
       </div>
@@ -210,8 +210,7 @@ export function Landing({ photos }: { photos?: LandingPhotos }) {
             {comida.map((it) => (
               <div key={it.src} style={{ width: 150, flexShrink: 0 }}>
                 <div style={{ height: 110, borderRadius: 18, overflow: "hidden", border: "1px solid var(--c-line)", background: "var(--c-surface2)" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={it.src} alt={L(it.n)} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  <Image src={it.src} alt={L(it.n)} width={150} height={110} sizes="150px" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 </div>
                 <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14, color: "var(--c-ink)", marginTop: 7 }}>
                   {L(it.n)}

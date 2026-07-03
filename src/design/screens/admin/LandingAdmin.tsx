@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { TopBar, Scroll, Card, Spinner, TrashConfirm, SectionLabel, DashedAddButton } from "@/design/ui";
@@ -14,7 +15,7 @@ async function uploadFile(file: File): Promise<string | null> {
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   // Caminho único — não dá para usar Date.now()/random no servidor, mas aqui (browser) podemos.
   const path = `${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("landing").upload(path, file, { upsert: false, contentType: file.type });
+  const { error } = await supabase.storage.from("landing").upload(path, file, { upsert: false, contentType: file.type, cacheControl: "31536000" });
   if (error) return null;
   const { data: pub } = supabase.storage.from("landing").getPublicUrl(path);
   return `${pub.publicUrl}?t=${Date.now()}`;
@@ -50,8 +51,7 @@ function PhotoTile({ photo, w, h, refresh }: { photo: LandingPhoto; w: number; h
   return (
     <>
       <button onClick={() => fileRef.current?.click()} disabled={busy} style={{ position: "relative", width: w, height: h, borderRadius: 14, flexShrink: 0, overflow: "hidden", border: "1px solid var(--c-line)", background: "var(--c-surface2)", cursor: busy ? "default" : "pointer", padding: 0 }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={photo.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: busy ? 0.4 : 1 }} />
+        <Image src={photo.image_url} alt="" width={w} height={h} sizes={`${w}px`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: busy ? 0.4 : 1 }} />
         <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", background: busy ? "rgba(0,0,0,0.25)" : "transparent" }}>
           {busy ? <Spinner size={16} /> : null}
         </span>
