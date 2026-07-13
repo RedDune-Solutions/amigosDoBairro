@@ -200,6 +200,7 @@ export function Reservations({
             <IconTile icon="clock" accent="var(--c-green)" size={44} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <input
+                className="res-time"
                 type="time"
                 value={time ?? ""}
                 min={minTime}
