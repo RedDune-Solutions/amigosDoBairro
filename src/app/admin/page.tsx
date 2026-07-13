@@ -79,6 +79,7 @@ export default async function AdminPage() {
     { data: newsData },
     { data: logData },
     { data: clientesData },
+    { data: saldosData },
   ] = await Promise.all([
     isAdmin
       ? supabase.from("prizes").select("id, kind, nome_pt, nome_en, desc_pt, desc_en, icon, accent, weight").order("kind").order("id")
@@ -100,6 +101,7 @@ export default async function AdminPage() {
     isAdmin ? supabase.from("news").select("id, titulo_pt, titulo_en, desc_pt, desc_en, icon, accent, ativo, created_at").order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
     isAdmin ? supabase.rpc("historico_acoes", { p_limit: 100 }) : Promise.resolve({ data: [] }),
     isAdmin ? supabase.from("profiles").select("id, nome, telefone, food_pref, created_at, banned, reservas_bloqueadas").eq("role", "customer").order("created_at", { ascending: false }).limit(500) : Promise.resolve({ data: [] }),
+    isAdmin ? supabase.rpc("saldos_clientes") : Promise.resolve({ data: [] }),
   ]);
 
   type Rel = { nome?: string } | { nome?: string }[] | null;
@@ -123,7 +125,17 @@ export default async function AdminPage() {
     activeClients: activeClients ?? 0,
   };
 
-  const clientes = (clientesData ?? []) as ClienteRow[];
+  // Funde saldo + ganhos (escalão) por cliente. A RPC devolve 1 linha por
+  // cliente com lotes; quem nunca ganhou pontos fica a 0 (escalão "Vizinho Novo").
+  const saldoMap = new Map<string, { saldo: number; ganhos: number }>();
+  for (const s of (saldosData ?? []) as { user_id: string; saldo: number; ganhos: number }[]) {
+    saldoMap.set(s.user_id, { saldo: s.saldo, ganhos: s.ganhos });
+  }
+  const clientes = ((clientesData ?? []) as Omit<ClienteRow, "saldo" | "ganhos">[]).map((c) => ({
+    ...c,
+    saldo: saldoMap.get(c.id)?.saldo ?? 0,
+    ganhos: saldoMap.get(c.id)?.ganhos ?? 0,
+  }));
 
   const [menu, foodCategories, prefStats, landingPhotos] = await Promise.all([
     getMenu(),

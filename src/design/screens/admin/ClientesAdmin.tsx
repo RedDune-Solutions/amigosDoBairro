@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { Card, Button } from "@/design/ui";
+import { TIERS, tierIndexFor } from "@/design/data";
 import type { ClienteRow, FoodCategory } from "@/design/data";
 import { enviarAviso, definirSuspensao, definirReservasBloqueadas } from "@/lib/clientes-actions";
 
@@ -22,6 +23,10 @@ function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirming, setConfirming] = useState(false);
+
+  // Escalão = pontos GANHOS (lifetime), igual à app do cliente. Saldo = gastável.
+  const tier = TIERS[tierIndexFor(c.ganhos)];
+  const tierColor = `var(--c-${tier.accent})`;
 
   async function send() {
     if (busy || titulo.trim().length < 2) return;
@@ -63,6 +68,8 @@ function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null
     width: "100%", border: "1px solid var(--c-line)", background: "var(--c-surface)", borderRadius: 11,
     padding: "10px 12px", fontFamily: "var(--f-body)", fontSize: 14, color: "var(--c-ink)", outline: "none",
   };
+  // Ícone + texto na mesma linha (senão o SVG display:block cai p/ linha própria).
+  const detailItem: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 5 };
 
   return (
     <Card style={{ display: "flex", flexDirection: "column", gap: open ? 12 : 0 }} pad={14}>
@@ -73,6 +80,12 @@ function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 14.5, color: "var(--c-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.nome || "—"}</div>
           <div style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>{c.telefone || "Sem telefone"}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 4, flexWrap: "wrap" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 100, background: `color-mix(in srgb, ${tierColor} 14%, var(--c-surface))`, color: tierColor, fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 11, lineHeight: 1.3 }}>
+              <Icon name="star" size={11} fill="currentColor" /> {tier.name.pt}
+            </span>
+            <span style={{ fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 12, color: "var(--c-ink)" }}>{c.saldo.toLocaleString("pt-PT")} pts</span>
+          </div>
         </div>
         {c.banned && (
           <span style={{ flexShrink: 0, fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 10.5, padding: "4px 9px", borderRadius: 100, color: "var(--c-red)", background: "color-mix(in srgb, var(--c-red) 13%, var(--c-surface))" }}>Suspenso</span>
@@ -83,9 +96,10 @@ function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null
       {open && (
         <div style={{ display: "flex", flexDirection: "column", gap: 11, borderTop: "1px solid var(--c-line)", paddingTop: 12 }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)" }}>
-            <span><Icon name="calendar" size={13} /> Membro desde <b style={{ color: "var(--c-ink)" }}>{membro(c.created_at)}</b></span>
-            {foodLabel && <span><Icon name="heart" size={13} /> Gosta de <b style={{ color: "var(--c-ink)" }}>{foodLabel}</b></span>}
-            {c.reservas_bloqueadas && <span style={{ fontWeight: 800, color: "var(--c-red)" }}>Reservas bloqueadas</span>}
+            <span style={detailItem}><Icon name="calendar" size={13} /> Membro desde <b style={{ color: "var(--c-ink)" }}>{membro(c.created_at)}</b></span>
+            <span style={detailItem}><Icon name="trophy" size={13} /> <b style={{ color: "var(--c-ink)" }}>{c.ganhos.toLocaleString("pt-PT")} pts</b> ganhos ao todo</span>
+            {foodLabel && <span style={detailItem}><Icon name="heart" size={13} /> Gosta de <b style={{ color: "var(--c-ink)" }}>{foodLabel}</b></span>}
+            {c.reservas_bloqueadas && <span style={{ ...detailItem, fontWeight: 800, color: "var(--c-red)" }}>Reservas bloqueadas</span>}
           </div>
 
           {avisoOpen ? (

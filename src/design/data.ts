@@ -209,6 +209,8 @@ export type ClienteRow = {
   created_at: string;
   banned: boolean;
   reservas_bloqueadas: boolean;
+  saldo: number; // pontos gastáveis (lotes ativos, não expirados)
+  ganhos: number; // pontos ganhos lifetime → escalão
 };
 
 export type NotifRow = {
