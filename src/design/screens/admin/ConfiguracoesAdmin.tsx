@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Select } from "@/design/ui";
 import { EditProfile } from "@/design/screens/Profile";
+import { PushOptIn } from "@/design/screens/PushOptIn";
 import { SignOutButton } from "@/design/screens/SignOutButton";
 import { EquipaSection, type MemberRow, type InviteRow } from "@/design/screens/admin/EquipaScreen";
 import { ClientesAdmin } from "@/design/screens/admin/ClientesAdmin";
@@ -242,6 +243,11 @@ export function ConfiguracoesAdmin({
           <div style={{ flex: 1, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 15, color: "var(--c-ink)" }}>Editar perfil</div>
           <Icon name="chevronRight" size={20} color="var(--c-muted)" />
         </Card>
+
+        {/* Push da equipa: recebe "Nova reserva" neste dispositivo (staff e admin). */}
+        <div style={{ marginTop: 11 }}>
+          <PushOptIn />
+        </div>
 
         {isAdmin && (
           <>

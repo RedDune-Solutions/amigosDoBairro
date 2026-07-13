@@ -61,11 +61,14 @@ export default async function AdminPage() {
   const hojeLisboa = `${_nv("year")}-${_nv("month")}-${_nv("day")}`;
   const horaLisboa = `${_nv("hour")}:${_nv("minute")}:${_nv("second")}`;
   const reservaFutura = `data.gt.${hojeLisboa},and(data.eq.${hojeLisboa},hora.gte.${horaLisboa})`;
+  // Complemento exato de reservaFutura — o Histórico mostra o que já passou.
+  const reservaPassada = `data.lt.${hojeLisboa},and(data.eq.${hojeLisboa},hora.lt.${horaLisboa})`;
 
   const [
     { data: prizesData },
     { data: rewardsAdminData },
     { data: resData },
+    { data: resPassadasData },
     { data: membersData },
     { data: invitesData },
     { count: scratchGiven },
@@ -84,6 +87,7 @@ export default async function AdminPage() {
       ? supabase.from("rewards").select("id, titulo, nome_en, descricao, desc_en, custo_pontos, icon, accent, ativo").order("custo_pontos", { ascending: true })
       : Promise.resolve({ data: [] }),
     supabase.from("reservations").select("id, data, hora, n_pessoas, estado, profiles(nome)").or(reservaFutura).order("data", { ascending: true }).order("hora", { ascending: true }).limit(60),
+    supabase.from("reservations").select("id, data, hora, n_pessoas, estado, profiles(nome)").or(reservaPassada).order("data", { ascending: false }).order("hora", { ascending: false }).limit(60),
     isAdmin
       ? supabase.from("profiles").select("id, nome, role, is_owner").in("role", ["staff", "admin"]).order("role")
       : Promise.resolve({ data: [] }),
@@ -101,14 +105,16 @@ export default async function AdminPage() {
   type Rel = { nome?: string } | { nome?: string }[] | null;
   const relNome = (p: Rel): string => (Array.isArray(p) ? p[0]?.nome : p?.nome) ?? "Cliente";
 
-  const reservas: ReservaAdminRow[] = (resData ?? []).map((r) => ({
+  const toRow = (r: { id: unknown; data: unknown; hora: unknown; n_pessoas: unknown; estado: unknown; profiles: unknown }): ReservaAdminRow => ({
     id: r.id as string,
     data: r.data as string,
     hora: r.hora as string,
     n_pessoas: r.n_pessoas as number,
     estado: r.estado as string,
     cliente: relNome(r.profiles as Rel),
-  }));
+  });
+  const reservas: ReservaAdminRow[] = (resData ?? []).map(toRow);
+  const reservasPassadas: ReservaAdminRow[] = (resPassadasData ?? []).map(toRow);
 
   const stats: AdminStatsData = {
     scratchGiven: scratchGiven ?? 0,
@@ -138,6 +144,7 @@ export default async function AdminPage() {
         rewards={(rewardsAdminData ?? []) as RewardAdmin[]}
         stats={stats}
         reservas={reservas}
+        reservasPassadas={reservasPassadas}
         members={(membersData ?? []) as MemberRow[]}
         invites={(invitesData ?? []) as InviteRow[]}
         news={(newsData ?? []) as NewsRow[]}

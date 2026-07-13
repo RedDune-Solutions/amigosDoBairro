@@ -1,6 +1,9 @@
 "use server";
 
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sendPushToStaff } from "@/lib/push-send";
+import { sendNovaReservaEmail } from "@/lib/email-send";
 
 export async function redeemReward(
   rewardId: string,
@@ -112,5 +115,34 @@ export async function createReservation(input: {
           : "Não foi possível reservar.",
     };
   }
+
+  // Avisar a equipa (email + push) DEPOIS da resposta ao cliente — after() corre
+  // pós-response (na Vercel via waitUntil). Best-effort: falhar o aviso nunca
+  // falha a reserva já criada.
+  const email = user.email ?? "";
+  after(async () => {
+    try {
+      const { data: quem } = await supabase.from("profiles").select("nome, telefone").eq("id", user.id).single();
+      const nome = quem?.nome ?? "Cliente";
+      const dataFmt = new Date(input.data + "T00:00:00").toLocaleDateString("pt-PT", { weekday: "short", day: "numeric", month: "short" });
+      await Promise.allSettled([
+        sendNovaReservaEmail({
+          clienteNome: nome,
+          clienteEmail: email,
+          clienteTelefone: quem?.telefone ?? "",
+          data: input.data,
+          hora: input.hora,
+          nPessoas: input.n_pessoas,
+        }),
+        sendPushToStaff({
+          title: "Nova reserva",
+          body: `${nome} · ${dataFmt} ${input.hora.slice(0, 5)} · ${input.n_pessoas} pax`,
+          url: "/admin",
+        }),
+      ]);
+    } catch (e) {
+      console.error("[reserva] aviso à equipa falhou:", e);
+    }
+  });
   return { ok: true };
 }

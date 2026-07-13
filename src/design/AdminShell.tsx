@@ -41,6 +41,7 @@ export function AdminShell({
   rewards: initialRewards,
   stats,
   reservas,
+  reservasPassadas,
   members,
   invites,
   news,
@@ -60,6 +61,7 @@ export function AdminShell({
   rewards: RewardAdmin[];
   stats: AdminStatsData;
   reservas: ReservaAdminRow[];
+  reservasPassadas: ReservaAdminRow[];
   members: MemberRow[];
   invites: InviteRow[];
   news: NewsRow[];
@@ -133,7 +135,7 @@ export function AdminShell({
       </>
     );
   } else if (tab === "reservas") {
-    screen = <ReservasAdmin reservas={reservas} />;
+    screen = <ReservasAdmin reservas={reservas} passadas={reservasPassadas} />;
   } else if (tab === "menu") {
     screen = <MenuAdmin menu={menu} />;
   } else if (tab === "config") {

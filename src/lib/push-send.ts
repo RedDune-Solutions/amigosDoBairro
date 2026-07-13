@@ -2,7 +2,7 @@
 // notificações por-evento (ex.: resposta a uma reserva). NÃO é "use server":
 // é um módulo de servidor importado por server actions.
 import webpush from "web-push";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { VAPID_PUBLIC_KEY } from "@/lib/push-config";
 
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
@@ -58,4 +58,24 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
   const subs = (data ?? []) as PushSub[];
   if (!subs.length) return;
   await sendToSubs(subs, payload);
+}
+
+/**
+ * Push para toda a equipa (staff + admin) — ex.: cliente criou uma reserva.
+ * Usa o service client porque aqui o chamador é um CLIENTE, e a RLS (bem)
+ * não deixa a sessão dele ler subscrições de terceiros. Só corre no servidor.
+ */
+export async function sendPushToStaff(payload: PushPayload): Promise<void> {
+  if (!vapidReady()) return;
+  const svc = createServiceClient();
+  const { data } = await svc
+    .from("push_subscriptions")
+    .select("endpoint, p256dh, auth, profiles!inner(role)")
+    .in("profiles.role", ["staff", "admin"]);
+  const subs = (data ?? []) as unknown as PushSub[];
+  if (!subs.length) return;
+  const { stale } = await sendToSubs(subs, payload);
+  if (stale.length) {
+    await svc.from("push_subscriptions").delete().in("endpoint", stale);
+  }
 }
