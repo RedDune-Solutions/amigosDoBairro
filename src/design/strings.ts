@@ -141,6 +141,8 @@ export const STRINGS: Record<string, Entry> = {
   "res.request": { pt: (wd: string, t: string) => `Pedir · ${wd} ${t}`, en: (wd: string, t: string) => `Request · ${wd} ${t}` },
   "res.noSlots": { pt: "Sem horários disponíveis neste dia.", en: "No times available on this day." },
   "res.hoursNote": { pt: "Horários dentro do funcionamento do café.", en: "Times within the café's opening hours." },
+  "res.leadNote": { pt: "As reservas são feitas com pelo menos 12 h de antecedência.", en: "Reservations require at least 12 hours' notice." },
+  "res.leadError": { pt: "As reservas têm de ser feitas com pelo menos 12 horas de antecedência.", en: "Reservations must be made at least 12 hours in advance." },
   "res.between": { pt: (a: string, b: string) => `Entre ${a} e ${b}`, en: (a: string, b: string) => `Between ${a} and ${b}` },
   "res.outOfRange": { pt: (a: string, b: string) => `Escolhe uma hora entre ${a} e ${b}.`, en: (a: string, b: string) => `Pick a time between ${a} and ${b}.` },
   "res.archive": { pt: "Arquivar", en: "Archive" },

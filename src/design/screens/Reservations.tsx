@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
 import { TopBar, Scroll, Card, IconTile, Button, SectionLabel, Spinner } from "@/design/ui";
-import { reservationSlots, type Reservation } from "@/design/data";
+import { reservationSlots, RESERVA_MIN_LEAD_MIN, type Reservation } from "@/design/data";
 import { createReservation, arquivarReserva } from "@/lib/app-actions";
 import { CAFE } from "@/lib/site";
 
@@ -68,7 +68,7 @@ export function Reservations({
 
   const day = days.find((d) => d.key === dayKey)!;
   const slots = useMemo(
-    () => reservationSlots(new Date(day.iso + "T00:00:00"), new Date()),
+    () => reservationSlots(new Date(day.iso + "T00:00:00"), new Date(), RESERVA_MIN_LEAD_MIN),
     [day.iso],
   );
   const minTime = slots[0] ?? "";
@@ -183,6 +183,9 @@ export function Reservations({
           <SectionLabel>{T("res.chooseTime") as string}</SectionLabel>
           <span style={{ fontFamily: "var(--f-body)", fontSize: 11, color: "var(--c-muted)" }}>{T("res.hoursNote") as string}</span>
         </div>
+        <p style={{ margin: "6px 2px 0", fontFamily: "var(--f-body)", fontSize: 11.5, color: "var(--c-muted)", display: "flex", alignItems: "center", gap: 6 }}>
+          <Icon name="clock" size={13} color="var(--c-muted)" /> {T("res.leadNote") as string}
+        </p>
         {slots.length === 0 ? (
           <Card style={{ marginTop: 12, textAlign: "center", padding: "18px 14px", color: "var(--c-muted)", fontFamily: "var(--f-body)", fontSize: 13.5 }}>
             {T("res.noSlots") as string}

@@ -134,21 +134,31 @@ const toMin = (hhmm: string): number => {
 const fromMin = (min: number): string =>
   `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 
+/** Antecedência mínima para reservar (em minutos). 12h: se um cliente reserva
+ *  às 21h para as 7h30 da manhã, a equipa pode não ver a tempo. O servidor
+ *  (createReservation) valida o mesmo — isto é só para a UI não oferecer o que
+ *  seria recusado. */
+export const RESERVA_MIN_LEAD_MIN = 12 * 60;
+
 /**
  * Horas de reserva possíveis num dado dia, dentro do horário do café.
  * Range: começa 15 min DEPOIS de abrir e vai até 15 min ANTES de fechar.
- * Slots de 30 min. Para hoje, remove horas já passadas (60 min de antecedência).
+ * Slots de 30 min. Remove qualquer slot que esteja a menos de `minLeadMin`
+ * minutos de `now` (instante absoluto, não só minutos-do-dia) — cobre o caso
+ * de reservar de noite para o dia seguinte de manhã cedo.
  */
-export function reservationSlots(date: Date, now: Date): string[] {
+export function reservationSlots(date: Date, now: Date, minLeadMin = 0): string[] {
   const hours = CAFE_HOURS[date.getDay()];
   if (!hours) return [];
   const start = toMin(hours.open) + 15;
   const lastStart = toMin(hours.close) - 15;
-  const sameDay = date.toDateString() === now.toDateString();
-  const minAllowed = sameDay ? now.getHours() * 60 + now.getMinutes() + 60 : -1;
+  const minInstant = now.getTime() + minLeadMin * 60_000;
   const out: string[] = [];
   for (let m = start; m <= lastStart; m += 30) {
-    if (m >= minAllowed) out.push(fromMin(m));
+    const slot = new Date(date);
+    slot.setHours(0, 0, 0, 0);
+    slot.setMinutes(m);
+    if (slot.getTime() >= minInstant) out.push(fromMin(m));
   }
   return out;
 }

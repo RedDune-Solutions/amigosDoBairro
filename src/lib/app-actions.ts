@@ -96,9 +96,26 @@ export async function createReservation(input: {
   if (!user) return { error: "Sessão expirada." };
   const { data: prof } = await supabase.from("profiles").select("reservas_bloqueadas").eq("id", user.id).single();
   if (prof?.reservas_bloqueadas) return { error: "O café bloqueou as reservas desta conta. Fala connosco." };
-  const today = new Date().toISOString().slice(0, 10);
-  if (input.data < today) return { error: "Data no passado." };
   if (input.n_pessoas < 1 || input.n_pessoas > 12) return { error: "Nº de pessoas inválido." };
+
+  // Antecedência mínima de 12h — em Europe/Lisbon (autoritativo, não confiar na
+  // UI/dispositivo do cliente). Truque: tratar o relógio-de-parede de Lisboa
+  // (agora e a reserva) como se fosse UTC; a diferença dá o intervalo real
+  // porque partilham o mesmo fuso. Subsume "data no passado" (diff < 12h).
+  const MIN_LEAD_MS = 12 * 60 * 60 * 1000;
+  const nowParts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Lisbon", hourCycle: "h23",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+  }).formatToParts(new Date());
+  const nv = (t: string) => Number(nowParts.find((p) => p.type === t)?.value ?? "0");
+  const agoraWall = Date.UTC(nv("year"), nv("month") - 1, nv("day"), nv("hour"), nv("minute"), nv("second"));
+  const [ry, rm, rd] = input.data.split("-").map(Number);
+  const [rh, rmin] = input.hora.split(":").map(Number);
+  const reservaWall = Date.UTC(ry, rm - 1, rd, rh, rmin, 0);
+  if (reservaWall - agoraWall < MIN_LEAD_MS) {
+    return { error: "As reservas têm de ser feitas com pelo menos 12 horas de antecedência." };
+  }
   const { error } = await supabase.from("reservations").insert({
     user_id: user.id,
     data: input.data,
