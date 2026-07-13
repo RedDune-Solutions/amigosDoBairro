@@ -228,7 +228,7 @@ export function Reservations({
         {error && <p style={{ marginTop: 14, fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 13.5, color: "var(--c-red)", textAlign: "center" }}>{error}</p>}
 
         <div style={{ marginTop: 20 }}>
-          <Button full size="lg" accent="var(--c-green)" onClick={confirm} icon="bell" style={{ opacity: ready ? 1 : 0.5, pointerEvents: ready ? "auto" : "none", boxShadow: "0 8px 20px -8px color-mix(in srgb, var(--c-green) 60%, transparent)" }}>
+          <Button full size="lg" accent="var(--c-green)" onClick={confirm} icon="bell" disabled={!ready} style={{ boxShadow: "0 8px 20px -8px color-mix(in srgb, var(--c-green) 60%, transparent)" }}>
             {time ? (T("res.request", day.wd, time) as string) : (T("res.pickHour") as string)}
           </Button>
         </div>
