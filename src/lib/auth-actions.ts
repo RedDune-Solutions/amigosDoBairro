@@ -188,6 +188,9 @@ export async function signUp(
     options: {
       data: {
         nome: parsed.data.nome,
+        // `display_name` para o painel Auth do Supabase mostrar o nome (o
+        // dashboard lê display_name/name/full_name, não a nossa chave `nome`).
+        display_name: parsed.data.nome,
         telefone: parsed.data.telefone || null,
         food_pref: parsed.data.food_pref || null,
       },
