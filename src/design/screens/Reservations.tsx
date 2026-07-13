@@ -161,9 +161,18 @@ export function Reservations({
             <h2 style={{ margin: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 18, color: "var(--c-ink)" }}>{T("res.newReq") as string}</h2>
           </div>
         )}
-        <Card style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 6, background: "color-mix(in srgb, var(--c-red) 6%, var(--c-surface))", borderColor: "color-mix(in srgb, var(--c-red) 20%, var(--c-line))" }}>
+        <Card style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 8, background: "color-mix(in srgb, var(--c-red) 6%, var(--c-surface))", borderColor: "color-mix(in srgb, var(--c-red) 20%, var(--c-line))" }}>
           <Icon name="bell" size={18} color="var(--c-red)" stroke={2.2} />
           <span style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-ink)", lineHeight: 1.45 }}>{T("res.noShowWarn") as string}</span>
+        </Card>
+        {/* Info que o cliente deve ler ao entrar — em cards no topo, fora do título. */}
+        <Card pad={13} style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 8 }}>
+          <Icon name="coffee" size={18} color="var(--c-primary)" stroke={2.2} />
+          <span style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", lineHeight: 1.45 }}>{T("res.hoursNote") as string}</span>
+        </Card>
+        <Card pad={13} style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 14 }}>
+          <Icon name="clock" size={18} color="var(--c-primary)" stroke={2.2} />
+          <span style={{ fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", lineHeight: 1.45 }}>{T("res.leadNote") as string}</span>
         </Card>
         <SectionLabel>{T("res.chooseDay") as string}</SectionLabel>
         <div style={{ display: "flex", gap: 9, overflowX: "auto", padding: "12px 0 4px" }} className="om-scroll">
@@ -179,13 +188,9 @@ export function Reservations({
           })}
         </div>
 
-        <div style={{ marginTop: 18, display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ marginTop: 18 }}>
           <SectionLabel>{T("res.chooseTime") as string}</SectionLabel>
-          <span style={{ fontFamily: "var(--f-body)", fontSize: 11, color: "var(--c-muted)" }}>{T("res.hoursNote") as string}</span>
         </div>
-        <p style={{ margin: "6px 2px 0", fontFamily: "var(--f-body)", fontSize: 11.5, color: "var(--c-muted)", display: "flex", alignItems: "center", gap: 6 }}>
-          <Icon name="clock" size={13} color="var(--c-muted)" /> {T("res.leadNote") as string}
-        </p>
         {slots.length === 0 ? (
           <Card style={{ marginTop: 12, textAlign: "center", padding: "18px 14px", color: "var(--c-muted)", fontFamily: "var(--f-body)", fontSize: 13.5 }}>
             {T("res.noSlots") as string}
