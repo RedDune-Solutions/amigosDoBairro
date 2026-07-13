@@ -153,10 +153,14 @@ export function AuthScreen({
           <input type="hidden" name="mode" value={mode} />
           {next ? <input type="hidden" name="next" value={next} /> : null}
           <div style={{ display: "flex", flexDirection: "column", gap: 13, marginTop: 18 }}>
+            {/* defaultValue vem de state.values (devolvido pela action nos erros):
+                o React 19 faz reset dos inputs não-controlados após cada action,
+                e sem isto uma password rejeitada limpava o formulário todo.
+                A password nunca é reposta (não é ecoada de volta pelo servidor). */}
             {isReg && (
-              <Field label={T("auth.name") as string} placeholder={T("auth.namePh") as string} icon="user" name="nome" required autoComplete="name" />
+              <Field label={T("auth.name") as string} placeholder={T("auth.namePh") as string} icon="user" name="nome" defaultValue={state.values?.nome} required autoComplete="name" />
             )}
-            <Field key={`email-${emailPrefill}`} label={T("auth.email") as string} placeholder="email@exemplo.pt" icon="mail" name="email" type="email" defaultValue={emailPrefill} required autoComplete="email" />
+            <Field key={`email-${emailPrefill}`} label={T("auth.email") as string} placeholder="email@exemplo.pt" icon="mail" name="email" type="email" defaultValue={emailPrefill || state.values?.email} required autoComplete="email" />
             <Field label={T("auth.pass") as string} placeholder="••••••••" icon="lock" name="password" type="password" required autoComplete={isReg ? "new-password" : "current-password"} />
             {isReg && (
               <PhoneInput variant="field" name="telefone" label={T("auth.phone") as string} />

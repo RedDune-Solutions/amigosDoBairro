@@ -41,7 +41,19 @@ export type AuthState = {
   exists?: boolean;
   /** Email do precheck, para pré-preencher o campo de login. */
   email?: string;
+  /** Valores submetidos, devolvidos junto com `error` para o formulário não
+   *  limpar os campos (o React 19 faz reset dos inputs não-controlados após
+   *  cada action). NUNCA inclui a palavra-passe. */
+  values?: { nome?: string; email?: string };
 };
+
+/** Valores a preservar no formulário quando a action devolve erro. */
+function keepValues(formData: FormData): NonNullable<AuthState["values"]> {
+  return {
+    nome: String(formData.get("nome") ?? ""),
+    email: String(formData.get("email") ?? ""),
+  };
+}
 
 function safeNext(next: FormDataEntryValue | null): string {
   const value = typeof next === "string" ? next : "";
@@ -69,12 +81,13 @@ export async function signIn(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
+  const values = keepValues(formData);
   const parsed = credentials.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos.", values };
   }
 
   // Preferência do utilizador: manter sessão (cookie persistente) ou só durante
@@ -89,16 +102,16 @@ export async function signIn(
     const status = (error as { status?: number }).status;
     const code = (error as { code?: string }).code ?? "";
     if (code === "invalid_credentials" || status === 400) {
-      return { error: "Email ou palavra-passe incorretos." };
+      return { error: "Email ou palavra-passe incorretos.", values };
     }
     if (code === "email_not_confirmed") {
-      return { error: "Confirma o teu email antes de entrar." };
+      return { error: "Confirma o teu email antes de entrar.", values };
     }
     if (!status) {
       // sem status HTTP = não chegou ao servidor (Supabase/Docker em baixo)
-      return { error: "Serviço indisponível. Tenta novamente daqui a pouco." };
+      return { error: "Serviço indisponível. Tenta novamente daqui a pouco.", values };
     }
-    return { error: "Não foi possível entrar. Tenta novamente." };
+    return { error: "Não foi possível entrar. Tenta novamente.", values };
   }
   // Conta suspensa pelo admin → não deixar entrar.
   const {
@@ -108,7 +121,7 @@ export async function signIn(
     const { data: prof } = await supabase.from("profiles").select("banned").eq("id", user.id).single();
     if (prof?.banned) {
       await supabase.auth.signOut({ scope: "local" });
-      return { error: "A tua conta está suspensa. Contacta o café." };
+      return { error: "A tua conta está suspensa. Contacta o café.", values };
     }
   }
   await postAuthRedirect(supabase, formData);
@@ -119,6 +132,7 @@ export async function signUp(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
+  const values = keepValues(formData);
   const parsed = signUpSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -127,7 +141,7 @@ export async function signUp(
     food_pref: formData.get("food_pref"),
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos.", values };
   }
 
   const supabase = await createClient();
@@ -142,7 +156,7 @@ export async function signUp(
   const check = (pre ?? {}) as { rate_limited?: boolean; exists?: boolean; active?: boolean };
   if (!preErr) {
     if (check.rate_limited) {
-      return { error: "Demasiadas tentativas. Tenta novamente daqui a uns minutos." };
+      return { error: "Demasiadas tentativas. Tenta novamente daqui a uns minutos.", values };
     }
     if (check.exists && check.active) {
       // Já tem conta confirmada → não criar; mandar para o login com o email.
@@ -159,7 +173,7 @@ export async function signUp(
         if (status === 429 || code === "over_email_send_rate_limit") {
           return { resent: true };
         }
-        return { error: "Não foi possível reenviar o email. Tenta novamente daqui a pouco." };
+        return { error: "Não foi possível reenviar o email. Tenta novamente daqui a pouco.", values };
       }
       return { resent: true };
     }
@@ -180,7 +194,7 @@ export async function signUp(
     },
   });
   if (error) {
-    return { error: "Não foi possível criar a conta. Tenta outro email." };
+    return { error: "Não foi possível criar a conta. Tenta outro email.", values };
   }
   // Sem sessão = confirmação de email pendente → avisar (não redirecionar).
   // Com sessão (confirmação desligada, ex. local) → entrar normalmente.
