@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
-import { Card, Button } from "@/design/ui";
+import { Card, Button, BottomSheet } from "@/design/ui";
 import { TIERS, tierIndexFor } from "@/design/data";
 import type { ClienteRow, FoodCategory } from "@/design/data";
-import { enviarAviso, definirSuspensao, definirReservasBloqueadas } from "@/lib/clientes-actions";
+import { enviarAviso, definirSuspensao, definirReservasBloqueadas, darOferta } from "@/lib/clientes-actions";
 
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 function membro(iso: string): string {
@@ -23,6 +23,11 @@ function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [ofertaOpen, setOfertaOpen] = useState(false);
+  const [nCarimbos, setNCarimbos] = useState(0);
+  const [nComum, setNComum] = useState(0);
+  const [nEspecial, setNEspecial] = useState(0);
+  const totalOferta = nCarimbos + nComum + nEspecial;
 
   // Escalão = pontos GANHOS (lifetime), igual à app do cliente. Saldo = gastável.
   const tier = TIERS[tierIndexFor(c.ganhos)];
@@ -51,6 +56,30 @@ function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null
     // Recolher o card — os dados mudam com o refresh do servidor.
     setAvisoOpen(false);
     setOpen(false);
+    router.refresh();
+  }
+
+  function resetOferta() {
+    setNCarimbos(0);
+    setNComum(0);
+    setNEspecial(0);
+  }
+
+  async function giveOferta() {
+    if (busy || totalOferta === 0) return;
+    setBusy(true);
+    setMsg(null);
+    const r = await darOferta({ userId: c.id, carimbos: nCarimbos, comum: nComum, especial: nEspecial });
+    setBusy(false);
+    if (r.error) { setMsg({ ok: false, text: r.error }); return; }
+    const raspadinhas = nComum + nEspecial + (r.cartolas ?? 0) * 2;
+    const partes = [
+      nCarimbos > 0 ? `${nCarimbos} carimbo${nCarimbos > 1 ? "s" : ""}` : null,
+      raspadinhas > 0 ? `${raspadinhas} raspadinha${raspadinhas > 1 ? "s" : ""}` : null,
+    ].filter(Boolean);
+    setMsg({ ok: true, text: `Oferta enviada: +${partes.join(" · ")} ✓` });
+    setOfertaOpen(false);
+    resetOferta();
     router.refresh();
   }
 
@@ -114,6 +143,7 @@ function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null
           ) : (
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <MiniBtn label="Enviar aviso" icon="bell" color="var(--c-primary)" onClick={() => { setAvisoOpen(true); setMsg(null); }} />
+              <MiniBtn label="Dar carimbos" icon="ticket" color="var(--c-primary)" onClick={() => { setOfertaOpen(true); resetOferta(); setMsg(null); }} />
               {c.banned ? (
                 <MiniBtn label="Reativar conta" icon="check" color="var(--c-green)" onClick={toggleBan} />
               ) : confirming ? (
@@ -130,7 +160,56 @@ function ClienteCard({ c, foodLabel }: { c: ClienteRow; foodLabel: string | null
           {msg && <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: msg.ok ? "var(--c-green)" : "var(--c-red)" }}>{msg.text}</div>}
         </div>
       )}
+
+      {ofertaOpen && (
+        <BottomSheet onClose={() => { setOfertaOpen(false); resetOferta(); }} maxHeight="80%">
+          <h3 style={{ margin: "0 0 3px", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 18, color: "var(--c-ink)", textAlign: "center" }}>
+            Dar carimbos a {(c.nome || "cliente").split(" ")[0]}
+          </h3>
+          <p style={{ margin: "0 0 14px", fontFamily: "var(--f-body)", fontSize: 12.5, color: "var(--c-muted)", textAlign: "center", lineHeight: 1.45 }}>
+            Escolhe as quantidades. Não conta para o limite de 2 carimbos/semana.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            <StepRow icon="ticket" label="Carimbos" hint="no cartão · 10 = 2 raspadinhas" value={nCarimbos} onChange={setNCarimbos} />
+            <StepRow icon="dice" label="Raspadinha comum" hint="prémios regulares" value={nComum} onChange={setNComum} />
+            <StepRow icon="sparkle" label="Raspadinha especial" hint="grandes prémios" value={nEspecial} onChange={setNEspecial} />
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+            <Button icon="gift" onClick={giveOferta} loading={busy} disabled={totalOferta === 0} style={{ flex: 1 }}>
+              {totalOferta === 0 ? "Escolhe quantidades" : "Dar oferta"}
+            </Button>
+            <Button variant="outline" onClick={() => { setOfertaOpen(false); resetOferta(); }}>Cancelar</Button>
+          </div>
+        </BottomSheet>
+      )}
     </Card>
+  );
+}
+
+function StepRow({ icon, label, hint, value, onChange }: { icon: string; label: string; hint: string; value: number; onChange: (n: number) => void }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 13, background: "var(--c-surface)", border: "1px solid var(--c-line)" }}>
+      <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: "color-mix(in srgb, var(--c-primary) 12%, var(--c-surface))", color: "var(--c-primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Icon name={icon} size={17} stroke={2.2} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: "var(--f-display)", fontWeight: 700, fontSize: 13.5, color: "var(--c-ink)" }}>{label}</div>
+        <div style={{ fontFamily: "var(--f-body)", fontSize: 11.5, color: "var(--c-muted)" }}>{hint}</div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <StepBtn icon="minus" disabled={value <= 0} onClick={() => onChange(Math.max(0, value - 1))} />
+        <span style={{ minWidth: 26, textAlign: "center", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 16, color: value > 0 ? "var(--c-ink)" : "var(--c-muted)" }}>{value}</span>
+        <StepBtn icon="plus" disabled={value >= 10} onClick={() => onChange(Math.min(10, value + 1))} />
+      </div>
+    </div>
+  );
+}
+
+function StepBtn({ icon, onClick, disabled }: { icon: string; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button onClick={onClick} disabled={disabled} aria-label={icon === "plus" ? "Mais um" : "Menos um"} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 9, border: "1px solid var(--c-line)", background: "var(--c-surface)", color: disabled ? "var(--c-line)" : "var(--c-primary)", cursor: disabled ? "default" : "pointer" }}>
+      <Icon name={icon} size={16} stroke={2.4} />
+    </button>
   );
 }
 
