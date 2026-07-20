@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
+import { storagePathFromPublicUrl } from "@/lib/storage-path";
 import type { LandingPhoto, LandingPhotos } from "@/design/data";
 
 async function assertAdmin() {
@@ -88,8 +89,12 @@ export async function patchLandingPhoto(input: z.input<typeof patchSchema>): Pro
 export async function removeLandingPhoto(id: string): Promise<{ ok?: boolean; error?: string }> {
   await assertAdmin();
   const supabase = await createClient();
+  const { data: row } = await supabase.from("landing_photos").select("image_url").eq("id", id).maybeSingle();
   const { error } = await supabase.from("landing_photos").delete().eq("id", id);
   if (error) return { error: "Não foi possível remover." };
+  // Limpeza best-effort do ficheiro no storage (a linha já foi apagada).
+  const path = row?.image_url ? storagePathFromPublicUrl(row.image_url as string, "landing") : null;
+  if (path) await supabase.storage.from("landing").remove([path]);
   revalidate();
   return { ok: true };
 }

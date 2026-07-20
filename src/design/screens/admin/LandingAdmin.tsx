@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { TopBar, Scroll, Card, Spinner, TrashConfirm, SectionLabel, DashedAddButton } from "@/design/ui";
 import { createClient } from "@/lib/supabase/client";
+import { storagePathFromPublicUrl } from "@/lib/storage-path";
 import type { LandingPhoto, LandingPhotos } from "@/design/data";
 import { addLandingPhoto, patchLandingPhoto, removeLandingPhoto } from "@/lib/landing-actions";
 
@@ -42,7 +43,12 @@ function PhotoTile({ photo, w, h, refresh }: { photo: LandingPhoto; w: number; h
     setBusy(true);
     const url = await uploadFile(file);
     if (url) {
-      await patchLandingPhoto({ id: photo.id, image_url: url });
+      const res = await patchLandingPhoto({ id: photo.id, image_url: url });
+      // Limpeza best-effort do ficheiro anterior (o URL novo já está gravado).
+      if (!res.error) {
+        const old = storagePathFromPublicUrl(photo.image_url, "landing");
+        if (old) void createClient().storage.from("landing").remove([old]);
+      }
       refresh();
     }
     setBusy(false);

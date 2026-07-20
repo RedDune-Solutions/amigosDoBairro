@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/design/icons";
 import { TopBar, Scroll, Card, Spinner, TrashConfirm, DashedAddButton } from "@/design/ui";
 import { createClient } from "@/lib/supabase/client";
+import { storagePathFromPublicUrl } from "@/lib/storage-path";
 import type { MenuCatRow, MenuItemRow } from "@/design/data";
 import {
   addMenuCategory, patchMenuCategory, removeMenuCategory,
@@ -28,12 +29,21 @@ function ItemPhoto({ item }: { item: MenuItemRow }) {
     if (!error) {
       const { data: pub } = supabase.storage.from("menu").getPublicUrl(path);
       await patchMenuItem({ id: item.id, image_url: `${pub.publicUrl}?t=${Date.now()}` });
+      // Se a extensão mudou (ex.: .jpg → .png), o upsert não cobre o ficheiro
+      // antigo — apagar para não ficar órfão no bucket.
+      const oldPath = item.image_url ? storagePathFromPublicUrl(item.image_url, "menu") : null;
+      if (oldPath && oldPath !== path) void supabase.storage.from("menu").remove([oldPath]);
       router.refresh();
     }
     setBusy(false);
   }
   async function remove() {
-    await patchMenuItem({ id: item.id, image_url: null });
+    const res = await patchMenuItem({ id: item.id, image_url: null });
+    // Limpeza best-effort do ficheiro no storage (o URL já saiu da BD).
+    if (!res.error && item.image_url) {
+      const path = storagePathFromPublicUrl(item.image_url, "menu");
+      if (path) void createClient().storage.from("menu").remove([path]);
+    }
     router.refresh();
   }
 

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
+import { storagePathFromPublicUrl } from "@/lib/storage-path";
 import type { MenuCatRow, FoodCategory, FoodPrefStat } from "@/design/data";
 
 async function assertAdmin() {
@@ -109,8 +110,14 @@ export async function addMenuCategory(): Promise<{ id?: string; error?: string }
 export async function removeMenuCategory(id: string): Promise<{ ok?: boolean; error?: string }> {
   await assertAdmin();
   const supabase = await createClient();
+  // Os itens caem por cascade — recolher as fotos antes para limpar o storage.
+  const { data: items } = await supabase.from("menu_items").select("image_url").eq("category_id", id);
   const { error } = await supabase.from("menu_categories").delete().eq("id", id);
   if (error) return { error: "Não foi possível remover." };
+  const paths = ((items ?? []) as { image_url: string | null }[])
+    .map((it) => (it.image_url ? storagePathFromPublicUrl(it.image_url, "menu") : null))
+    .filter((p): p is string => !!p);
+  if (paths.length) await supabase.storage.from("menu").remove(paths);
   return { ok: true };
 }
 
@@ -152,8 +159,12 @@ export async function addMenuItem(categoryId: string): Promise<{ id?: string; er
 export async function removeMenuItem(id: string): Promise<{ ok?: boolean; error?: string }> {
   await assertAdmin();
   const supabase = await createClient();
+  const { data: row } = await supabase.from("menu_items").select("image_url").eq("id", id).maybeSingle();
   const { error } = await supabase.from("menu_items").delete().eq("id", id);
   if (error) return { error: "Não foi possível remover." };
+  // Limpeza best-effort do ficheiro no storage (a linha já foi apagada).
+  const path = row?.image_url ? storagePathFromPublicUrl(row.image_url as string, "menu") : null;
+  if (path) await supabase.storage.from("menu").remove([path]);
   return { ok: true };
 }
 
