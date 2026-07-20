@@ -93,7 +93,8 @@ export function Profile({
           <LangToggle value={lang} onChange={setLang} flags />
         </Card>
 
-        <PushOptIn />
+        {/* Toggle de emails só para clientes — a equipa não recebe os emails de cliente. */}
+        <PushOptIn emailOn={data.role === "customer" ? data.emailNotifs : undefined} />
         <InstallApp />
 
         {isAdmin && (
@@ -263,6 +264,16 @@ export function EditProfile({
     const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
     const url = `${pub.publicUrl}?t=${Date.now()}`;
     await updateProfile({ nome: name, telefone: phone, avatar_url: url });
+    // Limpeza best-effort: apaga os avatares antigos da pasta do user (o novo
+    // fica). Sem await — não atrasa a UI; se falhar fica lixo inofensivo.
+    const newName = path.split("/")[1];
+    void supabase.storage
+      .from("avatars")
+      .list(user.id)
+      .then(({ data: old }) => {
+        const stale = (old ?? []).filter((f) => f.name !== newName).map((f) => `${user.id}/${f.name}`);
+        return stale.length ? supabase.storage.from("avatars").remove(stale) : null;
+      });
     setAvatar(url);
     onSaved();
     setUploading(false);

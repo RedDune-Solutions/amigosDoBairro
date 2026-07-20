@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
-import { sendPushToUser } from "@/lib/push-send";
+import { notificarCliente } from "@/lib/notify-cliente";
 
 async function assertAdmin() {
   const { profile } = await getProfile();
@@ -24,9 +24,9 @@ export async function enviarAviso(input: z.input<typeof avisoSchema>): Promise<{
   const { userId, titulo, corpo } = parsed.data;
   const supabase = await createClient();
   const { error } = await supabase.rpc("admin_enviar_aviso", { p_user: userId, p_titulo: titulo, p_corpo: corpo || "" });
-  if (error) return { error: "Não foi possível enviar o aviso." };
-  // Push best-effort (não falha o aviso se o cliente não tiver push ativo).
-  await sendPushToUser(userId, { title: titulo, body: corpo || "Tens um aviso do café.", url: "/app" });
+  if (error) return { error: (error.message ?? "").includes("clientes") ? "Só contas de cliente." : "Não foi possível enviar o aviso." };
+  // Push + email best-effort (não falha o aviso se o cliente não tiver canais ativos).
+  await notificarCliente(userId, { title: titulo, body: corpo || "Tens um aviso do café.", url: "/app" });
   return { ok: true };
 }
 
@@ -67,11 +67,12 @@ export async function darOferta(
     carimbos > 0 ? `${carimbos} carimbo${carimbos > 1 ? "s" : ""}` : null,
     raspadinhas > 0 ? `${raspadinhas} raspadinha${raspadinhas > 1 ? "s" : ""}` : null,
   ].filter(Boolean);
-  // Push best-effort — não falha a operação se o cliente não tiver push ativo.
-  await sendPushToUser(userId, {
+  // Push + email best-effort — não falha a operação se o cliente não tiver canais ativos.
+  await notificarCliente(userId, {
     title: "Recebeste uma oferta 🎁",
     body: `+${partes.join(" · ")} do café.`,
     url: "/app",
+    emailAssunto: "Recebeste uma oferta · Os Amigos do Bairro",
   });
   return { ok: true, stamps: res?.stamps, cartolas };
 }

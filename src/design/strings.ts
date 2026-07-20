@@ -181,6 +181,10 @@ export const STRINGS: Record<string, Entry> = {
   "push.enable": { pt: "Ativar", en: "Enable" },
   "push.disable": { pt: "Desligar", en: "Turn off" },
   "push.err": { pt: "Não foi possível ativar neste dispositivo.", en: "Couldn't enable on this device." },
+  "mail.title": { pt: "Emails do café", en: "Café emails" },
+  "mail.descOn": { pt: "Ativos — recebes reservas, ofertas e novidades também por email.", en: "On — you'll also get bookings, gifts and news by email." },
+  "mail.descOff": { pt: "Recebe reservas, ofertas e novidades por email.", en: "Get bookings, gifts and news by email." },
+  "mail.err": { pt: "Não foi possível guardar. Tenta novamente.", en: "Couldn't save. Try again." },
 
   // Instalar a app (PWA) — card no perfil
   "install.title": { pt: "Instalar a app", en: "Install the app" },

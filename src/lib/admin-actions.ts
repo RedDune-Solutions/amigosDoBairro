@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
-import { sendPushToUser } from "@/lib/push-send";
+import { notificarCliente } from "@/lib/notify-cliente";
 
 async function assertAdmin() {
   const { profile } = await getProfile();
@@ -163,16 +163,16 @@ export async function atualizarReserva(formData: FormData): Promise<void> {
   await supabase.from("reservations").update({ estado }).eq("id", id);
   revalidatePath("/admin");
 
-  // Push ao cliente quando o staff responde (confirmar/recusar).
+  // Push + email ao cliente quando o staff responde (confirmar/recusar).
   if (estado === "confirmada" || estado === "cancelada") {
     const dia = String(row.data).slice(8, 10) + "/" + String(row.data).slice(5, 7);
     const hora = String(row.hora).slice(0, 5);
     const detalhe = `${dia} · ${hora} · ${row.n_pessoas} pax`;
     const payload =
       estado === "confirmada"
-        ? { title: "Reserva confirmada ✓", body: `Mesa para ${detalhe}. Até já!`, url: "/app" }
-        : { title: "Reserva não disponível", body: `O café não pôde confirmar a tua reserva de ${dia} · ${hora}.`, url: "/app" };
-    await sendPushToUser(row.user_id as string, payload);
+        ? { title: "Reserva confirmada ✓", body: `Mesa para ${detalhe}. Até já!`, url: "/app", emailAssunto: `Reserva confirmada · ${dia} ${hora}` }
+        : { title: "Reserva não disponível", body: `O café não pôde confirmar a tua reserva de ${dia} · ${hora}.`, url: "/app", emailAssunto: `Reserva não disponível · ${dia} ${hora}` };
+    await notificarCliente(row.user_id as string, payload);
   }
 }
 

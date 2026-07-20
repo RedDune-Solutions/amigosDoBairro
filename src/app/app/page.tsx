@@ -47,7 +47,7 @@ export default async function AppPage() {
     { data: notifData },
     { data: lotsData },
   ] = await Promise.all([
-    supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at, food_pref, banned, reservas_bloqueadas").eq("id", user.id).single(),
+    supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at, food_pref, banned, reservas_bloqueadas, email_notifs").eq("id", user.id).single(),
     supabase.rpc("meu_saldo_v2"),
     supabase.rpc("meus_pontos_ganhos_v2"),
     supabase.from("rewards").select("id, titulo, nome_en, descricao, desc_en, custo_pontos, icon, accent").eq("ativo", true).order("custo_pontos", { ascending: true }),
@@ -154,6 +154,7 @@ export default async function AppPage() {
       estado: r.estado as string,
     })),
     reservasBloqueadas: Boolean((profile as { reservas_bloqueadas?: boolean } | null)?.reservas_bloqueadas),
+    emailNotifs: Boolean((profile as { email_notifs?: boolean } | null)?.email_notifs),
   };
 
   const [menu, foodCategories] = await Promise.all([getMenu(), getFoodCategories()]);

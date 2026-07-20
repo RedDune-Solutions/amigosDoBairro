@@ -199,6 +199,7 @@ export type AppData = {
   expiring: { pts: number; dias: number } | null;
   reservations: Reservation[];
   reservasBloqueadas: boolean;
+  emailNotifs: boolean;
 };
 
 export type ClienteRow = {

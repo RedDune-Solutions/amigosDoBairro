@@ -57,7 +57,12 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
   const { data } = await supabase.rpc("push_subs_do_user", { p_user: userId });
   const subs = (data ?? []) as PushSub[];
   if (!subs.length) return;
-  await sendToSubs(subs, payload);
+  const { stale } = await sendToSubs(subs, payload);
+  if (stale.length) {
+    // Higiene: subscrições mortas saem da BD. Service client porque o chamador
+    // (staff) não tem grant de DELETE nas subscrições de terceiros — e não deve ter.
+    await createServiceClient().from("push_subscriptions").delete().in("endpoint", stale);
+  }
 }
 
 /**

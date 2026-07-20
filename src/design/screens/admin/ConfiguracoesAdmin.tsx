@@ -76,7 +76,7 @@ function CampanhaForm({ foodCategories }: { foodCategories: FoodCategory[] }) {
       setRes({ ok: false, text: r.error });
       return;
     }
-    setRes({ ok: true, text: `Enviada a ${r.enviados} de ${r.alvo} dispositivos.` });
+    setRes({ ok: true, text: `Na app: ${r.inapp ?? 0} cliente${(r.inapp ?? 0) === 1 ? "" : "s"} · push: ${r.enviados} de ${r.alvo} dispositivos · email: ${r.emails ?? 0}.` });
     setTitulo("");
     setCorpo("");
   }

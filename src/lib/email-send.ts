@@ -13,9 +13,14 @@ const RESERVA_EMAIL_TO = process.env.RESERVA_EMAIL_TO || "";
 
 let transporter: Transporter | null = null;
 
-/** Há configuração SMTP completa? */
+/** Há credenciais SMTP (para qualquer email)? */
+export function smtpReady(): boolean {
+  return Boolean(SMTP_HOST && SMTP_USER && SMTP_PASSWORD);
+}
+
+/** Há configuração completa para o aviso de reserva à equipa? */
 export function emailReady(): boolean {
-  return Boolean(SMTP_HOST && SMTP_USER && SMTP_PASSWORD && RESERVA_EMAIL_TO);
+  return Boolean(smtpReady() && RESERVA_EMAIL_TO);
 }
 
 function getTransporter(): Transporter {
@@ -114,4 +119,79 @@ export async function sendNovaReservaEmail(r: NovaReservaEmail): Promise<void> {
     subject: `Nova reserva · ${r.clienteNome} · ${dataCurta} ${hora}`,
     html,
   });
+}
+
+export type ClienteEmail = {
+  assunto: string;
+  titulo: string;
+  corpo: string; // texto simples; é escapado aqui
+  ctaLabel?: string;
+  ctaUrl?: string;
+};
+
+/** Layout branded partilhado (mesmo visual do email de reserva/templates de auth). */
+function clienteEmailHtml(m: ClienteEmail): string {
+  const cta = m.ctaUrl
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+        <tr><td style="border-radius:14px;background:#ef9a2e;">
+          <a href="${esc(m.ctaUrl)}"
+             style="display:inline-block;padding:14px 30px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:14px;">
+            ${esc(m.ctaLabel || "Abrir a app")}
+          </a>
+        </td></tr>
+      </table>`
+    : "";
+  return `<!doctype html>
+<html lang="pt">
+  <body style="margin:0;padding:0;background:#fbf3e7;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf3e7;padding:28px 12px;">
+      <tr><td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #f0e6d6;">
+          <tr>
+            <td bgcolor="#fff8ee" style="background-color:#fff8ee;padding:24px 28px;text-align:center;border-bottom:1px solid #f0e6d6;">
+              <img src="https://www.osamigosdobairro.pt/logo-transp.png" width="180" alt="Os Amigos do Bairro — Café &amp; Snack-Bar" style="display:block;margin:0 auto;width:180px;max-width:80%;height:auto;border:0;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:30px 28px;">
+              <h1 style="margin:0 0 10px;font-size:21px;color:#2c2620;font-weight:800;">${esc(m.titulo)}</h1>
+              <p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#6b5e4d;">${esc(m.corpo).replace(/\n/g, "<br/>")}</p>
+              ${cta}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px;background:#fff8ee;border-top:1px solid #f0e6d6;text-align:center;">
+              <div style="font-size:12px;color:#8a7c6b;line-height:1.6;">
+                R. Dâmaso da Encarnação 53C, 8700-249 Quelfes · Olhão<br/>
+                +351 289 034 275<br/>
+                Recebes este email porque ativaste os emails do café no teu perfil — podes desligar lá a qualquer momento.
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+}
+
+/** Email branded ao cliente (ou vários, por BCC quando `to` é lista — campanhas).
+ *  Best-effort: sem SMTP configurado devolve false (o caller não deve contar
+ *  envios que não aconteceram), nunca lança para não falhar a ação. */
+export async function sendClienteEmail(to: string | string[], m: ClienteEmail): Promise<boolean> {
+  if (!smtpReady()) return false;
+  const many = Array.isArray(to);
+  if (many && to.length === 0) return false;
+  const html = clienteEmailHtml(m);
+  const from = `"Os Amigos do Bairro" <${SMTP_USER}>`;
+  if (!many) {
+    await getTransporter().sendMail({ from, to, subject: m.assunto, html });
+    return true;
+  }
+  // Campanhas: BCC para não expor os emails dos clientes uns aos outros,
+  // em blocos de 50 (listas grandes num só envio tropeçam em limites SMTP).
+  for (let i = 0; i < to.length; i += 50) {
+    await getTransporter().sendMail({ from, to: SMTP_USER, bcc: to.slice(i, i + 50), subject: m.assunto, html });
+  }
+  return true;
 }

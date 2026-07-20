@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
 import { vapidReady, sendToSubs, type PushSub } from "@/lib/push-send";
+import { sendClienteEmail } from "@/lib/email-send";
 
 async function assertAdmin() {
   const { profile } = await getProfile();
@@ -71,36 +72,106 @@ const campSchema = z.object({
   url: z.string().trim().max(300).optional().or(z.literal("")),
 });
 
-/** Admin envia uma campanha push, opcionalmente só a um segmento (food_pref). */
-export async function enviarCampanha(input: z.input<typeof campSchema>): Promise<{ enviados?: number; alvo?: number; error?: string }> {
+/** Admin envia uma campanha, opcionalmente só a um segmento (food_pref).
+ *  Coerência (auditoria 2026-07-20): a campanha fica SEMPRE na app (in-app,
+ *  fan-out via RPC) + push aos dispositivos subscritos DE CLIENTES + email aos
+ *  clientes com emails ativos. Antes só existia em push e a equipa também recebia. */
+export async function enviarCampanha(
+  input: z.input<typeof campSchema>,
+): Promise<{ enviados?: number; alvo?: number; inapp?: number; emails?: number; error?: string }> {
   await assertAdmin();
   const parsed = campSchema.safeParse(input);
   if (!parsed.success) return { error: "Preenche o título e a mensagem." };
-  if (!vapidReady()) return { error: "Falta a chave VAPID_PRIVATE_KEY na Vercel." };
 
   const { titulo, corpo, segmento, url } = parsed.data;
   const supabase = await createClient();
 
-  let q = supabase.from("push_subscriptions").select("endpoint, p256dh, auth, profiles!inner(food_pref)");
+  // 1) Leituras que podem falhar vêm PRIMEIRO — a partir do fan-out in-app não
+  //    há mais returns de erro, senão um retry do admin duplicava a campanha.
+  let q = supabase.from("push_subscriptions").select("endpoint, p256dh, auth, profiles!inner(food_pref, role)").eq("profiles.role", "customer");
   if (segmento) q = q.eq("profiles.food_pref", segmento);
   const { data: rows, error } = await q;
   if (error) return { error: "Não foi possível ler os subscritores." };
-
   const subs: PushSub[] = (rows ?? []).map((s) => ({
     endpoint: s.endpoint as string,
     p256dh: s.p256dh as string,
     auth: s.auth as string,
   }));
-  if (subs.length === 0) return { enviados: 0, alvo: 0, error: "Ninguém ativou as notificações neste segmento ainda." };
 
-  const { enviados, stale } = await sendToSubs(subs, { title: titulo, body: corpo, url });
+  // 2) In-app para todos os clientes do alvo (fica na app mesmo sem push/email).
+  const { data: inappData, error: inappErr } = await supabase.rpc("admin_campanha_inapp", {
+    p_titulo: titulo,
+    p_corpo: corpo,
+    p_segmento: segmento || "",
+  });
+  if (inappErr) return { error: "Não foi possível criar as notificações na app." };
+  const inapp = (inappData as number | null) ?? 0;
 
-  if (stale.length) await supabase.from("push_subscriptions").delete().in("endpoint", stale);
+  // 3) Push — só dispositivos de CLIENTES (a equipa não recebe marketing).
+  //    Sem VAPID o push é saltado, mas in-app e email seguem na mesma.
+  let enviados = 0;
+  if (subs.length && vapidReady()) {
+    const r = await sendToSubs(subs, { title: titulo, body: corpo, url });
+    enviados = r.enviados;
+    if (r.stale.length) await supabase.from("push_subscriptions").delete().in("endpoint", r.stale);
+  }
+
+  // 4) Email — clientes do alvo com email_notifs ativo (BCC, best-effort).
+  let emails = 0;
+  const { data: emailRows } = await supabase.rpc("admin_emails_notif", { p_segmento: segmento || "" });
+  const dests = ((emailRows ?? []) as { email: string }[]).map((e) => e.email);
+  if (dests.length) {
+    try {
+      // Só conta se saiu mesmo (false = SMTP não configurado).
+      if (await sendClienteEmail(dests, { assunto: titulo, titulo, corpo, ctaUrl: "https://www.osamigosdobairro.pt/app" })) {
+        emails = dests.length;
+      }
+    } catch (e) {
+      console.error("[campanha] email falhou:", e);
+    }
+  }
 
   const { data: { user } } = await supabase.auth.getUser();
   await supabase.from("push_campaigns").insert({
     titulo, corpo, segmento: segmento || null, url: url || null, enviados, created_by: user?.id ?? null,
   });
 
-  return { enviados, alvo: subs.length };
+  return { enviados, alvo: subs.length, inapp, emails };
+}
+
+// Rate-limit leve do welcome email (por instância): evita usar o SMTP do café
+// como spam ligando/desligando o toggle em loop. Persistência não justifica tabela.
+const welcomeSentAt = new Map<string, number>();
+
+/** Cliente liga/desliga os emails do café (por conta). Welcome email ao ligar. */
+export async function setEmailNotifs(on: boolean): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada. Volta a entrar." };
+  // `select` devolve as linhas alteradas: com o filtro neq, 0 linhas = já estava
+  // neste valor → não repete o welcome (toggle obsoleto/duplo clique = no-op).
+  const { data: changed, error } = await supabase
+    .from("profiles")
+    .update({ email_notifs: on })
+    .eq("id", user.id)
+    .neq("email_notifs", on)
+    .select("id");
+  if (error) return { error: "Não foi possível guardar. Tenta novamente." };
+  const mudou = (changed ?? []).length > 0;
+  const last = welcomeSentAt.get(user.id) ?? 0;
+  if (on && mudou && user.email && Date.now() - last > 10 * 60_000) {
+    // Confirmação imediata, como o push de boas-vindas — best-effort.
+    try {
+      await sendClienteEmail(user.email, {
+        assunto: "Emails ativados ✓ · Os Amigos do Bairro",
+        titulo: "Emails ativados ✓",
+        corpo: "A partir de agora recebes por email as tuas reservas, ofertas e novidades do café.",
+        ctaUrl: "https://www.osamigosdobairro.pt/app",
+      });
+      welcomeSentAt.set(user.id, Date.now());
+    } catch (e) {
+      console.error("[email-notifs] welcome falhou:", e);
+    }
+  }
+  return { ok: true };
 }

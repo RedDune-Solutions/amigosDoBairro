@@ -48,6 +48,7 @@ export default async function AdminPage() {
     expiring: null,
     reservations: [],
     reservasBloqueadas: false,
+    emailNotifs: false,
   };
 
   // "Agora" em Lisboa (data + hora). Reservas cuja data+hora já passou saem da
