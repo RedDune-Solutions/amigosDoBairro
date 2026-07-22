@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
-import { vapidReady, sendToSubs, type PushSub } from "@/lib/push-send";
+import { vapidReady, sendToSubs, isAllowedPushEndpoint, type PushSub } from "@/lib/push-send";
 import { sendClienteEmail } from "@/lib/email-send";
 
 async function assertAdmin() {
@@ -20,6 +20,9 @@ const subSchema = z.object({
 export async function savePushSubscription(sub: z.input<typeof subSchema>): Promise<{ ok?: boolean; error?: string }> {
   const parsed = subSchema.safeParse(sub);
   if (!parsed.success) return { error: "Subscrição inválida." };
+  // Anti-SSRF: só aceitar endpoints https de serviços de push conhecidos (o
+  // servidor faz depois POST a este endpoint). Bloqueia hosts internos/IPs privados.
+  if (!isAllowedPushEndpoint(parsed.data.endpoint)) return { error: "Subscrição inválida." };
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada. Volta a entrar." };

@@ -23,6 +23,58 @@ export function vapidReady(): boolean {
 export type PushSub = { endpoint: string; p256dh: string; auth: string };
 export type PushPayload = { title: string; body: string; url?: string };
 
+// Allowlist de hosts dos serviços de push conhecidos. Entradas com "." inicial
+// são sufixos de domínio; sem "." são hosts exactos.
+const PUSH_HOST_ALLOWLIST = [
+  ".googleapis.com", // FCM (fcm.googleapis.com)
+  ".push.services.mozilla.com", // Mozilla autopush
+  ".notify.windows.com", // WNS
+  "web.push.apple.com", // Apple (host exacto)
+  ".push.apple.com", // Apple (regional)
+];
+
+/** true se `host` for um IP literal privado/loopback/link-local ou 'localhost'. */
+function isPrivateOrLocalHost(host: string): boolean {
+  const h = host.toLowerCase();
+  if (h === "localhost" || h === "ip6-localhost") return true;
+  // IPv6 literal (pode vir entre parênteses rectos).
+  const v6 = h.replace(/^\[|\]$/g, "");
+  if (v6 === "::1") return true; // loopback
+  if (/^f[cd][0-9a-f]{2}:/.test(v6)) return true; // fc00::/7 (ULA)
+  if (/^fe[89ab][0-9a-f]:/.test(v6)) return true; // fe80::/10 (link-local)
+  // IPv4 literal.
+  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    if (a === 0) return true; // 0.0.0.0/8
+    if (a === 127) return true; // 127.0.0.0/8 loopback
+    if (a === 10) return true; // 10.0.0.0/8
+    if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+    if (a === 192 && b === 168) return true; // 192.168.0.0/16
+    if (a === 169 && b === 254) return true; // 169.254.0.0/16 link-local
+  }
+  return false;
+}
+
+/**
+ * Guard anti-SSRF para endpoints de Web Push. A subscrição vem do cliente e o
+ * servidor faz POST ao endpoint (web-push), por isso só aceitamos https para
+ * hosts dos serviços de push conhecidos e recusamos IPs literais privados.
+ */
+export function isAllowedPushEndpoint(url: string): boolean {
+  let host: string;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "https:") return false; // endpoints de push são sempre https
+    host = u.hostname.toLowerCase();
+  } catch {
+    return false; // URL inválido
+  }
+  if (!host || isPrivateOrLocalHost(host)) return false;
+  return PUSH_HOST_ALLOWLIST.some((s) => (s.startsWith(".") ? host.endsWith(s) : host === s));
+}
+
 /** Envia para um conjunto de subscrições. Devolve nº enviados + endpoints expirados. */
 export async function sendToSubs(
   subs: PushSub[],
@@ -33,6 +85,9 @@ export async function sendToSubs(
   const stale: string[] = [];
   await Promise.all(
     subs.map(async (s) => {
+      // Defensivo: nunca fazer POST a um endpoint fora da allowlist (SSRF), mesmo
+      // que uma subscrição antiga/adulterada tenha escapado à validação de entrada.
+      if (!isAllowedPushEndpoint(s.endpoint)) return;
       try {
         await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, body);
         enviados++;

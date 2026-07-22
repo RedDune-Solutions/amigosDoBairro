@@ -1,9 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { getRequestIp } from "@/lib/request-ip";
 
 /** Grava a preferência "manter sessão iniciada" antes de escrever os cookies de auth. */
 async function setRememberPref(remember: boolean): Promise<void> {
@@ -150,8 +151,7 @@ export async function signUp(
   // O Supabase obfusca o signUp (defesa contra enumeração): re-registar um email
   // já confirmado devolve "sucesso" sem mandar email. O precheck deixa a mensagem
   // dizer a verdade. IP (Vercel) para o rate-limit do RPC.
-  const h = await headers();
-  const ip = (h.get("x-forwarded-for")?.split(",")[0] ?? h.get("x-real-ip") ?? "").trim();
+  const ip = await getRequestIp();
   const { data: pre, error: preErr } = await supabase.rpc("signup_precheck", { p_email: email, p_ip: ip });
   const check = (pre ?? {}) as { rate_limited?: boolean; exists?: boolean; active?: boolean };
   if (!preErr) {
@@ -221,8 +221,7 @@ export async function requestPasswordReset(
   const supabase = await createClient();
 
   // IP do pedido (Vercel) para o rate-limit do RPC.
-  const h = await headers();
-  const ip = (h.get("x-forwarded-for")?.split(",")[0] ?? h.get("x-real-ip") ?? "").trim();
+  const ip = await getRequestIp();
 
   const { data, error } = await supabase.rpc("pw_reset_request", { p_email: email, p_ip: ip });
   if (error) {
