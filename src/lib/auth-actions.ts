@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getRequestIp } from "@/lib/request-ip";
 
 /** Grava a preferência "manter sessão iniciada" antes de escrever os cookies de auth. */
@@ -150,9 +150,12 @@ export async function signUp(
 
   // O Supabase obfusca o signUp (defesa contra enumeração): re-registar um email
   // já confirmado devolve "sucesso" sem mandar email. O precheck deixa a mensagem
-  // dizer a verdade. IP (Vercel) para o rate-limit do RPC.
+  // dizer a verdade. Corre com service role: o EXECUTE foi revogado a anon/
+  // authenticated (o RPC devolve `exists` e aceita p_ip do caller — chamado
+  // diretamente à API REST era um oráculo de enumeração com throttle contornável).
+  // O IP real vem do servidor (getRequestIp).
   const ip = await getRequestIp();
-  const { data: pre, error: preErr } = await supabase.rpc("signup_precheck", { p_email: email, p_ip: ip });
+  const { data: pre, error: preErr } = await createServiceClient().rpc("signup_precheck", { p_email: email, p_ip: ip });
   const check = (pre ?? {}) as { rate_limited?: boolean; exists?: boolean; active?: boolean };
   if (!preErr) {
     if (check.rate_limited) {
@@ -210,7 +213,9 @@ export async function signUp(
 
 /** Pede email de recuperação de palavra-passe.
  *  Decisão de produto: feedback explícito (o email tem conta?). A enumeração é
- *  mitigada por rate-limit por IP no RPC `pw_reset_request` (5 / 15 min). */
+ *  mitigada por rate-limit por IP no RPC `pw_reset_request` (5 / 15 min), que só
+ *  o servidor pode chamar (service role; EXECUTE revogado a anon/authenticated
+ *  para o throttle não ser contornável com p_ip forjado via API REST). */
 export async function requestPasswordReset(
   _prev: AuthState,
   formData: FormData,
@@ -223,7 +228,7 @@ export async function requestPasswordReset(
   // IP do pedido (Vercel) para o rate-limit do RPC.
   const ip = await getRequestIp();
 
-  const { data, error } = await supabase.rpc("pw_reset_request", { p_email: email, p_ip: ip });
+  const { data, error } = await createServiceClient().rpc("pw_reset_request", { p_email: email, p_ip: ip });
   if (error) {
     // Falha do RPC não deve trancar a recuperação: cai no comportamento neutro.
     await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${origin}/recuperar` });
