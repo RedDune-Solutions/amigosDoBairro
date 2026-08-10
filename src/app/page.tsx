@@ -3,7 +3,10 @@ import { Landing } from "@/design/screens/Landing";
 import { SITE_URL, CAFE } from "@/lib/site";
 import { getLandingPhotos } from "@/lib/landing-actions";
 
-export const dynamic = "force-dynamic";
+// ISR: HTML servido do cache CDN da Vercel (TTFB ~0, sem cold start nem query
+// por visita). As actions do admin chamam revalidatePath("/") ao mexer nas
+// fotos; o revalidate diário é só rede de segurança.
+export const revalidate = 86400;
 
 const jsonLd = {
   "@context": "https://schema.org",

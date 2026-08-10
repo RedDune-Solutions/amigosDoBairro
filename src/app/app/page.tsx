@@ -46,6 +46,8 @@ export default async function AppPage() {
     { data: newsData },
     { data: notifData },
     { data: lotsData },
+    menu,
+    foodCategories,
   ] = await Promise.all([
     supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at, food_pref, banned, reservas_bloqueadas, email_notifs").eq("id", user.id).single(),
     supabase.rpc("meu_saldo_v2"),
@@ -60,6 +62,8 @@ export default async function AppPage() {
     supabase.from("news").select("id, titulo_pt, titulo_en, desc_pt, desc_en, icon, accent, ativo, created_at").eq("ativo", true).order("created_at", { ascending: false }).limit(10),
     supabase.from("notifications").select("id, kind, title_pt, title_en, body_pt, body_en, icon, accent, read_at, created_at").eq("user_id", user.id).is("archived_at", null).order("created_at", { ascending: false }).limit(40),
     supabase.from("points_lots").select("pontos_restantes, data_expiracao").eq("user_id", user.id).eq("estado", "ATIVO").gt("data_expiracao", new Date().toISOString()).order("data_expiracao", { ascending: true }),
+    getMenu(),
+    getFoodCategories(),
   ]);
 
   // Conta suspensa pelo admin → terminar sessão e mostrar aviso no login.
@@ -156,8 +160,6 @@ export default async function AppPage() {
     reservasBloqueadas: Boolean((profile as { reservas_bloqueadas?: boolean } | null)?.reservas_bloqueadas),
     emailNotifs: Boolean((profile as { email_notifs?: boolean } | null)?.email_notifs),
   };
-
-  const [menu, foodCategories] = await Promise.all([getMenu(), getFoodCategories()]);
 
   return (
     <Stage>

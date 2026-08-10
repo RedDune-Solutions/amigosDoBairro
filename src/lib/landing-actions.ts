@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAnonClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
 import { storagePathFromPublicUrl } from "@/lib/storage-path";
 import type { LandingPhoto, LandingPhotos } from "@/design/data";
@@ -22,7 +22,8 @@ function revalidate() {
 
 /** Fotos da landing agrupadas por secção, ordenadas. Leitura pública (anon). */
 export async function getLandingPhotos(): Promise<LandingPhotos> {
-  const supabase = await createClient();
+  // Anon sem cookies: permite à landing ser ISR (regenera via revalidatePath).
+  const supabase = createAnonClient();
   const { data } = await supabase
     .from("landing_photos")
     .select("id, section, image_url, label_pt, label_en, ordem")

@@ -2,6 +2,8 @@
 
 import { useRef, useState, useTransition, type CSSProperties, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
+import Image from "next/image";
+import logoPic from "../../public/logo.jpeg";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
 
@@ -487,10 +489,12 @@ export function LogoBadge({ size = 64, ring = true }: { size?: number; ring?: bo
         justifyContent: "center",
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/logo.jpeg"
+      <Image
+        src={logoPic}
         alt="Os Amigos do Bairro"
+        sizes="160px"
+        // Aparece no hero/header (above the fold) — eager como o <img> antigo.
+        loading="eager"
         style={{ width: "128%", height: "128%", objectFit: "cover", objectPosition: "center 42%" }}
       />
     </div>

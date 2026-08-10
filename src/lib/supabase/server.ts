@@ -35,6 +35,19 @@ export async function createClient() {
 }
 
 /**
+ * Cliente anónimo sem cookies — leituras públicas (RLS aplica-se como a
+ * qualquer visitante). Não toca em cookies(), por isso pode ser usado em
+ * páginas estáticas/ISR sem as forçar a dynamic.
+ */
+export function createAnonClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+}
+
+/**
  * Cliente com service role — APENAS server-side, ignora RLS.
  * Usar só onde estritamente necessário (operações administrativas controladas).
  */

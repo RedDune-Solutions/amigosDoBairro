@@ -16,6 +16,33 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
+  const path = request.nextUrl.pathname;
+  const isPrivate =
+    path.startsWith("/app") ||
+    path.startsWith("/perfil") ||
+    path.startsWith("/recompensas") ||
+    path.startsWith("/reservar") ||
+    path.startsWith("/staff") ||
+    path.startsWith("/admin");
+
+  // Visitante sem cookie de auth do Supabase: não há sessão para refrescar,
+  // e getUser() devolveria null de qualquer forma. Saltar o round-trip ao
+  // Supabase poupa centenas de ms de TTFB em todas as visitas anónimas
+  // (landing incluída). O resultado é idêntico ao caminho normal com
+  // user === null: rota privada → login; rota pública → segue.
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
+  if (!hasAuthCookie) {
+    if (isPrivate) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/entrar";
+      url.search = `?next=${encodeURIComponent(path)}`;
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
     supabaseUrl,
     supabaseKey,
@@ -46,8 +73,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const path = request.nextUrl.pathname;
-
   // Redireciona PRESERVANDO os cookies de sessão refrescados (rotação de refresh
   // token). Sem isto, um redirect deita fora o cookie novo e a sessão quebra —
   // o utilizador era obrigado a fazer login a cada arranque.
@@ -59,14 +84,6 @@ export async function updateSession(request: NextRequest) {
     supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c));
     return res;
   };
-
-  const isPrivate =
-    path.startsWith("/app") ||
-    path.startsWith("/perfil") ||
-    path.startsWith("/recompensas") ||
-    path.startsWith("/reservar") ||
-    path.startsWith("/staff") ||
-    path.startsWith("/admin");
 
   if (!user && isPrivate) {
     return redirectTo("/entrar", `?next=${encodeURIComponent(path)}`);
