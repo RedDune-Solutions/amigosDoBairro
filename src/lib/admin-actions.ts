@@ -160,8 +160,14 @@ export async function atualizarReserva(formData: FormData): Promise<void> {
     revalidatePath("/admin");
     return;
   }
-  await supabase.from("reservations").update({ estado }).eq("id", id);
+  const { error: updErr } = await supabase.from("reservations").update({ estado }).eq("id", id);
   revalidatePath("/admin");
+  // Sem isto, um update recusado passava despercebido e o cliente recebia à
+  // mesma o "Reserva confirmada" — a reserva ficava pendente no painel.
+  if (updErr) {
+    console.error("[reserva] update do estado falhou:", updErr);
+    return;
+  }
 
   // Push + email ao cliente quando o staff responde (confirmar/recusar).
   if (estado === "confirmada" || estado === "cancelada") {

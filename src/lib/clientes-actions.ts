@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/data";
 import { notificarCliente } from "@/lib/notify-cliente";
 
@@ -92,15 +92,42 @@ export async function definirReservasBloqueadas(input: z.input<typeof resBlockSc
 
 const banSchema = z.object({ userId: z.string().uuid(), banned: z.boolean() });
 
-/** Suspende (banned=true) ou reativa (false) a conta de um cliente. */
+/** Ban permanente no GoTrue (~100 anos). 'none' levanta o ban. */
+const BAN_DURATION = "876000h";
+
+/** Suspende (banned=true) ou reativa (false) a conta de um cliente.
+ *
+ *  `profiles.banned` é a fonte de verdade (é o que a BD lê nos triggers de
+ *  conta_ativa). O ban no GoTrue é o que impede o cliente de pedir um token
+ *  novo — sem ele, bastava voltar a autenticar-se contra o Supabase para
+ *  contornar a suspensão. Suspender: BD primeiro. Reactivar: GoTrue primeiro,
+ *  para nunca ficar uma conta activa na BD mas incapaz de entrar. */
 export async function definirSuspensao(input: z.input<typeof banSchema>): Promise<{ ok?: boolean; error?: string }> {
   await assertAdmin();
   const parsed = banSchema.safeParse(input);
   if (!parsed.success) return { error: "Dados inválidos." };
+  const { userId, banned } = parsed.data;
   const supabase = await createClient();
-  const { error } = await supabase.rpc("definir_banido", { p_user: parsed.data.userId, p_banned: parsed.data.banned });
+
+  if (!banned) {
+    const { error: unbanErr } = await createServiceClient().auth.admin.updateUserById(userId, { ban_duration: "none" });
+    if (unbanErr) {
+      console.error("[suspensao] levantar ban no GoTrue falhou:", unbanErr);
+      return { error: "Não foi possível reativar." };
+    }
+  }
+
+  const { error } = await supabase.rpc("definir_banido", { p_user: userId, p_banned: banned });
   if (error) {
     return { error: (error.message ?? "").includes("clientes") ? "Só contas de cliente podem ser suspensas." : "Não foi possível atualizar." };
   }
+
+  if (banned) {
+    // Best-effort: a BD já bloqueia ganhos/resgates via conta_ativa(); isto
+    // fecha também a emissão de tokens novos e revoga as sessões abertas.
+    const { error: banErr } = await createServiceClient().auth.admin.updateUserById(userId, { ban_duration: BAN_DURATION });
+    if (banErr) console.error("[suspensao] ban no GoTrue falhou (conta suspensa na BD):", banErr);
+  }
+
   return { ok: true };
 }

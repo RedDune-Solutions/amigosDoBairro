@@ -13,7 +13,9 @@ const compraSchema = z.object({
 });
 
 function mapNonceError(m: string): string {
-  return m.includes("expirado")
+  return m.includes("suspensa")
+    ? "Conta suspensa — não pode receber pontos."
+    : m.includes("expirado")
     ? "Código expirado. Pede um novo."
     : m.includes("utilizado")
       ? "Código já utilizado."

@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { sendPushToStaff } from "@/lib/push-send";
 import { sendNovaReservaEmail } from "@/lib/email-send";
 
+/** A BD recusa ganhos/resgates de contas suspensas (trigger conta_ativa). */
+const CONTA_SUSPENSA = "A tua conta está suspensa. Fala connosco no café.";
+
 export async function redeemReward(
   rewardId: string,
 ): Promise<{ codigo?: string; error?: string }> {
@@ -15,11 +18,13 @@ export async function redeemReward(
   if (error) {
     const m = error.message ?? "";
     return {
-      error: m.includes("insuficientes")
-        ? "Pontos insuficientes."
-        : m.includes("esgotada")
-          ? "Recompensa esgotada."
-          : "Não foi possível resgatar.",
+      error: m.includes("suspensa")
+        ? CONTA_SUSPENSA
+        : m.includes("insuficientes")
+          ? "Pontos insuficientes."
+          : m.includes("esgotada")
+            ? "Recompensa esgotada."
+            : "Não foi possível resgatar.",
     };
   }
   return { codigo: String(data) };
@@ -42,7 +47,7 @@ export async function openScratch(
     p_card: cardId,
   });
   if (error) {
-    return { error: "Não foi possível abrir." };
+    return { error: (error.message ?? "").includes("suspensa") ? CONTA_SUSPENSA : "Não foi possível abrir." };
   }
   return { prize: data as Record<string, unknown> };
 }
@@ -125,11 +130,13 @@ export async function createReservation(input: {
   if (error) {
     const m = error.message ?? "";
     return {
-      error: m.includes("bloqueadas")
-        ? "O café bloqueou as reservas desta conta. Fala connosco."
-        : m.includes("esse dia")
-          ? "Já tens uma reserva para esse dia. Cancela-a para pedir outra."
-          : "Não foi possível reservar.",
+      error: m.includes("suspensa")
+        ? CONTA_SUSPENSA
+        : m.includes("bloqueadas")
+          ? "O café bloqueou as reservas desta conta. Fala connosco."
+          : m.includes("esse dia")
+            ? "Já tens uma reserva para esse dia. Cancela-a para pedir outra."
+            : "Não foi possível reservar.",
     };
   }
 
