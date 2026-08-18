@@ -172,6 +172,18 @@ export type Reservation = {
 };
 export type NextReservation = Reservation | null;
 
+// Linha do "Top 5 do bairro" (tab Pontos). Vem do servidor já pronta a mostrar:
+// top 5 do mês, ou top 4 + a linha do próprio quando está fora do top.
+// Privacidade: só primeiro nome + pontos do mês + índice de escalão — nunca
+// ids, nomes completos, nem os ganhos lifetime de terceiros.
+export type TopBairroRow = {
+  rank: number;
+  firstName: string;
+  points: number; // pontos ganhos este mês
+  tier: number; // índice em TIERS (escalão), calculado no servidor
+  isMe: boolean;
+};
+
 // Tipos de dados da app (vindos do Supabase)
 export type AppData = {
   nome: string;
@@ -200,6 +212,7 @@ export type AppData = {
   reservations: Reservation[];
   reservasBloqueadas: boolean;
   emailNotifs: boolean;
+  topBairro: TopBairroRow[];
 };
 
 export type ClienteRow = {
