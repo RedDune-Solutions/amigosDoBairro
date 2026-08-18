@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
 import { Scroll, Card, IconTile, Button, LogoBadge, Stamp, SectionLabel, TopBar, BottomSheet } from "@/design/ui";
-import { TIERS, tierIndexFor, type AppData, type HistoryRow } from "@/design/data";
+import { TIERS, tierIndexFor, type AppData, type HistoryRow, type TopBairroRow } from "@/design/data";
 
 // ── Regra dos carimbos (V2: compra ≥15€ = 1 carimbo, máx 2/semana) ───────────
 function StampRule() {
@@ -249,6 +249,59 @@ export function Home({
   );
 }
 
+// ── Top 5 do bairro (leaderboard do mês, tab Pontos) ─────────────────────────
+const RANK_GOLD = "linear-gradient(135deg,#F8DE7E,#E7B53A 65%,#C78A1E)";
+
+function RankBadge({ rank }: { rank: number }) {
+  const base: CSSProperties = { width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 14 };
+  if (rank === 1) return <div style={{ ...base, background: RANK_GOLD, color: "#7A560E", boxShadow: "0 4px 10px -3px rgba(199,138,30,.6)" }}>1</div>;
+  if (rank <= 3) return <div style={{ ...base, background: "color-mix(in srgb, var(--c-primary) 16%, var(--c-surface))", color: "var(--c-primary)" }}>{rank}</div>;
+  return <div style={{ ...base, background: "var(--c-surface2)", color: "var(--c-muted)" }}>{rank}</div>;
+}
+
+function TopBairro({ rows }: { rows: TopBairroRow[] }) {
+  const { T, L } = useI18n();
+  if (rows.length === 0) return null;
+  return (
+    <div style={{ marginTop: 18, animation: "fadeIn .3s ease" }}>
+      <SectionLabel>{T("top.label") as string}</SectionLabel>
+      <Card style={{ marginTop: 11, padding: 0, overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px 12px" }}>
+          <IconTile icon="trophy" accent="var(--c-primary)" size={40} iconSize={20} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 16, color: "var(--c-ink)", lineHeight: 1.15 }}>{T("top.title") as string}</div>
+            <div style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)" }}>{T("top.sub") as string}</div>
+          </div>
+        </div>
+        {rows.map((r) => {
+          const tier = TIERS[r.tier] ?? TIERS[0];
+          const ac = `var(--c-${tier.accent})`;
+          return (
+            <div key={r.rank} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 16px", borderTop: "1px solid var(--c-line)", background: r.isMe ? "color-mix(in srgb, var(--c-primary) 8%, var(--c-surface))" : "transparent" }}>
+              <RankBadge rank={r.rank} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontFamily: "var(--f-body)", fontWeight: r.isMe ? 800 : 700, fontSize: 14.5, color: "var(--c-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.firstName}</span>
+                  {r.isMe && <span style={{ flexShrink: 0, fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 10, letterSpacing: 0.5, textTransform: "uppercase", color: "#fff", background: "var(--c-primary)", padding: "2px 8px", borderRadius: 100 }}>{T("top.you") as string}</span>}
+                  {r.rank === 1 && <Icon name="sparkle" size={14} color="#C78A1E" />}
+                </div>
+                <div style={{ marginTop: 4 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 100, fontFamily: "var(--f-body)", fontWeight: 800, fontSize: 9.5, letterSpacing: 0.5, textTransform: "uppercase", whiteSpace: "nowrap", color: ac, background: `color-mix(in srgb, ${ac} 14%, var(--c-surface))` }}>
+                    <Icon name={tier.icon} size={10} stroke={2.4} /> {L(tier.name) as string}
+                  </span>
+                </div>
+              </div>
+              <span style={{ flexShrink: 0, fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 15, color: r.rank === 1 ? "#C78A1E" : r.isMe ? "var(--c-primary)" : "var(--c-ink)" }}>
+                {r.points} <span style={{ fontSize: 11.5, fontFamily: "var(--f-body)", fontWeight: 700, color: "var(--c-muted)" }}>pts</span>
+              </span>
+            </div>
+          );
+        })}
+      </Card>
+    </div>
+  );
+}
+
 // ── Cartão (tab Pontos) ──────────────────────────────────────────────────────
 export function LoyaltyCard({
   data,
@@ -292,6 +345,9 @@ export function LoyaltyCard({
             <div style={{ fontFamily: "var(--f-body)", fontWeight: 700, fontSize: 12.5, color: "var(--c-muted)", marginTop: 3 }}>{T("card.stampsCap") as string}</div>
           </Card>
         </div>
+
+        {/* Top 5 do bairro (leaderboard de pontos do mês) */}
+        <TopBairro rows={data.topBairro} />
 
         <Card style={{ marginTop: 14 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
