@@ -251,11 +251,13 @@ export function Home({
 
 // ── Top 5 do bairro (leaderboard, tabs mês/sempre, tab Pontos) ───────────────
 const RANK_GOLD = "linear-gradient(135deg,#F8DE7E,#E7B53A 65%,#C78A1E)";
+const RANK_SILVER = "linear-gradient(135deg,#F2F3F5,#CDD2D8 65%,#9FA6B0)";
 
 function RankBadge({ rank }: { rank: number }) {
   const base: CSSProperties = { width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 14 };
   if (rank === 1) return <div style={{ ...base, background: RANK_GOLD, color: "#7A560E", boxShadow: "0 4px 10px -3px rgba(199,138,30,.6)" }}>1</div>;
-  if (rank <= 3) return <div style={{ ...base, background: "color-mix(in srgb, var(--c-primary) 16%, var(--c-surface))", color: "var(--c-primary)" }}>{rank}</div>;
+  if (rank === 2) return <div style={{ ...base, background: RANK_SILVER, color: "#565C66", boxShadow: "0 4px 10px -3px rgba(159,166,176,.55)" }}>2</div>;
+  if (rank === 3) return <div style={{ ...base, background: "color-mix(in srgb, var(--c-primary) 16%, var(--c-surface))", color: "var(--c-primary)" }}>{rank}</div>;
   return <div style={{ ...base, background: "var(--c-surface2)", color: "var(--c-muted)" }}>{rank}</div>;
 }
 
