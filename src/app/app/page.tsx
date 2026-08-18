@@ -69,7 +69,7 @@ export default async function AppPage() {
     // Leaderboard é decorativo — nunca deitar o ecrã abaixo por causa dele.
     getTopBairro(user.id).catch((e) => {
       console.error("[top-bairro]", e);
-      return [];
+      return { mes: [], sempre: [] };
     }),
   ]);
 
