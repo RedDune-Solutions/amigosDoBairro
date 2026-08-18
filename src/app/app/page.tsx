@@ -3,6 +3,7 @@ import { Stage } from "@/design/ui";
 import { AppShell } from "@/design/AppShell";
 import { requireUser } from "@/lib/data";
 import { getMenu, getFoodCategories } from "@/lib/menu-actions";
+import { getTopBairro } from "@/lib/top-bairro";
 import type { AppData, HistoryRow, RewardRow, WalletItemRow, NotifRow } from "@/design/data";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,7 @@ export default async function AppPage() {
     { data: lotsData },
     menu,
     foodCategories,
+    topBairro,
   ] = await Promise.all([
     supabase.from("profiles").select("nome, telefone, avatar_url, role, stamps, spend_toward, created_at, food_pref, banned, reservas_bloqueadas, email_notifs").eq("id", user.id).single(),
     supabase.rpc("meu_saldo_v2"),
@@ -64,6 +66,11 @@ export default async function AppPage() {
     supabase.from("points_lots").select("pontos_restantes, data_expiracao").eq("user_id", user.id).eq("estado", "ATIVO").gt("data_expiracao", new Date().toISOString()).order("data_expiracao", { ascending: true }),
     getMenu(),
     getFoodCategories(),
+    // Leaderboard é decorativo — nunca deitar o ecrã abaixo por causa dele.
+    getTopBairro(user.id).catch((e) => {
+      console.error("[top-bairro]", e);
+      return [];
+    }),
   ]);
 
   // Conta suspensa pelo admin → terminar sessão e mostrar aviso no login.
@@ -159,6 +166,7 @@ export default async function AppPage() {
     })),
     reservasBloqueadas: Boolean((profile as { reservas_bloqueadas?: boolean } | null)?.reservas_bloqueadas),
     emailNotifs: Boolean((profile as { email_notifs?: boolean } | null)?.email_notifs),
+    topBairro,
   };
 
   return (
