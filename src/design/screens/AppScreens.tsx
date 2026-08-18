@@ -4,7 +4,7 @@ import { useState, type CSSProperties } from "react";
 import { Icon } from "@/design/icons";
 import { useI18n } from "@/design/i18n";
 import { Scroll, Card, IconTile, Button, LogoBadge, Stamp, SectionLabel, TopBar, BottomSheet } from "@/design/ui";
-import { TIERS, tierIndexFor, type AppData, type HistoryRow, type TopBairroRow } from "@/design/data";
+import { TIERS, tierIndexFor, type AppData, type HistoryRow, type TopBairroTabs } from "@/design/data";
 
 // ── Regra dos carimbos (V2: compra ≥15€ = 1 carimbo, máx 2/semana) ───────────
 function StampRule() {
@@ -249,7 +249,7 @@ export function Home({
   );
 }
 
-// ── Top 5 do bairro (leaderboard do mês, tab Pontos) ─────────────────────────
+// ── Top 5 do bairro (leaderboard, tabs mês/sempre, tab Pontos) ───────────────
 const RANK_GOLD = "linear-gradient(135deg,#F8DE7E,#E7B53A 65%,#C78A1E)";
 
 function RankBadge({ rank }: { rank: number }) {
@@ -259,20 +259,53 @@ function RankBadge({ rank }: { rank: number }) {
   return <div style={{ ...base, background: "var(--c-surface2)", color: "var(--c-muted)" }}>{rank}</div>;
 }
 
-function TopBairro({ rows }: { rows: TopBairroRow[] }) {
+function TopBairro({ tabs }: { tabs: TopBairroTabs }) {
   const { T, L } = useI18n();
-  if (rows.length === 0) return null;
+  const [periodo, setPeriodo] = useState<"mes" | "sempre">("mes");
+  if (tabs.mes.length === 0 && tabs.sempre.length === 0) return null;
+  const rows = tabs[periodo];
   return (
     <div style={{ marginTop: 18, animation: "fadeIn .3s ease" }}>
       <SectionLabel>{T("top.label") as string}</SectionLabel>
       <Card style={{ marginTop: 11, padding: 0, overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px 12px" }}>
           <IconTile icon="trophy" accent="var(--c-primary)" size={40} iconSize={20} />
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: "var(--f-display)", fontWeight: 800, fontSize: 16, color: "var(--c-ink)", lineHeight: 1.15 }}>{T("top.title") as string}</div>
-            <div style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)" }}>{T("top.sub") as string}</div>
+            <div style={{ fontFamily: "var(--f-body)", fontSize: 12, color: "var(--c-muted)" }}>{(periodo === "mes" ? T("top.sub") : T("top.subAll")) as string}</div>
+          </div>
+          <div style={{ flexShrink: 0, display: "flex", gap: 2, padding: 3, borderRadius: 100, background: "var(--c-surface2)" }}>
+            {(["mes", "sempre"] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                aria-pressed={periodo === p}
+                onClick={() => setPeriodo(p)}
+                style={{
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "5px 10px",
+                  borderRadius: 100,
+                  fontFamily: "var(--f-body)",
+                  fontWeight: 800,
+                  fontSize: 10.5,
+                  letterSpacing: 0.4,
+                  textTransform: "uppercase",
+                  background: periodo === p ? "var(--c-primary)" : "transparent",
+                  color: periodo === p ? "#fff" : "var(--c-muted)",
+                  transition: "all .15s",
+                }}
+              >
+                {(p === "mes" ? T("top.tabMonth") : T("top.tabAll")) as string}
+              </button>
+            ))}
           </div>
         </div>
+        {rows.length === 0 && (
+          <div style={{ padding: "16px", borderTop: "1px solid var(--c-line)", fontFamily: "var(--f-body)", fontSize: 13, color: "var(--c-muted)", textAlign: "center" }}>
+            {(periodo === "mes" ? T("top.empty") : T("top.emptyAll")) as string}
+          </div>
+        )}
         {rows.map((r) => {
           const tier = TIERS[r.tier] ?? TIERS[0];
           const ac = `var(--c-${tier.accent})`;
@@ -346,8 +379,8 @@ export function LoyaltyCard({
           </Card>
         </div>
 
-        {/* Top 5 do bairro (leaderboard de pontos do mês) */}
-        <TopBairro rows={data.topBairro} />
+        {/* Top 5 do bairro (leaderboard de pontos, tabs mês/sempre) */}
+        <TopBairro tabs={data.topBairro} />
 
         <Card style={{ marginTop: 14 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
