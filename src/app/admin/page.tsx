@@ -49,7 +49,7 @@ export default async function AdminPage() {
     reservations: [],
     reservasBloqueadas: false,
     emailNotifs: false,
-    topBairro: [],
+    topBairro: { mes: [], sempre: [] },
   };
 
   // "Agora" em Lisboa (data + hora). Reservas cuja data+hora já passou saem da
