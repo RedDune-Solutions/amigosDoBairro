@@ -1,6 +1,7 @@
 import { Stage } from "@/design/ui";
 import { Landing } from "@/design/screens/Landing";
-import { SITE_URL, CAFE } from "@/lib/site";
+import { SITE_URL, SITE_DESCRIPTION, CAFE } from "@/lib/site";
+import { CAFE_HOURS } from "@/design/data";
 import { getLandingPhotos } from "@/lib/landing-actions";
 
 // ISR: HTML servido do cache CDN da Vercel (TTFB ~0, sem cold start nem query
@@ -11,13 +12,16 @@ export const revalidate = 86400;
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "CafeOrCoffeeShop",
+  "@id": `${SITE_URL}/#cafe`,
   name: CAFE.name,
   legalName: CAFE.legalName,
+  description: SITE_DESCRIPTION,
   url: SITE_URL,
   image: `${SITE_URL}/opengraph-image`,
   telephone: CAFE.phone,
   priceRange: "€",
   servesCuisine: ["Café", "Pequeno-almoço", "Sandes", "Pastelaria"],
+  acceptsReservations: true,
   address: {
     "@type": "PostalAddress",
     streetAddress: CAFE.street,
@@ -28,18 +32,19 @@ const jsonLd = {
   },
   geo: { "@type": "GeoCoordinates", latitude: CAFE.lat, longitude: CAFE.lng },
   hasMap: CAFE.mapsUrl,
+  // Horário de CAFE_HOURS (fonte única — a UI da landing lê do mesmo sítio).
   openingHoursSpecification: [
     {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      opens: "06:30",
-      closes: "17:00",
+      opens: CAFE_HOURS[1].open,
+      closes: CAFE_HOURS[1].close,
     },
     {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: ["Saturday", "Sunday"],
-      opens: "07:00",
-      closes: "15:00",
+      opens: CAFE_HOURS[6].open,
+      closes: CAFE_HOURS[6].close,
     },
   ],
 };

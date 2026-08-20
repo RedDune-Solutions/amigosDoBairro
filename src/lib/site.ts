@@ -2,6 +2,10 @@
  *  Trocável por env sem mexer no código; default = domínio oficial do café. */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://osamigosdobairro.pt").replace(/\/$/, "");
 
+/** Descrição pública do café (fonte única para metadata, JSON-LD e llms.txt). */
+export const SITE_DESCRIPTION =
+  "Café & Snack-Bar Os Amigos do Bairro, em Quelfes (Olhão). Junta-te ao clube de fidelização: acumula pontos a cada visita, troca por recompensas, raspadinhas e reserva a tua mesa. Pequenos-almoços, sandes em pão caseiro, pastéis e pratos do dia.";
+
 /** Dados reais do café (fonte única para metadata + JSON-LD). */
 export const CAFE = {
   name: "Os Amigos do Bairro",

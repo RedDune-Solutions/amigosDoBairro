@@ -4,7 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Providers } from "./providers";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, SITE_DESCRIPTION } from "@/lib/site";
 
 const baloo = Baloo_2({
   variable: "--font-baloo",
@@ -18,8 +18,7 @@ const nunito = Nunito({
   weight: ["400", "600", "700", "800"],
 });
 
-const description =
-  "Café & Snack-Bar Os Amigos do Bairro, em Quelfes (Olhão). Junta-te ao clube de fidelização: acumula pontos a cada visita, troca por recompensas, raspadinhas e reserva a tua mesa. Pequenos-almoços, sandes em pão caseiro, pastéis e pratos do dia.";
+const description = SITE_DESCRIPTION;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
